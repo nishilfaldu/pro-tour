@@ -1,0 +1,30 @@
+{
+  "tag": "v2.101.0",
+  "published_at": "2026-09-15T14:24:34Z",
+  "release_url": "https://github.com/cli/cli/releases/tag/v2.101.0",
+  "source_commit": "0cf1092493af067646fc5f3db9421c6a6ec9c938",
+  "source_archive_sha256": "057c1bfc07ecee96fcb0a121b482464a3f10063532bace358ee37d57214ea150",
+  "assets": [
+    {
+      "name": "gh_2.101.0_checksums.txt",
+      "digest": "sha256:f8bbc37fc5568a6a162d1a67b1e9c1afa9139f7b5a46dcde4a57bdaa0db33b60",
+      "browser_download_url": "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_checksums.txt"
+    },
+    {
+      "name": "gh_2.101.0_linux_amd64.tar.gz",
+      "digest": "sha256:9bca2d1c16825f109907a23307628a2f0698fbf99662b73a5cf0b020293072b8",
+      "browser_download_url": "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_linux_amd64.tar.gz"
+    },
+    {
+      "name": "gh_2.101.0_linux_arm64.tar.gz",
+      "digest": "sha256:b57e8063f18862647c9d22727c32e9da1b963f8bf9db648fe123a6975695640f",
+      "browser_download_url": "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_linux_arm64.tar.gz"
+    },
+    {
+      "name": "gh_2.101.0_macOS_arm64.zip",
+      "digest": "sha256:e4303e39d8f07141c4bad4b99b01079f05029c59b27076e8fbc825c985ecdd8b",
+      "browser_download_url": "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_macOS_arm64.zip"
+    }
+  ],
+  "verification": "Archives checked against pinned SHA-256 and official checksums; not a signature-attestation claim."
+}

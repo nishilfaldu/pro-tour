@@ -1,0 +1,194 @@
+{
+  "cleanup": "verified",
+  "cli_version": "gh version 2.101.0 (2026-09-15)\nhttps://github.com/cli/cli/releases/tag/v2.101.0",
+  "clips": {
+    "app": {
+      "bytes": 382181,
+      "codec_name": "h264",
+      "duration": "4.000000",
+      "height": 360,
+      "nb_frames": "96",
+      "pix_fmt": "yuv420p",
+      "sha256": "dbf28fc10141edb87e89ae05431ed0aa6bf8bd22c5f27f5f28b038b63cba47b3",
+      "width": 640
+    },
+    "feature": {
+      "bytes": 360155,
+      "codec_name": "h264",
+      "duration": "4.000000",
+      "height": 360,
+      "nb_frames": "96",
+      "pix_fmt": "yuv420p",
+      "sha256": "a709f3dbec7d764f4b7aeabc7390651850f76fe6a1f5b10b6f3a2923b51e2ae3",
+      "width": 640
+    }
+  },
+  "comment": {
+    "body": "App tour \u00b7 upload check\n\nhttps://github.com/user-attachments/assets/bbd6d67b-44ea-4ff0-861a-3ab8a7d0a43e\n\nFeature tour \u00b7 upload check\n\nhttps://github.com/user-attachments/assets/d6476ff4-a028-473e-b905-0413cde58adf\n",
+    "id": 5823898166,
+    "media_urls": [
+      "https://github.com/user-attachments/assets/bbd6d67b-44ea-4ff0-861a-3ab8a7d0a43e",
+      "https://github.com/user-attachments/assets/d6476ff4-a028-473e-b905-0413cde58adf"
+    ],
+    "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1#issuecomment-5823898166"
+  },
+  "created_repository": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+  "egress": [
+    "api.github.com",
+    "denied-or-malformed",
+    "denied:127.0.0.1",
+    "denied:api.typesafe.ai",
+    "denied:api2.cursor.sh",
+    "denied:cafe.github.com",
+    "uploads.github.com"
+  ],
+  "finished_at": "2026-09-24T23:21:38+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:85b8dbec4836e39213941d0d59db129bc4a1cc2fea29d9fc45cd955e35c7609b",
+  "inline_playback_verified": false,
+  "kind": "github-media-upload-preflight",
+  "operations": [
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "authenticate_media_token"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 1,
+      "http_status": 404,
+      "operation": "find_demo"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 201,
+      "operation": "create_demo"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "baseline_ref"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 201,
+      "operation": "create_preflight_branch"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 201,
+      "operation": "commit_preflight_marker"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 201,
+      "operation": "create_preflight_pr"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_repository"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_pull_request"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "operation": "upload_two_attachments"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_media_comment"
+    }
+  ],
+  "owner": "nishilfaldu",
+  "phase": "readback",
+  "pr": 1,
+  "precredential_egress": {
+    "127.0.0.1": "HTTP/1.1 403 Forbidden",
+    "[::1]": "HTTP/1.1 403 Forbidden",
+    "api.github.com": "HTTP/1.1 200 Connection Established",
+    "api.typesafe.ai": "HTTP/1.1 403 Forbidden",
+    "api2.cursor.sh": "HTTP/1.1 403 Forbidden",
+    "uploads.github.com": "HTTP/1.1 200 Connection Established"
+  },
+  "pull_request": {
+    "base_sha": "7d8db9d5a6807e9ba235bb6d2d02d323c65355f1",
+    "head_sha": "52a22b77799cbdb8eb57e4fb5c39454d4d01e5ae",
+    "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1"
+  },
+  "real_media_credential_used": true,
+  "repo": "nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+  "repository": {
+    "full_name": "nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+    "html_url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+    "id": 1386476546,
+    "permissions": {
+      "admin": true,
+      "maintain": true,
+      "pull": true,
+      "push": true,
+      "triage": true
+    },
+    "visibility": "public"
+  },
+  "runtime": {
+    "CapDrop": [
+      "ALL"
+    ],
+    "Memory": 268435456,
+    "NetworkMode": "none",
+    "ReadonlyRootfs": true,
+    "SecurityOpt": [
+      "no-new-privileges=true"
+    ]
+  },
+  "started_at": "2026-09-24T23:21:23+00:00",
+  "status": "passed"
+}

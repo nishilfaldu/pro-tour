@@ -1,0 +1,24 @@
+{
+  "built_at": "2026-09-24T23:21:00+00:00",
+  "external_context": "/var/folders/ls/0hsp0l213fldf_40l66vvfmh0000gn/T/pro-tour-media-image-_hob9tku",
+  "image_id": "sha256:85b8dbec4836e39213941d0d59db129bc4a1cc2fea29d9fc45cd955e35c7609b",
+  "kind": "github-media-image",
+  "release": {
+    "archive_sha256": "b57e8063f18862647c9d22727c32e9da1b963f8bf9db648fe123a6975695640f",
+    "binary_sha256": "76f657388c2270fb5049305afe683b741fb7c50fba0e15b09338189123f66557",
+    "platform": "linux_arm64",
+    "url": "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_linux_arm64.tar.gz",
+    "version": "2.101.0"
+  },
+  "support_sha256": {
+    "Dockerfile": "87f1c5c685617df2ff606cc913dacfd1e321e0447820a01c1f771e5b27dbdddf",
+    "body.md": "48c27ff2d76ff285244643204cc9db65580d3c67c3b383d17cc4792cc15c5850",
+    "egress_proxy.py": "477072b2e77e56dd14d7d0421173dae6615edee75589c14e56c40d38c7d1d231",
+    "gateway.py": "6e92219a8b0058873eab72ab38bfd21837d04a94decb1077cdd2830d8ffed45f",
+    "image-id": "2d302e1583616fcd57566853a4ee73a86148302cc8e77c153e66e4e5028bb3f1",
+    "pro_tour/__init__.py": "c4a6588c2810327ebbd799d99aef5ac8773519b0c13bd2665b904c01ae208458",
+    "pro_tour/github_media.py": "79382fbfdd5834955871ebda911a26cf0afa5cf15ba34a3c7ec8e24efd1b72ae",
+    "pro_tour/sandbox.py": "78cbffca872f3a532addc8bf186e2bac528cf0fe2f4fc3ee86c487ec4809aa88",
+    "runtime.py": "93a627e4da22f10c4c78fcc03b53a59b204dfad76d8e5960fa2e2ba7ac8898f4"
+  }
+}

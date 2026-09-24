@@ -1,0 +1,42 @@
+{
+  "ambient_config_excluded": true,
+  "binary_sha256": "aa97dfb4a82f7c56063cdcbfaa39a738b923c1bdca29bd5a041b8e959ca38e04",
+  "checked_at": "2026-09-24T23:08:01+00:00",
+  "credential_names": [
+    "GH_TOKEN"
+  ],
+  "exit_code": 0,
+  "http_status": "HTTP/2.0 200 OK",
+  "owner": "nishilfaldu",
+  "owner_id": 63477134,
+  "response_header_names": [
+    "Access-Control-Allow-Origin",
+    "Access-Control-Expose-Headers",
+    "Cache-Control",
+    "Content-Security-Policy",
+    "Content-Type",
+    "Date",
+    "Etag",
+    "Github-Authentication-Token-Expiration",
+    "Last-Modified",
+    "Referrer-Policy",
+    "Server",
+    "Strict-Transport-Security",
+    "Vary",
+    "X-Accepted-Oauth-Scopes",
+    "X-Content-Type-Options",
+    "X-Frame-Options",
+    "X-Github-Api-Version-Selected",
+    "X-Github-Edge-Region",
+    "X-Github-Media-Type",
+    "X-Github-Request-Id",
+    "X-Oauth-Scopes",
+    "X-Ratelimit-Limit",
+    "X-Ratelimit-Remaining",
+    "X-Ratelimit-Reset",
+    "X-Ratelimit-Resource",
+    "X-Ratelimit-Used",
+    "X-Xss-Protection"
+  ],
+  "token_scopes": "repo"
+}

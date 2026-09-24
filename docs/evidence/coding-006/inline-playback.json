@@ -1,0 +1,219 @@
+{
+  "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1#issuecomment-5823898166",
+  "profile": "pro-tour-github-media-006",
+  "anonymous": true,
+  "videoCount": 2,
+  "app": {
+    "time": 4,
+    "ended": true,
+    "decodedFrames": 292,
+    "events": [
+      {
+        "event": "timeupdate",
+        "time": 0.000193,
+        "wall": 1790292224295
+      },
+      {
+        "event": "playing",
+        "time": 0.000396,
+        "wall": 1790292224295
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.258045,
+        "wall": 1790292224553
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.523253,
+        "wall": 1790292224819
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.790432,
+        "wall": 1790292225086
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.056418,
+        "wall": 1790292225352
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.32235,
+        "wall": 1790292225617
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.587997,
+        "wall": 1790292225883
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.852737,
+        "wall": 1790292226148
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.117206,
+        "wall": 1790292226412
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.384743,
+        "wall": 1790292226680
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.65079,
+        "wall": 1790292226946
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.916044,
+        "wall": 1790292227211
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.180027,
+        "wall": 1790292227475
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.44744,
+        "wall": 1790292227743
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.712765,
+        "wall": 1790292228008
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.979077,
+        "wall": 1790292228274
+      },
+      {
+        "event": "timeupdate",
+        "time": 4,
+        "wall": 1790292228303
+      },
+      {
+        "event": "ended",
+        "time": 4,
+        "wall": 1790292228303
+      }
+    ],
+    "sourceOrigin": "https://private-user-images.githubusercontent.com"
+  },
+  "feature": {
+    "time": 4,
+    "ended": true,
+    "decodedFrames": 100,
+    "events": [
+      {
+        "event": "timeupdate",
+        "time": 0.000675,
+        "wall": 1790292276054
+      },
+      {
+        "event": "playing",
+        "time": 0.000994,
+        "wall": 1790292276054
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.265611,
+        "wall": 1790292276319
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.532463,
+        "wall": 1790292276586
+      },
+      {
+        "event": "timeupdate",
+        "time": 0.797959,
+        "wall": 1790292276851
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.062461,
+        "wall": 1790292277116
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.329254,
+        "wall": 1790292277382
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.593732,
+        "wall": 1790292277647
+      },
+      {
+        "event": "timeupdate",
+        "time": 1.860067,
+        "wall": 1790292277913
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.126007,
+        "wall": 1790292278179
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.389788,
+        "wall": 1790292278443
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.657101,
+        "wall": 1790292278710
+      },
+      {
+        "event": "timeupdate",
+        "time": 2.923232,
+        "wall": 1790292278976
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.188541,
+        "wall": 1790292279242
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.453673,
+        "wall": 1790292279507
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.719803,
+        "wall": 1790292279773
+      },
+      {
+        "event": "timeupdate",
+        "time": 3.98504,
+        "wall": 1790292280038
+      },
+      {
+        "event": "timeupdate",
+        "time": 4,
+        "wall": 1790292280056
+      },
+      {
+        "event": "ended",
+        "time": 4,
+        "wall": 1790292280058
+      }
+    ],
+    "sourceOrigin": "https://private-user-images.githubusercontent.com"
+  },
+  "visibleLabels": [
+    "App tour · upload check",
+    "Feature tour · upload check"
+  ],
+  "verified_at": "2026-09-24T23:25:04.286Z",
+  "full_product_tours": false,
+  "notes": "Both real inline players started at zero and advanced to ended at four seconds. Screenshots show distinct animated FFmpeg patterns at frame 23. App decoded-frame count is cumulative across repeated starts while resolving screenshot file-save errors. No application journeys are claimed. GitHub media signed query strings are omitted."
+}
