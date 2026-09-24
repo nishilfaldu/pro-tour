@@ -113,6 +113,16 @@ class ModelsTest(unittest.TestCase):
         self.assertEqual(role["cli"], "claude")
         self.assertEqual(role["model_args"], ["--model", "claude-fable-5-1", "--effort", "high"])
 
+    def test_cursor_grok_effort_routes_to_available_model_id(self):
+        self.write(self.local, "skills:\n  df-easy-loop-e2e:\n    plan-critique:\n"
+                               "      model: grok-4.7\n      reasoning_effort: xhigh\n")
+        role = self.resolve()["plan-critique"]
+        self.assertEqual(role["cli"], "cursor")
+        self.assertEqual(role["model_args"], ["--model", "grok-4.7-xhigh"])
+        with self.assertRaises(models.ConfigError):
+            models.invocation("df-easy-loop-e2e", "coding",
+                              {"model": "grok-4.7", "reasoning_effort": "max"})
+
     def test_null_removes_effort(self):
         self.write(self.local, "skills:\n  df-easy-loop-e2e:\n    coding:\n      reasoning_effort: null\n")
         self.assertEqual(self.resolve()["coding"]["model_args"], ["--model", "gpt-6-astra"])

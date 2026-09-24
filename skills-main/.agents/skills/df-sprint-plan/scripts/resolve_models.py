@@ -151,18 +151,24 @@ def invocation(skill, role, spec):
             raise ConfigError("cli-default is only valid for the Gemini lane without effort")
         return "agy", []
     cli = next((cli for prefix, cli in (("claude-", "claude"), ("gpt-", "codex"),
-                                        ("gemini-", "agy")) if model.startswith(prefix)), None)
+                                        ("grok-", "cursor"), ("gemini-", "agy"))
+                if model.startswith(prefix)), None)
     if cli is None:
         raise ConfigError(f"{role}: unsupported model prefix: {model}")
     if skill.startswith("df-easy-loop-") and cli == "agy":
-        raise ConfigError("Easy Loop supports Claude and Codex models only")
+        raise ConfigError("Easy Loop supports Claude, Codex, and Cursor Grok models only")
+    if cli == "cursor" and (not skill.startswith("df-easy-loop-") or model != "grok-4.7"):
+        raise ConfigError(f"{role}: Cursor support requires Easy Loop and model grok-4.7")
     if role in {"claude", "codex", "gemini"} and cli != {"gemini": "agy"}.get(role, role):
         raise ConfigError(f"{role}: model must match the selected provider lane")
     allowed = {"claude": {"low", "medium", "high", "xhigh", "max"},
                "codex": {"none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"},
+               "cursor": {"low", "medium", "high", "xhigh"},
                "agy": {"low", "medium", "high"}}
     if effort is not None and effort not in allowed[cli]:
         raise ConfigError(f"{role}: reasoning_effort {effort} is not supported by {cli}")
+    if cli == "cursor":
+        return cli, ["--model", f"{model}-{effort or 'high'}"]
     args = ["--model", model]
     if effort is not None:
         args += (["-c", f'model_reasoning_effort="{effort}"'] if cli == "codex"

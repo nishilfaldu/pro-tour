@@ -1,0 +1,23 @@
+skills:
+  df-easy-loop-e2e:
+    requirements:
+      model: gpt-6-astra
+      reasoning_effort: xhigh
+    plan:
+      model: gpt-6-astra
+      reasoning_effort: xhigh
+    plan-critique:
+      model: grok-4.7
+      reasoning_effort: xhigh
+    plan-update:
+      model: gpt-6-astra
+      reasoning_effort: xhigh
+    coding:
+      model: gpt-6-astra
+      reasoning_effort: xhigh
+    validation:
+      model: grok-4.7
+      reasoning_effort: xhigh
+    review:
+      model: grok-4.7
+      reasoning_effort: xhigh

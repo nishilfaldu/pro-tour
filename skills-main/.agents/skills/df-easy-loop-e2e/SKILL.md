@@ -1,6 +1,6 @@
 ---
 name: df-easy-loop-e2e
-description: Orchestrates an end-to-end multi-model delivery workflow — requirements interview, plan, critique, plan update, then a coding/validation/review loop — each role its own foreground Claude Code or Codex CLI process with per-role models and session resume. Use when the user invokes df-easy-loop-e2e or wants a governed, requirements-first build.
+description: Orchestrates an end-to-end multi-model delivery workflow with user-ratified requirements, repeated plan critique, and coding/validation/review until agreement. Roles run in foreground Claude Code, Codex, or Cursor Agent CLI sessions. Use for a governed, requirements-first build.
 ---
 
 # df-easy-loop-e2e
@@ -57,12 +57,11 @@ run:
   # Requirements-agent question handoff artifacts.
   question_file: "question.md"
   user_response_file: "user-response.md"
+  decisions_file: "decisions.md" # verbatim user rulings on product disputes
 
-# Global default cap on how many times any single agent may be visited. Per-agent
-# `max_visits_per_step` overrides this. The top-level agent enforces caps; once an agent
-# reaches its cap, the top-level agent routes to `end` instead of the agent's
-# normal `next` options. This rule is NOT placed in any sub-agent's prompt.
-max_visits_per_step: 50
+# Planning and implementation continue until accepted. A user may stop the run;
+# an orchestration error still ends it. Repeated disagreement is not agreement.
+max_visits_per_step: unlimited
 
 # Runtime inputs supplied to the top-level agent OUTSIDE this workflow. If any is not
 # provided, the top-level agent must ask for it (see top_level_agent.prompt).
@@ -86,14 +85,24 @@ inputs:
 # $WORKING_DIR) for these; an undefined shell variable expands to an empty string
 # and will silently produce a blank path. Verify the final command string contains
 # no `<...>` tokens, no `$`-vars, and no empty operands before you run it.
+# For Cursor, replace `<model>` with the effort-suffixed ID in resolved
+# `model_args`, not the unsuffixed `model` field.
 #
-# REASONING EFFORT: when an agent defines a `reasoning_effort:` field, substitute
-# it into that CLI's effort flag (Claude Code: `--effort <reasoning_effort>`;
-# Codex: `-c model_reasoning_effort="<reasoning_effort>"`). When the agent has NO
-# `reasoning_effort` field, OMIT that entire effort flag so the model runs at its
-# own default. Valid values: Codex = none|minimal|low|medium|high|xhigh|max|ultra;
-# Claude Code = low|medium|high|xhigh|max.
+# REASONING EFFORT: use the resolver's model_args. Claude Code and Codex use
+# effort flags; Cursor Agent uses an effort-suffixed Grok model ID such as
+# grok-4.7-xhigh. Never append a second effort flag.
 clis:
+  cursor:
+    matches_model_prefix: "grok-"
+    run_template: |
+      cursor-agent --print --trust --force --output-format json \
+        --workspace <working_dir> --add-dir <run_dir> \
+        --model <model> "<PROMPT>"
+    session_id_from: "the session_id field of the JSON result"
+    resume_template: |
+      cursor-agent --print --trust --force --output-format json \
+        --workspace <working_dir> --add-dir <run_dir> \
+        --model <model> --resume <session_id> "<PROMPT>"
   claude_code:
     matches_model_prefix: "claude-"
     # Config dir is passed ONLY via env var (no flag exists).
@@ -145,10 +154,9 @@ top_level_agent:
     `prompt_construction` carefully.
 
     Startup inputs:
-      - claude_config_dir / codex_config_dir: if not provided, ask for each.
-        Propose the defaults (`~/.claude`, `~/.codex`), and also look for
-        existing `~/.claude*` / `~/.codex*` directories and offer them as
-        options.
+      - claude_config_dir / codex_config_dir: use the defaults (`~/.claude`,
+        `~/.codex`) unless the user supplied alternatives. Only require the
+        directory for a CLI selected by the resolved model assignments.
       - working_dir: tell the user the current working directory and ask whether
         that is where the work should happen; use their answer.
 
@@ -165,6 +173,7 @@ top_level_agent:
          agent named with the agent's slug.
       4. Ensure codex_config_dir exists before any Codex invocation (mkdir -p);
          Codex will not create its config root.
+      5. Create an empty `<run_dir>/<run.decisions_file>` for user rulings.
 
     Begin the invocation loop with the `requirements` agent.
 
@@ -178,18 +187,21 @@ top_level_agent:
          the invocation. Wait for the exact launched process to exit before
          evaluating its artifacts or routing to another agent.
       3. Use the saved resolved model/effort for this role, replacing its
-         defaults below. Choose the CLI by the resolved model prefix (`claude-` -> Claude Code,
-         `gpt-` -> Codex) and use the matching template in `clis`. Export the
+         defaults below. Choose the CLI from the resolved assignment (`claude-`
+         -> Claude Code, `gpt-` -> Codex, `grok-` -> Cursor Agent) and use the
+         matching template in `clis`. Export the
          correct config-dir env var; set the working directory to <working_dir>.
          Substitute every placeholder per the PLACEHOLDER SUBSTITUTION rules in
          `clis`; before running, confirm the final command contains no `<...>`
          tokens, no `$`-vars, and no empty path operands.
       4. Build the agent's prompt by combining `base_prompt` with that agent's
          `prompt_construction`. Supply, in the prompt: the full path to the
-         agent's visit directory, and the full path(s) to the artifact(s) it must
-         read (per the agent's `reads`).
-      5. After the process exits successfully, verify that the expected output
-         artifact(s) and `outcome.yaml` exist. If anything appears absent, wait
+         agent's visit directory, the full path(s) to the artifact(s) it must
+         read (per the agent's `reads`), and `<run_dir>/<run.decisions_file>`.
+      5. After the process exits successfully, verify `outcome.yaml` exists and
+         read its `next` value. If it routes to the same agent with `question.md`,
+         verify that question exists; otherwise verify the normal output
+         artifact(s). If anything appears absent, wait
          `run.artifact_recheck_interval_seconds` and recheck the same paths, up to
          `run.artifact_recheck_attempts` times; do not relaunch the agent. If
          anything is still absent after all rechecks, treat the invocation as a
@@ -204,21 +216,22 @@ top_level_agent:
       7. If the agent's `context` is `continue` AND a session/thread id from a
          PRIOR visit of this same agent exists, invoke via the CLI's
          `resume_template` (Claude: `--resume <session_id>`; Codex:
-         `codex exec ... resume <thread_id> "<PROMPT>"`). If `context` is `empty`,
+         `codex exec ... resume <thread_id> "<PROMPT>"`; Cursor Agent:
+         `--resume <session_id>`). If `context` is `empty`,
          always start a fresh session. The first visit of any agent is always
          fresh.
       8. It is the sub-agent's responsibility to write `<run.outcome_file>` into
-         its visit directory naming the agent to invoke next. Read only that file
-         to decide routing.
-      9. Requirements question handoff: if the `requirements` agent routes to
-         `requirements`, verify `<visit_dir>/<run.question_file>` exists, read its
-         contents exactly, present those contents to the user unmodified, and
-         capture the user's response unmodified. Before the next `requirements`
-         visit launches, write that exact response to
-         `<next_visit_dir>/<run.user_response_file>` and supply that path in the
-         next requirements-agent prompt. Do not summarize, rephrase, interpret, or
-         sanitize either the question or the response.
-      10. A visit is complete only when its expected output artifact(s) exist and
+         its visit directory naming the agent to invoke next. Use that value
+         for routing after the checks above.
+      9. Question handoff: any agent may route to itself with `question.md` when
+         an unresolved product interpretation changes required behavior. Read
+         that question exactly, present it to the user, and capture the answer
+         exactly. Append both verbatim to `<run_dir>/<run.decisions_file>`.
+         Write the answer to the next visit's `user-response.md` and supply its
+         path to the resumed agent. A question visit requires `question.md` and
+         `outcome.yaml`; the normal output artifacts are due on the resumed
+         visit. Do not infer an answer from silence.
+      10. A visit is complete only when the applicable output artifacts exist and
          its `outcome.yaml` contains one allowed `next` value. Read only
          `outcome.yaml` to route; checking the expected artifact's existence is
          allowed, but reading it is not, except for the requirements-question
@@ -227,7 +240,8 @@ top_level_agent:
          agent's `max_visits_per_step`, or the global default, before following its route.
          If the cap has been reached, route to `end`. `end` is terminal and is not
          an agent slug; never try to invoke an `end` agent. Never put the
-         visit-cap rule in any sub-agent's prompt.
+         visit-cap rule in any sub-agent's prompt. With `unlimited`, route until
+         the reviewer selects `end`, the user stops, or a terminal error occurs.
 
 # Combined with each agent's `prompt_construction` when calling that agent.
 # Replace `<next_options>` with that agent's `next:` list, copied verbatim,
@@ -237,9 +251,16 @@ base_prompt: |
   below. Read the input artifact(s) at the full path(s) provided below, do your
   task, and write your output artifact into your visit directory.
 
-  A token cache (full project context) and semantic index are available: see
-  `docs/SEMANTIC-INDEX.md` in the working directory for the token cache local
-  path and the semantic index entrypoint.
+  If `docs/SEMANTIC-INDEX.md` exists in the working directory, use it to find
+  the token cache and semantic index. Otherwise inspect the project normally.
+
+  Read the supplied decisions.md before acting. It records verbatim user rulings
+  and overrides conflicting interpretations of requirements. When a genuine
+  product ambiguity would change required behavior, write one concise question
+  with the competing interpretations to question.md and route to yourself.
+  Continue only after the user-response.md path is supplied on the next visit.
+  For technical disagreements, state the evidence and answer the other agent's
+  specific objections; preserve unresolved objections for the next round.
 
   When you have completed your work, write `outcome.yaml` into your visit
   directory containing a single field `next:` set to the slug of the agent that
@@ -303,7 +324,7 @@ agents:
   plan-critique:
     model: gpt-6-astra # -> Codex
     reasoning_effort: high
-    context: empty
+    context: continue
     reads:
       - plan.md
       - requirements.md
@@ -311,16 +332,24 @@ agents:
       - plan-critique.md
     next:
       - plan-update
+      - plan-critique
+      - coding
     prompt_construction: |
       Tell the plan-critique agent its visit directory and the full paths to
-      `plan.md` and `requirements.md`. Instruct it to read `plan.md` and
-      `requirements.md` and produce `plan-critique.md` in its visit directory. Its
-      only next option is `plan-update`.
+      the latest plan (`updated-plan.md` if present, otherwise `plan.md`),
+      `requirements.md`, and the previous critique and update when present.
+      Instruct it to produce `plan-critique.md` with each objection marked
+      resolved or open and its evidence. On the first critique route to
+      `plan-update` so an authoritative `updated-plan.md` exists. Later route
+      to `coding` only when it explicitly accepts that updated plan and no
+      objections remain; otherwise route
+      to `plan-update`. For a product ambiguity, ask via `question.md` and
+      route to `plan-critique` for the user's ruling.
 
   plan-update:
     model: claude-fable-5-1 # -> Claude Code
     reasoning_effort: high
-    context: empty
+    context: continue
     reads:
       - requirements.md
       - plan.md
@@ -328,21 +357,24 @@ agents:
     creates:
       - updated-plan.md
     next:
-      - coding
+      - plan-critique
+      - plan-update
     prompt_construction: |
       Tell the plan-update agent its visit directory and the full paths to
-      `requirements.md`, `plan.md`, and `plan-critique.md`. Instruct it to read
-      those three and produce `updated-plan.md` (NOT `plan-update.md`) in its
-      visit directory. Instruct it to preserve the plan as Markdown checklist
-      items using only unchecked `- [ ]` task checkboxes. Its only next option is
-      `coding`.
-      Tell the agent to only include genuine improvements that derisk the project
-      and make it more maintainable or well tested.
+      `requirements.md`, the latest plan, and the latest `plan-critique.md`.
+      Instruct it to answer every open objection with a change or an
+      evidence-based disagreement and produce `updated-plan.md`. Preserve
+      Markdown checklist items using only unchecked `- [ ]` markers. Route
+      to `plan-critique` for another check. For a product ambiguity, ask via
+      `question.md` and route to `plan-update`. Include only genuine
+      improvements that derisk the project and make it more maintainable or
+      well tested.
 
   coding:
     model: gpt-6-astra # -> Codex
     reasoning_effort: high
     context: continue
+    max_visits_per_step: unlimited
     reads:
       - updated-plan.md # latest review visit copy, otherwise plan-update output
       - requirements.md
@@ -352,6 +384,7 @@ agents:
       - proposed-plan-checks.md
     next:
       - validation
+      - coding
     prompt_construction: |
       Tell the coding agent its visit directory and the full paths to
       `updated-plan.md` and `requirements.md`; use the latest `updated-plan.md`
@@ -365,13 +398,17 @@ agents:
       checked and the evidence for each. Instruct it to produce
       `coding-update.md` in its visit directory, test the software it writes, and
       run any tests that are part of the repo's standard test set. Instruct it to
+      answer each open review finding with a change or evidence-backed
+      disagreement in `coding-update.md`. For a product ambiguity, ask via
+      `question.md` and route to `coding` for the user's ruling. Instruct it to
       commit every change it makes, and to never use `git add` with wildcards or
-      `-A` (add specific paths only). Its only next option is `validation`.
+      `-A` (add specific paths only). Otherwise route to `validation`.
 
   validation:
     model: gpt-6-astra # -> Codex
     reasoning_effort: high
     context: empty
+    max_visits_per_step: unlimited
     reads:
       - requirements.md
       - validation-holdout.md
@@ -397,6 +434,7 @@ agents:
     model: claude-fable-5-1 # -> Claude Code
     reasoning_effort: high
     context: continue
+    max_visits_per_step: unlimited
     reads:
       - requirements.md
       - updated-plan.md
@@ -409,6 +447,7 @@ agents:
     next:
       - end
       - coding
+      - review
     prompt_construction: |
       Tell the review agent its visit directory and the full paths to
       `requirements.md`, the latest authoritative `updated-plan.md`, every prior
@@ -423,11 +462,17 @@ agents:
       completeness against the requirements, correctness, quality concerns from
       the validation step, and the results of its own testing. If the requirements
       are not all met, it must choose `coding` next so more work can be completed.
+      It must answer each builder disagreement with evidence and mark every
+      finding open or resolved. Route to `coding` while any technical objection
+      remains open. Route to `end` only after validation passes, every plan box
+      is checked, and all objections are resolved. For a product ambiguity,
+      ask via `question.md` and route to `review` for the user's ruling.
       If validation failed because validation-holdout criteria were not met, it
       must also choose `coding` next, regardless of whether the other validation
       checks or its own tests passed. In `review.md`, describe the work as
       incomplete and identify the missing required behavior, but do not mention
-      the holdout set or holdout criteria. Its next options are `end` or `coding`.
+      the holdout set or holdout criteria. Its normal next options are `end` or
+      `coding`; `review` is only for a user question handoff.
       Also tell it the run directory's timestamp name. When it chooses `end`,
       it must copy its final `updated-plan.md` and `review.md` into
       `docs/plans/<run-timestamp>/` in the working directory and commit them

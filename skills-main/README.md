@@ -105,9 +105,9 @@ For any non-trivial skill formatting, namespacing, or workflow change:
   cost declarations plus gate-linked evidence, and issues a commit-pinned README
   badge only after every fulfillment gate passes. Bundles the generic state and
   badge helper at `.claude/skills/df-promise/scripts/promise.py`.
-- **`df-easy-loop-e2e`** — Run a requirements interview, multi-model plan and
-  critique, then a foreground coding/validation/review loop with resumable
-  Claude Code and Codex sessions.
+- **`df-easy-loop-e2e`** — Run a requirements interview, repeated plan critique
+  until acceptance, then coding/validation/review until all objections resolve.
+  Supports foreground Claude Code, Codex, and Cursor Grok 4.7 sessions.
 - **`df-easy-loop-simple`** — Run the same governed multi-model delivery loop
   from an existing specification, without the requirements interview.
 
@@ -144,6 +144,9 @@ skills:
     coding:
       model: gpt-6-astra
       reasoning_effort: high
+    plan-critique:
+      model: grok-4.7
+      reasoning_effort: xhigh
   df-easy-loop-simple:
     plan:
       model: claude-fable-5-1

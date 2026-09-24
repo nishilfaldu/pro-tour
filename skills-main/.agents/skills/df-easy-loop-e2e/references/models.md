@@ -22,6 +22,9 @@ skills:
     coding:
       model: gpt-6-astra
       reasoning_effort: high
+    plan-critique:
+      model: grok-4.7
+      reasoning_effort: xhigh
   df-easy-loop-simple:
     plan:
       model: claude-fable-5-1
@@ -74,8 +77,11 @@ critique, and execution calls; shell-quote each argument when using a shell.
 Do not pass both template defaults and resolved flags. Preserve the skill's
 existing permissions, working directories, prompts, and routing.
 
-Easy Loop roles may switch between `claude-` (Claude Code) and `gpt-` (Codex)
-models. Choose the CLI and effort flag from the resolved assignment. Resolve
+Easy Loop roles may switch between `claude-` (Claude Code), `gpt-` (Codex),
+and `grok-4.7` (Cursor Agent). Cursor uses model IDs such as
+`grok-4.7-xhigh`; the resolver appends the configured effort to `grok-4.7`
+instead of passing a separate effort flag. Check `cursor-agent models` on the
+current account before a run. Choose the CLI and effort flag from the resolved assignment. Resolve
 once after startup inputs, save the JSON as `setup/resolved-models.json`, and
 reuse it for the whole run including resumed visits. Keep using the original
 installed helper when copying `SKILL.md` into the run directory.
