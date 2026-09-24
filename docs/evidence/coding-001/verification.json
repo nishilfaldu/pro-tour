@@ -1,7 +1,7 @@
 {
   "baseline_commit": "3efcdab",
   "browser_launches": 0,
-  "collected_at": "2026-09-24T20:31:26+00:00",
+  "collected_at": "2026-09-24T20:33:35+00:00",
   "commands": [
     {
       "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv sync",
@@ -57,6 +57,11 @@
       "command": "uv pip install --python /tmp/pro-tour-coding-001-wheel-env/bin/python --no-deps --reinstall /tmp/pro-tour-coding-001-dist/pro_tour-0.1.0-py3-none-any.whl",
       "exit_code": 0,
       "note": "Rebuilt/reinstalled after final integer normalization fix; repeated CLI smoke passed from /tmp."
+    },
+    {
+      "command": "/tmp/pro-tour-coding-001-venv/bin/python -m unittest discover -s skills-main/tools/easyloop-visualizer -p test_*.py",
+      "exit_code": 0,
+      "note": "Additional existing visualizer suite: 7 passed. See visualizer-checks.log."
     }
   ],
   "full_acceptance": "not-tested",

@@ -1,0 +1,9 @@
+# Proposed plan checks — coding visit 001
+
+Only the following exact checklist item is proposed as complete. The authoritative plan remains unchanged.
+
+- [ ] **P01 — Preserve the repository and complete the critique loop.** Work on `exp/astra-xhigh-author-grok47-xhigh-reviewer`, currently tracking the same origin branch at `3efcdab` in `https://github.com/nishilfaldu/pro-tour.git`. Preserve the existing `.gitignore` addition of `.env.*` and unrelated imported skills. Root/ancestor `AGENTS.md`, root `docs/SEMANTIC-INDEX.md`, product code, and product manifests were absent during planning. Recheck scoped guidance before creating files. Use the frozen `setup/resolved-models.json`: Astra xhigh authors; Grok 4.7 xhigh critiques, validates, and reviews. Obtain an authoritative `updated-plan.md` through plan-critique/plan-update before coding; answer each technical objection with evidence and retain unresolved ones. Do not invoke Claude or Grok Fast. (R1, R10, R13, R16)
+
+Evidence: the visit began on the required branch at `3efcdab`; the matching origin tracking branch and frozen role file were inspected. Decisions were read first. Plan-critique/002 explicitly accepted plan-update/001 with O1–O3 resolved. No root/ancestor AGENTS.md or root semantic index exists. The imported skills and pre-existing `.gitignore` edit were preserved, confirmed by Git diff/status. Implementation is committed as `7b08fe92629f54eb51f4080fbbcf5327e939e8f4`. No model, prohibited CLI, or Jev integration clone/refactor was invoked. See coding-update.md and docs/evidence/coding-001/verification.json for input hashes and scope.
+
+Do not check P02, P08, P09, P25, P27, or P28: this visit advances only portions of those items and has no complete provider, isolation, sample/workflow, review, or delivery acceptance evidence. All other items remain unchecked.
