@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "editor": {"vimMode": false},
+  "permissions": {
+    "allow": [],
+    "deny": ["Shell(*)", "Read(*)", "Read(**)", "Read(/**)", "Write(*)", "Write(**)", "Write(/**)", "WebFetch(*)", "Mcp(*:*)"]
+  },
+  "approvalMode": "allowlist",
+  "network": {"useHttp1ForAgent": true},
+  "notifications": false,
+  "hints": false,
+  "suggestNextPrompt": false
+}

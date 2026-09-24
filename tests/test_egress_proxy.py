@@ -132,3 +132,25 @@ def test_denied_tunnel_never_dials_and_allowed_tunnel_relays_opaque_bytes(monkey
     # Darwin's sockaddr_un cannot fit pytest's long default temporary paths.
     with tempfile.TemporaryDirectory(prefix="pt-", dir="/tmp") as temporary:
         asyncio.run(scenario())
+
+
+def test_tunnel_deadline_closes_a_peer_that_never_sends_headers():
+    class Writer:
+        data = b""
+        closed = False
+
+        def write(self, data):
+            self.data += data
+
+        def close(self):
+            self.closed = True
+
+    async def scenario():
+        writer = Writer()
+        await egress_proxy.tunnel(
+            asyncio.StreamReader(), writer, frozenset(), asyncio.Semaphore(1), lifetime=0.01
+        )
+        assert writer.closed
+        assert writer.data.startswith(b"HTTP/1.1 403")
+
+    asyncio.run(scenario())

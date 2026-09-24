@@ -78,6 +78,7 @@ class SandboxSession:
         "controller": (("control", True),),
     }
     NETWORKS: dict[str, str] = {}
+    MEMORY = {"browser": "768m"}
 
     def __init__(self, docker: Docker, image_id: str):
         if not re.fullmatch(r"sha256:[a-f0-9]{64}", image_id):
@@ -128,7 +129,7 @@ class SandboxSession:
         name = f"{self.prefix}-{role}"
         self.containers[role] = name
         mounts = self.MOUNTS[role]
-        memory = "768m" if role == "browser" else "128m"
+        memory = self.MEMORY.get(role, "128m")
         options = [
             "create",
             "--name",

@@ -1,0 +1,11 @@
+{
+  "cleanup": "verified",
+  "error": "EROFS writing Cursor cli-config preference temporary file under /opt/policy",
+  "exit_code": 1,
+  "hook_events": 0,
+  "image_id": "sha256:3f1f5dc110ec1016c2ef48061104e0e3116c6e3e49dea8799014f37e0bb69601",
+  "model_call_succeeded": false,
+  "observed_at": "2026-09-24T21:54:41+00:00",
+  "real_cursor_credential_used": true,
+  "tool_events": 0
+}

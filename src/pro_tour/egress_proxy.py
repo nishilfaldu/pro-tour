@@ -75,10 +75,10 @@ async def relay(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> N
         await writer.drain()
 
 
-async def tunnel(reader, writer, allowed, semaphore) -> None:
+async def tunnel(reader, writer, allowed, semaphore, *, lifetime: float = 90) -> None:
     peer = None
     try:
-        async with asyncio.timeout(90), semaphore:
+        async with asyncio.timeout(lifetime), semaphore:
             header = await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), 5)
             host = destination(header, allowed)
             upstream, peer = await connect(host)

@@ -1,0 +1,20 @@
+{
+  "architecture": "linux/arm64",
+  "archive_sha256": "38d1482c945172926e780206fce8cc51c67dd4f96162bcec680903aa70d80417",
+  "archive_url": "https://downloads.cursor.com/lab/2026.09.23-86fc751/linux/arm64/agent-cli-package.tar.gz",
+  "built_at": "2026-09-24T21:57:49+00:00",
+  "cursor_index_sha256": "0f68a667487a491a88392c68b156e6218ed964f41df28b3d6fe68493fccb7790",
+  "cursor_version": "2026.09.23-86fc751",
+  "external_context": "/var/folders/ls/0hsp0l213fldf_40l66vvfmh0000gn/T/pro-tour-grok-u6cp0739/context",
+  "image_id": "sha256:9c92fc5c879dc1c85f449345ac654af582a252128d7b131376be3462e54a7b7d",
+  "kind": "grok-preflight-image",
+  "support_sha256": {
+    "Dockerfile": "50d2837d0413d101426b29306bee5dc54325617f47e04853a8b3053e580e58bd",
+    "cli-config.json": "02b2ffde6be33d03c30580a895d6c5dbbea10508defcffff0a409c540d038c8b",
+    "egress_proxy.py": "7a99253725d1f5c8bb5538279c267a0062aeb9f844548a3a5e5bcdedcbaed14c",
+    "gateway.py": "4158adb1a68135f7562257d39486beb1f9d50890ddb047b7825ce2ce1ad5a649",
+    "hooks.json": "a9b2cc2263f00e3e8c4daee7ccf49c4259210e6c5e500d2b825ed9365dfbac04",
+    "runtime.py": "7124f1e4a054dc51e3ff96b8c6e6aba7e2b5363cb3c9cc707a3d53f954c945a9",
+    "tool_gate.py": "7ac5d5c9e450cf16f3ca201796ce172079505a50e8fb7c17beebd1924d8d0a3e"
+  }
+}

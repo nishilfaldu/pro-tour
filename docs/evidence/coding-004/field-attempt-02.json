@@ -1,0 +1,23 @@
+{
+  "cleanup": "verified",
+  "error": "Workspace context exclusion is not allowed for this user, team, or selected model",
+  "exit_code": 1,
+  "helper_settings": [],
+  "hook_audit": [
+    {
+      "credential_names": [],
+      "event": "sessionStart",
+      "model": "grok-4.7-xhigh",
+      "model_id": null,
+      "model_params": null,
+      "tool": "unknown"
+    }
+  ],
+  "image_id": "sha256:822669cec7095b4cc8379fdc66c31c7619dc00fd54b34419d717c81a72ede197",
+  "launch_credential_names": [
+    "CURSOR_API_KEY"
+  ],
+  "model_call_succeeded": false,
+  "observed_at": "2026-09-24T21:57:33+00:00",
+  "workspace_entries": []
+}

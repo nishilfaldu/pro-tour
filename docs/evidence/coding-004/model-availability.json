@@ -1,0 +1,14 @@
+{
+  "available": true,
+  "cursor_version": "2026.09.23-86fc751",
+  "exit_code": 0,
+  "image_id": "sha256:3f1f5dc110ec1016c2ef48061104e0e3116c6e3e49dea8799014f37e0bb69601",
+  "launch_credential_names": [
+    "CURSOR_API_KEY"
+  ],
+  "observed_at": "2026-09-24T21:54:41+00:00",
+  "provider": "https://api2.cursor.sh",
+  "real_cursor_credential_used": true,
+  "selected_model": "grok-4.7-xhigh",
+  "workspace_entries": []
+}

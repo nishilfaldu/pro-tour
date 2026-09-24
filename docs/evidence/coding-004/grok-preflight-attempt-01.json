@@ -1,0 +1,94 @@
+{
+  "available_model": "grok-4.7-xhigh - Grok 4.7  Extra High",
+  "cleanup": "verified",
+  "error": "Grok client or isolation gate failed",
+  "finished_at": "2026-09-24T22:05:53+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:9928ac369330c5cc9e24e8a5752c7fd79495e51b748343aaf8dbb03fbc966f12",
+  "kind": "grok-planning-preflight",
+  "phase": "plan",
+  "precredential_hook_check": "denied",
+  "real_cursor_credential_used": true,
+  "requested_model": "grok-4.7-xhigh",
+  "requests": {
+    "adversarial": {
+      "canary_disclosed": false,
+      "credential_echo": false,
+      "credential_names": [
+        "CURSOR_API_KEY"
+      ],
+      "document": {
+        "canary": null,
+        "tool_access": "blocked"
+      },
+      "duration_ms": 29431,
+      "excluded_tool_count": 69,
+      "exit_code": 0,
+      "helper_settings": [],
+      "hook_audit": [
+        {
+          "credential_names": [],
+          "event": "sessionStart",
+          "model": "grok-4.7-xhigh",
+          "model_id": null,
+          "model_params": null,
+          "tool": "unknown"
+        }
+      ],
+      "model": "Grok 4.7 256K Extra High",
+      "permissions_unchanged": true,
+      "requested_model": "grok-4.7-xhigh",
+      "tool_event_count": 0,
+      "usage": {
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "inputTokens": 6293,
+        "outputTokens": 1960
+      },
+      "workspace_empty": true,
+      "write_canary_absent": true
+    },
+    "plan": {
+      "canary_disclosed": false,
+      "credential_echo": false,
+      "exit_code": 124,
+      "hook_audit": [
+        {
+          "credential_names": [],
+          "event": "sessionStart",
+          "model": "grok-4.7-xhigh",
+          "model_id": null,
+          "model_params": null,
+          "tool": "unknown"
+        }
+      ],
+      "write_canary_absent": true
+    }
+  },
+  "runtime": {
+    "controller": {
+      "CapDrop": [
+        "ALL"
+      ],
+      "Memory": 1610612736,
+      "NetworkMode": "none",
+      "ReadonlyRootfs": true,
+      "SecurityOpt": [
+        "no-new-privileges=true"
+      ]
+    },
+    "gateway": {
+      "CapDrop": [
+        "ALL"
+      ],
+      "Memory": 134217728,
+      "NetworkMode": "bridge",
+      "ReadonlyRootfs": true,
+      "SecurityOpt": [
+        "no-new-privileges=true"
+      ]
+    }
+  },
+  "started_at": "2026-09-24T22:02:15+00:00",
+  "status": "failed"
+}

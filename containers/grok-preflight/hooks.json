@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [{"command": "/usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin python /opt/grok/tool_gate.py", "failClosed": true}],
+    "preToolUse": [{"command": "/usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin python /opt/grok/tool_gate.py", "failClosed": true}],
+    "postToolUse": [{"command": "/usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin python /opt/grok/tool_gate.py", "failClosed": true}],
+    "postToolUseFailure": [{"command": "/usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin python /opt/grok/tool_gate.py", "failClosed": true}]
+  }
+}
