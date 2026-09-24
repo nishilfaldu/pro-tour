@@ -43,6 +43,14 @@
       "note": "125 product + 27 imported + 7 visualizer tests passed, with lint/format/compilation/whitespace gates."
     }
   ],
+  "delivery": {
+    "finished_product": false,
+    "implementation_commit": "30d4d275eae1a778b16b0f8fe8e42e41c6cf5f44",
+    "ls_remote_observed_sha": "30d4d275eae1a778b16b0f8fe8e42e41c6cf5f44",
+    "push_exit_code": 0,
+    "remote_branch": "exp/astra-xhigh-author-grok47-xhigh-reviewer",
+    "verified_at": "2026-09-24T21:07:44+00:00"
+  },
   "image_id": "sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477",
   "imported_sources_unchanged": true,
   "input_sha256": {
