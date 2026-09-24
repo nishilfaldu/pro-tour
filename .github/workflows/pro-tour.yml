@@ -1,0 +1,48 @@
+name: Pro Tour
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check out trusted workflow code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Classify PR files
+        id: classify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api --paginate --slurp "repos/$REPOSITORY/pulls/$PR_NUMBER/files" | jq '[.[][] | .filename]' | node scripts/classify-pr.js >> "$GITHUB_OUTPUT"
+      - name: Check out PR revision without credentials
+        if: steps.classify.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr-source
+          persist-credentials: false
+      - name: Start PR app in isolated container
+        if: steps.classify.outputs.run == 'true'
+        id: app
+        env:
+          PR_DIRECTORY: ${{ github.workspace }}/pr-source
+        run: |
+          node scripts/app-container.js "$PR_DIRECTORY" > "$RUNNER_TEMP/pro-tour-app.json"
+          jq -r '"container_id=" + .id' "$RUNNER_TEMP/pro-tour-app.json" >> "$GITHUB_OUTPUT"
+          jq -r '"url=" + .url' "$RUNNER_TEMP/pro-tour-app.json" >> "$GITHUB_OUTPUT"
+      - name: Report preflight
+        if: steps.classify.outputs.run == 'true'
+        run: echo "PR app ready at ${{ steps.app.outputs.url }}"
+      - name: Stop PR app
+        if: always() && steps.app.outputs.container_id != ''
+        env:
+          CONTAINER_ID: ${{ steps.app.outputs.container_id }}
+        run: docker rm -f "$CONTAINER_ID"

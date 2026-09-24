@@ -35,7 +35,8 @@ export function createAppServer() {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 4173);
-  createAppServer().listen(port, '127.0.0.1', () => {
-    process.stdout.write(`Task board ready at http://127.0.0.1:${port}\n`);
+  const host = process.env.HOST || '127.0.0.1';
+  createAppServer().listen(port, host, () => {
+    process.stdout.write(`Task board ready at http://${host}:${port}\n`);
   });
 }
