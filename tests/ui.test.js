@@ -3,7 +3,7 @@ import { strict as assert } from 'node:assert';
 import { chromium } from 'playwright';
 import { createAppServer } from '../sample_app/server.js';
 
-test('create, edit, change status, then reset', async () => {
+test('create, edit, change status, filter inclusion and exclusion, then reset', async () => {
   const server = createAppServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
@@ -24,6 +24,13 @@ test('create, edit, change status, then reset', async () => {
     assert.equal(await page.getByText('Prepare product demo').count(), 1);
 
     await page.getByRole('combobox', { name: 'Status for Prepare product demo' }).selectOption('done');
+    await page.locator('#status-filter').selectOption('done');
+    assert.equal(await page.locator('.task').count(), 2);
+    assert.equal(await page.getByText('Prepare product demo').count(), 1);
+    assert.equal(await page.getByText('Draft release notes').count(), 0);
+    await page.locator('#status-filter').selectOption('todo');
+    assert.equal(await page.getByText('Prepare product demo').count(), 0);
+
     await page.getByRole('button', { name: 'Reset demo' }).click();
     assert.equal(await page.locator('.task').count(), 3);
     assert.equal(await page.getByText('Prepare product demo').count(), 0);

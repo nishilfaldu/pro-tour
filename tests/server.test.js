@@ -7,7 +7,7 @@ test('serves the task board and its local assets', async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
     const base = `http://127.0.0.1:${server.address().port}`;
-    for (const [path, expected] of [['/', 'Task board'], ['/app.js', 'task-list'], ['/style.css', '.task']]) {
+    for (const [path, expected] of [['/', 'Task board'], ['/app.js', 'status-filter'], ['/style.css', '.task']]) {
       const response = await fetch(base + path);
       assert.equal(response.status, 200);
       assert.match(await response.text(), new RegExp(expected));

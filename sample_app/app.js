@@ -16,10 +16,11 @@ let editingId = null;
 const list = document.querySelector('#task-list');
 const dialog = document.querySelector('#task-dialog');
 const form = document.querySelector('#task-form');
+const filter = document.querySelector('#status-filter');
 const save = () => localStorage.setItem(storageKey, JSON.stringify(tasks));
 
 function render() {
-  const visible = tasks;
+  const visible = tasks.filter(task => filter.value === 'all' || task.status === filter.value);
   document.querySelector('#visible-count').textContent = visible.length;
   document.querySelector('#total-count').textContent = tasks.length;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
@@ -77,9 +78,11 @@ document.querySelector('#close-dialog').addEventListener('click', () => dialog.c
 document.querySelector('#cancel-dialog').addEventListener('click', () => dialog.close());
 document.querySelector('#reset').addEventListener('click', () => {
   tasks = structuredClone(seed);
+  filter.value = 'all';
   save();
   render();
 });
+filter.addEventListener('change', render);
 form.addEventListener('submit', event => {
   event.preventDefault();
   const data = new FormData(form);
