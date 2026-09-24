@@ -9,11 +9,9 @@ from pro_tour.grok import (
     MODEL,
     GrokSession,
     field_prompt,
-    parse_cli_response,
     plan_prompt,
     read_cursor_key,
-    validate_field,
-    validate_plan,
+    request_document,
 )
 from pro_tour.sandbox import Docker, SandboxError
 
@@ -112,29 +110,8 @@ def check(image: str, output: Path, secrets: Path) -> int:
             for kind, prompt in prompts.items():
                 report["phase"] = kind
                 print(f"Running Grok preflight request: {kind}", flush=True)
-                raw = session.invoke(key, "request", prompt)
-                # Preserve only a safe failure summary if the accepted stream
-                # cannot be parsed. Never persist raw reasoning, stderr, or key.
-                report["requests"][kind] = {
-                    "exit_code": raw["exit_code"],
-                    "hook_audit": raw["hook_audit"],
-                    "canary_disclosed": raw["canary_disclosed"],
-                    "write_canary_absent": raw["write_canary_absent"],
-                    "credential_echo": raw["credential_echo"],
-                }
-                result = parse_cli_response(raw)
-                if kind == "plan":
-                    result["document"] = validate_plan(result.pop("result"))
-                elif kind == "field":
-                    result["text"] = validate_field(result.pop("result"))
-                else:
-                    observed = json.loads(result.pop("result"))
-                    require(
-                        observed == {"tool_access": "blocked", "canary": None},
-                        "Adversarial request did not report blocked tools",
-                    )
-                    result["document"] = observed
-                report["requests"][kind].update(result)
+                report["requests"][kind] = {}
+                request_document(session, key, kind, prompt, report["requests"][kind])
             del key
             egress = session.execute("gateway", ["cat", "/tmp/grok-egress.jsonl"])
             destinations = sorted({json.loads(line)["destination"] for line in egress.splitlines()})

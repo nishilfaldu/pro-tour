@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/tmp/pro-tour-coding-001-venv/bin/python3",
+    "scripts/check_grok_preflight.py",
+    "--image",
+    "sha256:cc242f357c6a31ed1e45846755ac873f5867deccb44a496ced261cab2749e9cb",
+    "--output",
+    "/tmp/pro-tour-coding-005/grok-preflight-02.json",
+    "--secrets-file",
+    ".env.local"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-09-24T22:49:00+00:00",
+  "started_at": "2026-09-24T22:46:14+00:00"
+}

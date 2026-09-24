@@ -1,0 +1,19 @@
+{
+  "actual_runner": "Local Docker Desktop Linux VM, not GitHub Actions",
+  "architecture": "arm64",
+  "base_implementation_commit": "f1cd690fb3752978e87bd57b451ffccdb0462221",
+  "first_run_documents_revalidated": true,
+  "image_id": "sha256:cc242f357c6a31ed1e45846755ac873f5867deccb44a496ced261cab2749e9cb",
+  "model": "grok-4.7-xhigh",
+  "os": "linux",
+  "recorded_at": "2026-09-24T22:47:39+00:00",
+  "source_sha256": {
+    "containers/grok-preflight/gateway.py": "b90971384fcd0e61594b518324085d28ac7fa191aeb01d1ecdb98cf8647e0ef4",
+    "containers/grok-preflight/runtime.py": "24591228a108158c41144d49c4661ad22bdca12e15481470f8e03c754dc4129a",
+    "containers/grok-preflight/tool_gate.py": "7ac5d5c9e450cf16f3ca201796ce172079505a50e8fb7c17beebd1924d8d0a3e",
+    "scripts/check_grok_preflight.py": "febfddac970536097d18d6aabfbd7fab65fff05b2f0405ac8f7add8491676a57",
+    "src/pro_tour/grok.py": "7921b0c06df7fd089a8531864cc960bca2e0505cce4eb47c6f0d0c163b195aa5",
+    "tests/test_grok_preflight.py": "80318284620bcc14a64c9030392cca8c3e8cfe36b45aac4fa12754e8aa28a7a5"
+  },
+  "unchanged_runtime_image": true
+}

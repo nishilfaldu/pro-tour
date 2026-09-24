@@ -1,0 +1,41 @@
+Running ['-m', 'ruff', 'check', '--no-cache', 'src', 'tests', 'scripts', 'containers'] in .
+All checks passed!
+Running ['-m', 'ruff', 'format', '--check', '--no-cache', 'src', 'tests', 'scripts', 'containers'] in .
+31 files already formatted
+Running ['-m', 'pytest'] in .
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/happyhome/Desktop/pro-tour
+configfile: pyproject.toml
+testpaths: tests
+collected 250 items
+
+tests/test_cli.py ....                                                   [  1%]
+tests/test_config.py ................................................... [ 22%]
+.....................................................                    [ 43%]
+tests/test_egress_proxy.py ..............................                [ 55%]
+tests/test_grok.py ..................................................... [ 76%]
+....                                                                     [ 78%]
+tests/test_grok_preflight.py .............................               [ 89%]
+tests/test_jev_preflight.py .........                                    [ 93%]
+tests/test_prerequisites.py ......                                       [ 95%]
+tests/test_sandbox.py ...........                                        [100%]
+
+============================= 250 passed in 1.22s ==============================
+Running ['scripts/validate-skills.py'] in skills-main
+Skill naming validation passed
+Running ['-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_*.py'] in skills-main
+...........................
+----------------------------------------------------------------------
+Ran 27 tests in 8.557s
+
+OK
+Running ['-m', 'unittest', 'discover', '-s', 'tools/easyloop-visualizer', '-p', 'test_*.py'] in skills-main
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.004s
+
+OK
+Running ['diff', '--check'] in .
+Running ['diff', '--check', '--cached'] in .
+Compiled 32 imported Python files; overall PASS.

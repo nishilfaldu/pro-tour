@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_prefaced_adversarial_result_is_repaired_before_plan_and_field ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b06d280>
+tmp_path = PosixPath('/private/var/folders/ls/0hsp0l213fldf_40l66vvfmh0000gn/T/pytest-of-happyhome/pytest-10/test_prefaced_adversarial_resu0')
+
+    def test_prefaced_adversarial_result_is_repaired_before_plan_and_field(monkeypatch, tmp_path):
+        code, report, prompts = run_check(
+            monkeypatch,
+            tmp_path,
+            [reply(PREFACED), reply(BLOCKED), reply(json.dumps(valid_plan())), reply('{"text":"Task"}')],
+        )
+>       assert code == 0, report
+E       AssertionError: {'available_model': 'grok-4.7-xhigh - Grok 4.7 Extra High', 'cleanup': 'verified', 'error': 'Invalid preflight data', 'finished_at': '2026-09-24T22:40:09+00:00', ...}
+E       assert 1 == 0
+
+tests/test_grok_preflight.py:97: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Running Grok preflight request: adversarial
+=========================== short test summary info ============================
+FAILED tests/test_grok_preflight.py::test_prefaced_adversarial_result_is_repaired_before_plan_and_field
+1 failed in 0.06s

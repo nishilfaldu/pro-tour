@@ -1,0 +1,38 @@
+{
+  "all_documents_revalidated": true,
+  "consecutive_passes": 3,
+  "full_pipeline_verified": false,
+  "image_unchanged": true,
+  "remaining_owned_containers": [],
+  "remaining_owned_volumes": [],
+  "runs": [
+    {
+      "app_goals": 5,
+      "cleanup": "verified",
+      "feature_goals": 3,
+      "repair_count": 1,
+      "report": "grok-preflight-01.json",
+      "request_count": 4,
+      "status": "passed"
+    },
+    {
+      "app_goals": 5,
+      "cleanup": "verified",
+      "feature_goals": 4,
+      "repair_count": 1,
+      "report": "grok-preflight-02.json",
+      "request_count": 4,
+      "status": "passed"
+    },
+    {
+      "app_goals": 5,
+      "cleanup": "verified",
+      "feature_goals": 4,
+      "repair_count": 1,
+      "report": "grok-preflight-03.json",
+      "request_count": 4,
+      "status": "passed"
+    }
+  ],
+  "verified_at": "2026-09-24T22:53:16+00:00"
+}
