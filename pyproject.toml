@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pro-tour"
+version = "0.1.0"
+description = "Automatic pull-request app and feature tours"
+requires-python = ">=3.12,<3.14"
+dependencies = ["jsonschema==4.26.0"]
+
+[project.scripts]
+pro-tour = "pro_tour.cli:main"
+
+[dependency-groups]
+dev = ["pytest==8.4.2", "ruff==0.13.2", "PyYAML==6.0.2"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pro_tour"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -p no:cacheprovider"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

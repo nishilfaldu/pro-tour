@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "app": {
+    "root": "samples/task-board",
+    "install": ["npm", "ci", "--no-audit", "--no-fund"],
+    "build": ["npm", "run", "build"],
+    "start": ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"],
+    "url": "http://localhost:4173/",
+    "port": 4173,
+    "readiness_timeout_seconds": 60,
+    "public_env": {"VITE_DEMO_MODE": "true"},
+    "allowed_origins": ["http://localhost:4173"]
+  },
+  "app_paths": ["samples/task-board/**", ".pro-tour.json"],
+  "journeys": [
+    {"id": "create-task", "goal": "Create a task using synthetic demo data.", "checkpoints": ["The new task is visible in the board."]},
+    {"id": "edit-task", "goal": "Edit the task title and description.", "checkpoints": ["The updated title and description are visible."]},
+    {"id": "change-status", "goal": "Change a task from Todo to In progress.", "checkpoints": ["The task shows In progress."]}
+  ],
+  "reset": {
+    "strategy": "fresh-browser",
+    "instructions": "Use a new browser profile before each tour to restore synthetic seed tasks across Todo, In progress and Done."
+  },
+  "budgets": {
+    "install_seconds": 300,
+    "run_seconds": 1200,
+    "tour_seconds": 240,
+    "actions_per_tour": 60,
+    "provider_calls": 160,
+    "provider_timeout_seconds": 60,
+    "tour_attempts": 2
+  }
+}

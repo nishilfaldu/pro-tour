@@ -1,0 +1,29 @@
+Running ['-m', 'ruff', 'check', '--no-cache', 'src', 'tests', 'scripts'] in .
+All checks passed!
+Running ['-m', 'ruff', 'format', '--check', '--no-cache', 'src', 'tests', 'scripts'] in .
+11 files already formatted
+Running ['-m', 'pytest'] in .
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/happyhome/Desktop/pro-tour
+configfile: pyproject.toml
+testpaths: tests
+collected 114 items
+
+tests/test_cli.py ....                                                   [  3%]
+tests/test_config.py ................................................... [ 48%]
+.....................................................                    [ 94%]
+tests/test_prerequisites.py ......                                       [100%]
+
+============================= 114 passed in 0.98s ==============================
+Running ['scripts/validate-skills.py'] in skills-main
+Skill naming validation passed
+Running ['-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_*.py'] in skills-main
+...........................
+----------------------------------------------------------------------
+Ran 27 tests in 8.106s
+
+OK
+Running ['diff', '--check'] in .
+Running ['diff', '--check', '--cached'] in .
+Compiled 32 imported Python files; overall PASS.

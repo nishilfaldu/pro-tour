@@ -1,0 +1,97 @@
+{
+  "baseline_commit": "3efcdab",
+  "browser_launches": 0,
+  "collected_at": "2026-09-24T20:31:26+00:00",
+  "commands": [
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv sync",
+      "exit_code": 0,
+      "note": "Initial lock creation; Python 3.12.12 downloaded by uv."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked pytest",
+      "exit_code": 1,
+      "note": "Initial run: 104 passed, 2 failed; newline schema bug and macOS environment assertion fixed before final suite."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked python scripts/check.py",
+      "exit_code": 0,
+      "note": "Final suite: 114 product tests, 27 imported tests, 32 imported Python files compiled, Ruff and whitespace gates passed. See checks.log."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked pro-tour doctor --secrets-file .env.local --output docs/evidence/coding-001/prerequisites.json",
+      "exit_code": 0,
+      "note": "Inventory collection only; integrations unverified."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked pro-tour validate-config examples/task-board.pro-tour.json",
+      "exit_code": 0
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv build --wheel --out-dir /tmp/pro-tour-coding-001-dist",
+      "exit_code": 0
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file /tmp/pro-tour-coding-001-runtime.txt",
+      "exit_code": 0
+    },
+    {
+      "command": "uv venv --python 3.12.12 /tmp/pro-tour-coding-001-wheel-env",
+      "exit_code": 0
+    },
+    {
+      "command": "uv pip install --python /tmp/pro-tour-coding-001-wheel-env/bin/python --require-hashes -r /tmp/pro-tour-coding-001-runtime.txt",
+      "exit_code": 0
+    },
+    {
+      "command": "uv pip install --python /tmp/pro-tour-coding-001-wheel-env/bin/python --no-deps /tmp/pro-tour-coding-001-dist/pro_tour-0.1.0-py3-none-any.whl",
+      "exit_code": 0
+    },
+    {
+      "command": "/tmp/pro-tour-coding-001-wheel-env/bin/pro-tour validate-config /Users/happyhome/Desktop/pro-tour/examples/task-board.pro-tour.json",
+      "cwd": "/tmp",
+      "exit_code": 0,
+      "note": "Imported from wheel environment site-packages, not the source checkout."
+    },
+    {
+      "command": "uv pip install --python /tmp/pro-tour-coding-001-wheel-env/bin/python --no-deps --reinstall /tmp/pro-tour-coding-001-dist/pro_tour-0.1.0-py3-none-any.whl",
+      "exit_code": 0,
+      "note": "Rebuilt/reinstalled after final integer normalization fix; repeated CLI smoke passed from /tmp."
+    }
+  ],
+  "full_acceptance": "not-tested",
+  "github_mutations": 0,
+  "input_sha256": {
+    "agents/plan-critique/002/plan-critique.md": "8908466269d548b2a0516f5f3a6e6bf7fc23b927302536e5c1e325af199d9beb",
+    "agents/plan-update/001/updated-plan.md": "4eed5261e108c3a6d73a1a9c746394580be881712554152873955121b09e45d1",
+    "agents/requirements/004/requirements.md": "d07f1e68dd9a62996f3c95e8818ba94f16ec6681ade998bf8c4e1fdfcecc6d86",
+    "decisions.md": "3fc34ca64b66c1c2a84bf2a1268bc9b6681cdbf1d9b7337a0d69a516be5296e9",
+    "setup/resolved-models.json": "ef1d34ee0e2b5a0a0b10a43bcaafc48fe2e3efac82fd252f22c28d9da2f5918f"
+  },
+  "kind": "coding-001-local-verification",
+  "provider_calls": 0,
+  "schema_version": 1,
+  "source_sha256": {
+    ".python-version": "f01d748a75eb195e6fd73201279bfb23f09036ddd360eb3e9ff40ef042acbc8a",
+    "README.md": "39f04175ea28c2eea1d1b59ca0d0686aca662694c1dae62f7fca3accf0ce6e2f",
+    "docs/configuration.md": "27b26acd764831e94a0b74fae94b2ed4b396a0b4f65fa06730edc5385ea36757",
+    "examples/task-board.pro-tour.json": "8064e9c66b3bf334abccff864b619523b47a5d8061a6a2793b380b1983803161",
+    "pyproject.toml": "32cb9664c5732895f457553b184b84089392b20fc304f1a0f4bc2653edf3ba8e",
+    "scripts/check.py": "98c9c0a150a61c732b0a2ddbbcc9b06470c980d22671c8cd562b3db0dd1b6ea6",
+    "src/pro_tour/__init__.py": "c4a6588c2810327ebbd799d99aef5ac8773519b0c13bd2665b904c01ae208458",
+    "src/pro_tour/__main__.py": "0a9328813bf9239786d8da527f7801e3990289a6db247449244b6999f6c4f784",
+    "src/pro_tour/cli.py": "e73d92e0f3808aea5949bfa9a065ce9589a2f12d7f73f868bdbd2138805c2ae1",
+    "src/pro_tour/config.py": "d1d448506674cf7e09b893f362aeec5aea293721e2f0d8a647624e0cecbcf19e",
+    "src/pro_tour/config.schema.json": "a1ed051403ebdc3e88e6ddb5db72e5d70a88bc0ce903eea400f535d63ea29130",
+    "src/pro_tour/evidence.py": "6fea116b628331ca1e9c0c4b164ba72117857697afca7ca944a4b766ce291646",
+    "src/pro_tour/prerequisites.py": "7cace0ace284da5032d9139169a82025f1423c9fed886f7e885dae516281d894",
+    "tests/conftest.py": "d38e64ba5d40a1049225bf9ad00cc4554d08d48aa10a9c09a22da1bac353ddcf",
+    "tests/test_cli.py": "bd1f91668465b9f4f9f8fbd815d26630aeaf279a0d2b06f3cb46a2d5f8434292",
+    "tests/test_config.py": "9e485fb0623367c029e655126d6d026dbfd6b5384cce9ed56f1771d0cc91edfb",
+    "tests/test_prerequisites.py": "5130b808b69fe7f211468af11b7bfbf32317532f3552ea6ae609629676b0aa05",
+    "uv.lock": "a2e4bae52d8ec770acb461a1399ae796b1b5414c7b152821345184e22e3f9d69"
+  },
+  "timestamp_note": "Collection time; individual test/build invocation times were not captured. Prerequisite probes have their own start/end timestamps.",
+  "upstream_jev_acquired_or_adapted": false,
+  "wheel_sha256": "2c0500fc04de133a4325441c113d64d51d7d25dbc63497550ec3471c4dc080b6"
+}
