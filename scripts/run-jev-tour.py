@@ -74,12 +74,16 @@ def run_tour(url, goals, values, output, cdp_url):
             output.with_suffix(".trace.json").write_text(json.dumps(agent.state["history"], indent=2))
             raise
         finally:
-            recorder.stdin.write("STOP\n")
-            recorder.stdin.flush()
+            if recorder.poll() is None:
+                try:
+                    recorder.stdin.write("STOP\n")
+                    recorder.stdin.flush()
+                except BrokenPipeError:
+                    pass
             recorder.stdin.close()
             code = recorder.wait(timeout=30)
             if code != 0:
-                raise RuntimeError(f"Recorder failed: {recorder.stderr.read()[:300]}")
+                raise RuntimeError(f"Recorder failed: {recorder.stderr.read()[:1000]}")
 
 
 if __name__ == "__main__":
