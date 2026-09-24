@@ -66,6 +66,12 @@ jobs:
             sleep 1
           done
           env -i HOME="$HOME" PATH="$PATH" BU_CDP_URL=http://127.0.0.1:9223 .venv/bin/python -c 'from browser_harness.admin import ensure_daemon; ensure_daemon(wait=20)'
+      - name: Install Cursor CLI for trusted planning
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          curl --fail --location --silent --show-error https://cursor.com/install | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/cursor-agent" --version
       - name: Plan full and focused tours with Grok 4.7
         if: steps.classify.outputs.run == 'true'
         env:
