@@ -1,0 +1,10 @@
+{
+  "app": "A synthetic task board with create task, edit task, status change, and status filtering. The board has a Reset demo button and three seeded tasks: Draft release notes (To do), Review onboarding flow (In progress), and Approve color palette (Done).",
+  "resetGoal": "Click Reset demo to restore the three seed tasks before recording.",
+  "mainJourneys": ["Create a task", "Edit the created task", "Change that task's status", "Filter tasks by status"],
+  "feature": "Status filtering. Show the Done filter includes Done tasks and excludes To do and In progress tasks, then show a second filter with a different matching set.",
+  "textValues": {
+    "Task name": ["Prepare release demo", "Prepare product demo"],
+    "Details": ["Show the status filter", "Check included and excluded tasks"]
+  }
+}

@@ -14,6 +14,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+      - name: Install trusted JavaScript dependencies
+        run: npm ci
       - name: Classify PR files
         id: classify
         env:
@@ -41,6 +47,57 @@ jobs:
       - name: Report preflight
         if: steps.classify.outputs.run == 'true'
         run: echo "PR app ready at ${{ steps.app.outputs.url }}"
+      - name: Set up Python and upstream Jev
+        if: steps.classify.outputs.run == 'true'
+        uses: astral-sh/setup-uv@v5
+      - name: Install pinned upstream Jev
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          uv python install 3.12
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python 'git+https://github.com/browser-use/jev-ultrafast.git@1231850a0bf1a0c0341fe408ef1668dbbfdfac46'
+          .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
+      - name: Start credential-free Chrome and browser daemon
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          env -i HOME="$HOME" PATH="$PATH" google-chrome --headless=new --disable-dev-shm-usage --remote-debugging-address=127.0.0.1 --remote-debugging-port=9223 --user-data-dir="$RUNNER_TEMP/pro-tour-chrome" about:blank > "$RUNNER_TEMP/pro-tour-chrome.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:9223/json/version > /dev/null; then break; fi
+            sleep 1
+          done
+          env -i HOME="$HOME" PATH="$PATH" BU_CDP_URL=http://127.0.0.1:9223 .venv/bin/python -c 'from browser_harness.admin import ensure_daemon; ensure_daemon(wait=20)'
+      - name: Plan full and focused tours with Grok 4.7
+        if: steps.classify.outputs.run == 'true'
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node scripts/plan-tours.js tour-profile.json "$PR_TITLE" > "$RUNNER_TEMP/pro-tour-plan.json"
+      - name: Record two Jev tours
+        if: steps.classify.outputs.run == 'true'
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          BU_CDP_URL: http://127.0.0.1:9223
+          APP_URL: ${{ steps.app.outputs.url }}
+        run: |
+          jq '.full' "$RUNNER_TEMP/pro-tour-plan.json" > "$RUNNER_TEMP/full-goals.json"
+          jq '.focused' "$RUNNER_TEMP/pro-tour-plan.json" > "$RUNNER_TEMP/focused-goals.json"
+          jq '.textValues' tour-profile.json > "$RUNNER_TEMP/text-values.json"
+          .venv/bin/python scripts/run-jev-tour.py --url "$APP_URL" --goals "$RUNNER_TEMP/full-goals.json" --values "$RUNNER_TEMP/text-values.json" --output "$RUNNER_TEMP/full.mp4"
+          .venv/bin/python scripts/run-jev-tour.py --url "$APP_URL" --goals "$RUNNER_TEMP/focused-goals.json" --values "$RUNNER_TEMP/text-values.json" --output "$RUNNER_TEMP/focused.mp4"
+      - name: Install GitHub CLI with media upload support
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          curl --fail --location --silent --show-error https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_linux_amd64.tar.gz --output "$RUNNER_TEMP/gh.tar.gz"
+          echo '9bca2d1c16825f109907a23307628a2f0698fbf99662b73a5cf0b020293072b8  '"$RUNNER_TEMP/gh.tar.gz" | sha256sum --check --status
+          tar -xzf "$RUNNER_TEMP/gh.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/gh_2.101.0_linux_amd64/bin" >> "$GITHUB_PATH"
+      - name: Upload playable videos to the PR
+        if: steps.classify.outputs.run == 'true'
+        env:
+          GH_MEDIA_TOKEN: ${{ secrets.GH_MEDIA_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/upload-tours.js "$REPOSITORY" "$PR_NUMBER" "$RUNNER_TEMP/full.mp4" "$RUNNER_TEMP/focused.mp4"
       - name: Stop PR app
         if: always() && steps.app.outputs.container_id != ''
         env:
