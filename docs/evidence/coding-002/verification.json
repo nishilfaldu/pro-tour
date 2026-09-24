@@ -1,0 +1,91 @@
+{
+  "actual_credentials_injected": false,
+  "baseline_commit": "335e5ac2574579c27a8d7240d5eab2ae5a614a79",
+  "cleanup": {
+    "remaining_test_containers": [],
+    "remaining_test_volumes": []
+  },
+  "collected_at": "2026-09-24T21:04:37+00:00",
+  "commands": [
+    {
+      "command": "open -a Docker",
+      "exit_code": 0,
+      "note": "Started the existing installed Docker Desktop Linux engine. It is left running; no unrelated Docker resources were removed."
+    },
+    {
+      "command": "docker pull python:3.12.12-slim-bookworm",
+      "exit_code": 0,
+      "note": "Resolved and pinned base digest in Dockerfile/image.json."
+    },
+    {
+      "command": "docker build --tag pro-tour-isolation-probe:visit-002 containers/isolation-probe",
+      "exit_code": 0,
+      "note": "Trusted fixture-only context; final build log retained. No secret arguments or files."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked python scripts/check_isolation.py --image sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477 --output docs/evidence/coding-002/isolation-final.json",
+      "exit_code": 0,
+      "note": "Real Chromium app/controller boundary and real timeout/injected cancellation cleanup passed."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked python scripts/check_isolation.py --image sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477 --output docs/evidence/coding-002/isolation-negative-control.json --negative-control",
+      "exit_code": 1,
+      "note": "Expected nonzero: deliberately wrong app marker. Actual app reachable; failed verification retained with cleanup."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked pro-tour doctor --secrets-file .env.local --output docs/evidence/coding-002/prerequisites.json",
+      "exit_code": 0,
+      "note": "Availability only; no key value reported or supplied to a fixture."
+    },
+    {
+      "command": "UV_PROJECT_ENVIRONMENT=/tmp/pro-tour-coding-001-venv uv run --locked python scripts/check.py",
+      "exit_code": 0,
+      "note": "125 product + 27 imported + 7 visualizer tests passed, with lint/format/compilation/whitespace gates."
+    }
+  ],
+  "image_id": "sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477",
+  "imported_sources_unchanged": true,
+  "input_sha256": {
+    "agents/requirements/004/requirements.md": "d07f1e68dd9a62996f3c95e8818ba94f16ec6681ade998bf8c4e1fdfcecc6d86",
+    "agents/review/001/review.md": "e2a42a357bf41191c869fe0c93d97f200411eaa66aa3f3b7b452266aa5b1086f",
+    "agents/review/001/updated-plan.md": "703da17b4ca3928f5e44139f04090bdacbeee3101a87eecff7934817ab1f6c46",
+    "decisions.md": "ba970d70716c002fbbf9629af9810e0dae4d7c7f3b28e31a0555ac0d8e8c9487",
+    "setup/resolved-models.json": "ef1d34ee0e2b5a0a0b10a43bcaafc48fe2e3efac82fd252f22c28d9da2f5918f"
+  },
+  "kind": "coding-002-verification",
+  "limitations": [
+    "No GitHub Actions runner proof; this is local Linux arm64.",
+    "No trusted provider egress or dependency-download exception yet.",
+    "No actual PR source, sample, planner, Jev integration, recorder or uploader.",
+    "Fixture Chromium renderer sandbox is disabled; observed boundary is the restricted container.",
+    "Apt packages are recorded but not snapshot-pinned; fixture image is not published."
+  ],
+  "live_provider_calls": 0,
+  "schema_version": 1,
+  "source_sha256": {
+    ".gitignore": "51e9935538be13caeea1a6d83a6b0956a78ee56848eb8ad962d30faf14afb80f",
+    "README.md": "b44241a9810eb3b67ba02fa87fb1c713302696008ab3868d0a8e4d5df8b58724",
+    "containers/isolation-probe/.dockerignore": "e54e26d50ec6442115600b81bc0675b9c7a413ee58aefc60fae2fddaf6b4616d",
+    "containers/isolation-probe/Dockerfile": "fa345e6700b8fed63ae1b7bde8efa514e00b72091b04f9a9b1a51b876325964c",
+    "containers/isolation-probe/fixture.py": "58b5f3e764b677d1f0fbec4eb2e66d1e7d7736523ee997373f0271ea5092de8b",
+    "containers/isolation-probe/requirements.txt": "e860178e835770a7c017f2254b491ec1a4e6d5d2fe31978336ebdda6fd01714d",
+    "docs/isolation.md": "48fb6957f39673268e9880911b84ca53d75a5ee45c70adb34b2504bb4523f4e4",
+    "scripts/check.py": "dc9204436d156fb57d7751302900821458a121826ab8dd854b8468063560e570",
+    "scripts/check_isolation.py": "ddf6cc266395d06d3e1eb2771f5d6fd37f6241e918f3f90d2bb2152dccb1f5d6",
+    "src/pro_tour/sandbox.py": "9d2cd4961c7a1ff7eca0d92a4cffcfc8bed15c9dd610a00176dccd8688c5df88",
+    "tests/test_sandbox.py": "e8068c0d884324797e325743be84044678fb6c74222c4670dd0f45ca3130e801"
+  },
+  "timestamp_note": "Runtime reports contain invocation start/end timestamps. Build/test commands below have observed exit codes and collection time only.",
+  "upstream_source_inspection": {
+    "browser_harness_wheel_sha256": "2491459e4bfc0ee8aea22dc6c4680fc0f791b7ba553446323c50d2883449d769",
+    "integration_fork_or_refactor": false,
+    "jev_candidate_sha": "1231850a0bf1a0c0341fe408ef1668dbbfdfac46",
+    "pristine_example_executed": false,
+    "sources": [
+      "https://api.github.com/repos/browser-use/jev-ultrafast/commits/main",
+      "https://raw.githubusercontent.com/browser-use/jev-ultrafast/1231850a0bf1a0c0341fe408ef1668dbbfdfac46/pyproject.toml",
+      "https://raw.githubusercontent.com/browser-use/jev-ultrafast/1231850a0bf1a0c0341fe408ef1668dbbfdfac46/uv.lock"
+    ]
+  },
+  "video_acceptance": "not-tested"
+}

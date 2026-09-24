@@ -1,0 +1,73 @@
+{
+  "cleanup": "verified",
+  "error": "Fixture has a non-loopback interface",
+  "finished_at": "2026-09-24T20:51:45+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:3ad47003edd2f94fcd648088c58572c945925d74a246c31213165d0288cd9f02",
+  "kind": "linux-isolation-canary-probe",
+  "real_credentials_used": false,
+  "roles": {
+    "app": {
+      "cap_eff": "0000000000000000",
+      "credential_names_in_diagnostic_env": [],
+      "credential_names_seen_in_proc": [],
+      "files": {
+        "/Users/happyhome/Desktop/pro-tour/.env.local": "unreadable",
+        "/home/protour/private-canary": "unreadable",
+        "/host/.env.local": "unreadable",
+        "/proc/1/root/tmp/controller-canary": "unreadable",
+        "/root/.docker/config.json": "unreadable",
+        "/tmp/controller-canary": "unreadable",
+        "/var/run/docker.sock": "unreadable",
+        "/workspace/.env.local": "unreadable"
+      },
+      "interfaces": [
+        "bonding_masters",
+        "erspan0",
+        "gre0",
+        "gretap0",
+        "ip6_vti0",
+        "ip6gre0",
+        "ip6tnl0",
+        "ip_vti0",
+        "lo",
+        "sit0",
+        "tunl0"
+      ],
+      "namespace_creation_denied": true,
+      "namespaces": {
+        "mnt": "mnt:[4026532556]",
+        "net": "net:[4026532561]",
+        "pid": "pid:[4026532559]"
+      },
+      "no_new_privs": "1",
+      "outbound": {
+        "controller-loopback": "denied",
+        "desktop-gateway": "denied",
+        "docker-gateway": "denied",
+        "external-ipv4": "denied",
+        "external-ipv6": "denied",
+        "metadata": "denied",
+        "private-ipv6": "denied"
+      },
+      "root_escalation_denied": true,
+      "root_readonly": true,
+      "text_model_settings": [],
+      "uid": 10000,
+      "writable_channels": {
+        "app": true,
+        "control": false
+      }
+    }
+  },
+  "runner": {
+    "Architecture": "aarch64",
+    "KernelVersion": "6.12.76-linuxkit",
+    "OSType": "linux",
+    "OperatingSystem": "Docker Desktop",
+    "ServerVersion": "29.5.3"
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-24T20:51:43+00:00",
+  "status": "failed"
+}

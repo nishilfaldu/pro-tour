@@ -14,7 +14,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     commands = [
-        ([sys.executable, "-m", "ruff", "check", "--no-cache", "src", "tests", "scripts"], ROOT),
+        (
+            [
+                sys.executable,
+                "-m",
+                "ruff",
+                "check",
+                "--no-cache",
+                "src",
+                "tests",
+                "scripts",
+                "containers",
+            ],
+            ROOT,
+        ),
         (
             [
                 sys.executable,
@@ -26,6 +39,7 @@ def main() -> int:
                 "src",
                 "tests",
                 "scripts",
+                "containers",
             ],
             ROOT,
         ),
@@ -33,6 +47,19 @@ def main() -> int:
         ([sys.executable, "scripts/validate-skills.py"], ROOT / "skills-main"),
         (
             [sys.executable, "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"],
+            ROOT / "skills-main",
+        ),
+        (
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "tools/easyloop-visualizer",
+                "-p",
+                "test_*.py",
+            ],
             ROOT / "skills-main",
         ),
         (["git", "diff", "--check"], ROOT),

@@ -1,0 +1,50 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 795B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 84B done
+#3 DONE 0.0s
+
+#4 [1/7] FROM docker.io/library/python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c
+#4 resolve docker.io/library/python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 11.51kB done
+#5 DONE 0.0s
+
+#6 [2/7] RUN apt-get update && apt-get install -y --no-install-recommends     chromium socat iproute2 procps ca-certificates     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [4/7] RUN pip install --no-cache-dir --require-hashes -r /opt/probe/requirements.txt
+#7 CACHED
+
+#8 [3/7] COPY requirements.txt /opt/probe/requirements.txt
+#8 CACHED
+
+#9 [5/7] RUN install -d -o 10000 -g 10000 /run/pro-tour/app /run/pro-tour/control /workspace
+#9 CACHED
+
+#10 [6/7] COPY fixture.py /opt/probe/fixture.py
+#10 DONE 0.0s
+
+#11 [7/7] WORKDIR /workspace
+#11 DONE 0.0s
+
+#12 exporting to image
+#12 exporting layers 0.0s done
+#12 exporting manifest sha256:e499d8771a431717eaffb27cf8429014ab7e5347dedc4045887d7e3f06a28cf1 done
+#12 exporting config sha256:0bf8817627cb0a03fd597ff33e0ae0ce64d5e33541f2d27e44250a91a7d3c2e8 done
+#12 exporting attestation manifest sha256:6ee74cc3f86dcb7788190eb6101312e3c56dd1d075234aee4894f374d590221c done
+#12 exporting manifest list sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477 done
+#12 naming to docker.io/library/pro-tour-isolation-probe:visit-002 done
+#12 unpacking to docker.io/library/pro-tour-isolation-probe:visit-002 0.0s done
+#12 DONE 0.1s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/fm5xubdlxw0pfjl88l82ca2r0

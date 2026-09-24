@@ -1,0 +1,167 @@
+{
+  "chromium": {
+    "binary_present": true,
+    "launch": "not-attempted"
+  },
+  "credentials": {
+    "file_status": "read",
+    "inherited_text_model_settings": {
+      "TEXT_MODEL": "absent",
+      "TEXT_MODEL_API_KEY": "absent",
+      "TEXT_MODEL_BASE_URL": "absent"
+    },
+    "names": {
+      "CURSOR_API_KEY": "present",
+      "GH_MEDIA_TOKEN": "present",
+      "TYPESAFE_API_KEY": "present"
+    },
+    "operational_validity": "not-tested"
+  },
+  "docker_daemon": {
+    "exit_code": 0,
+    "status": "linux-daemon-observed"
+  },
+  "finished_at": "2026-09-24T21:00:22+00:00",
+  "integration_checks": {
+    "github_inline_upload": "not-tested",
+    "grok_planning": "not-tested",
+    "grok_tool_denial": "not-tested",
+    "linux_isolation": "not-tested",
+    "pr_playback": "not-tested",
+    "pristine_jev_example": "not-tested",
+    "typesafe_authentication": "not-tested"
+  },
+  "integration_ready": false,
+  "kind": "local-prerequisite-inventory",
+  "linux_utilities": {
+    "Xvfb": false,
+    "iptables": false,
+    "nft": false,
+    "unshare": false
+  },
+  "platform": {
+    "machine": "arm64",
+    "system": "Darwin"
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-24T21:00:20+00:00",
+  "tools": [
+    {
+      "argv": [
+        "python3",
+        "--version"
+      ],
+      "executable_sha256": "cf450e6bc0b00adecd12b7b13024de7000c7350801addc802bd3b45782104e79",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:20+00:00",
+      "name": "python",
+      "started_at": "2026-09-24T21:00:20+00:00",
+      "status": "observed",
+      "version": "3.12.12"
+    },
+    {
+      "argv": [
+        "uv",
+        "--version"
+      ],
+      "executable_sha256": "db161bb631ae2094da99e2a5f4f6161b325f169be37df07e46597e25124eccc2",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:20+00:00",
+      "name": "uv",
+      "started_at": "2026-09-24T21:00:20+00:00",
+      "status": "observed",
+      "version": "0.9.21"
+    },
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "executable_sha256": "4b3fe8b384e30ee917e28a9f5b79a3ca64b72b13b70d9ab2273e6e9a823f4cbf",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:20+00:00",
+      "name": "node",
+      "started_at": "2026-09-24T21:00:20+00:00",
+      "status": "observed",
+      "version": "25.9.0"
+    },
+    {
+      "argv": [
+        "npm",
+        "--version"
+      ],
+      "executable_sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:20+00:00",
+      "name": "npm",
+      "started_at": "2026-09-24T21:00:20+00:00",
+      "status": "observed",
+      "version": "11.12.1"
+    },
+    {
+      "argv": [
+        "agent",
+        "--version"
+      ],
+      "executable_sha256": "2ccc9a8e167797641448b5e5c936f006ba137a2555f117f38c5eb76a5238a233",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:21+00:00",
+      "name": "cursor",
+      "started_at": "2026-09-24T21:00:20+00:00",
+      "status": "observed",
+      "version": "2026.09.23-86fc751"
+    },
+    {
+      "argv": [
+        "gh",
+        "--version"
+      ],
+      "executable_sha256": "2ef6c63bc52dc32bc42366215f91a51b009950791806209fd7f6fc7f5b668ba2",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:21+00:00",
+      "name": "github",
+      "started_at": "2026-09-24T21:00:21+00:00",
+      "status": "observed",
+      "version": "2.94.0"
+    },
+    {
+      "argv": [
+        "ffmpeg",
+        "-version"
+      ],
+      "executable_sha256": "1ede5c7fd4e97d832ec69c97c78231875de7d69c55423158f5f4a4d923227dd5",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:21+00:00",
+      "name": "ffmpeg",
+      "started_at": "2026-09-24T21:00:21+00:00",
+      "status": "observed",
+      "version": "9.0.2"
+    },
+    {
+      "argv": [
+        "ffprobe",
+        "-version"
+      ],
+      "executable_sha256": "258fa480850eec6cf7b6831b2d3edd164cdd2f9ddb7a14965dc9fdaf9d175ff7",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:21+00:00",
+      "name": "ffprobe",
+      "started_at": "2026-09-24T21:00:21+00:00",
+      "status": "observed",
+      "version": "9.0.2"
+    },
+    {
+      "argv": [
+        "docker",
+        "--version"
+      ],
+      "executable_sha256": "73206884cd100a165e20fbab2b1f9e09e0ae8fc959ec9b02fed46152a99c5e79",
+      "exit_code": 0,
+      "finished_at": "2026-09-24T21:00:22+00:00",
+      "name": "docker",
+      "started_at": "2026-09-24T21:00:21+00:00",
+      "status": "observed",
+      "version": "29.5.3"
+    }
+  ]
+}

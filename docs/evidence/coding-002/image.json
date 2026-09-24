@@ -1,0 +1,20 @@
+{
+  "architecture": "arm64",
+  "base_image": "python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c",
+  "collected_at": "2026-09-24T21:00:42+00:00",
+  "fixture_source_sha256": {
+    "containers/isolation-probe/.dockerignore": "e54e26d50ec6442115600b81bc0675b9c7a413ee58aefc60fae2fddaf6b4616d",
+    "containers/isolation-probe/Dockerfile": "fa345e6700b8fed63ae1b7bde8efa514e00b72091b04f9a9b1a51b876325964c",
+    "containers/isolation-probe/fixture.py": "58b5f3e764b677d1f0fbec4eb2e66d1e7d7736523ee997373f0271ea5092de8b",
+    "containers/isolation-probe/requirements.txt": "e860178e835770a7c017f2254b491ec1a4e6d5d2fe31978336ebdda6fd01714d"
+  },
+  "image_created_at": "2026-09-24T20:54:00.940450757Z",
+  "image_id": "sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477",
+  "limitations": [
+    "Local synthetic fixture image only; not published as a deployable registry digest.",
+    "Base image and Python wheel are pinned; apt repository versions are recorded, not snapshot-pinned.",
+    "Linux arm64 Docker Desktop proof; GitHub Actions runner proof is pending."
+  ],
+  "os": "linux",
+  "os_packages_sha256": "a3c8a8a5540e7adb46a1bb1aecff1b392a165243658136bc5f716c48b9401bdf"
+}

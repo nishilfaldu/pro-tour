@@ -1,0 +1,938 @@
+{
+  "app_phase_probes": {
+    "build": "passed",
+    "install": "passed",
+    "start": "passed"
+  },
+  "browser": {
+    "browser_version": "Chrome/153.0.8010.52",
+    "page_title": "Isolation fixture",
+    "requests": {
+      "app": "APP_REACHABLE",
+      "controller": "denied",
+      "cursor": "denied",
+      "github": "denied",
+      "githubMedia": "denied",
+      "ipv4": "denied",
+      "ipv6": "denied",
+      "metadata": "denied",
+      "redirect": "denied",
+      "typesafe": "denied"
+    }
+  },
+  "cleanup": "verified",
+  "error": "Browser cannot reach the configured app",
+  "finished_at": "2026-09-24T21:00:43+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:64a3ed559fdabdc23a5c86d3fccc3f7a5236fd8db6d5b7c0d1c95b6c9adfb477",
+  "kind": "linux-isolation-canary-probe",
+  "negative_control": true,
+  "real_credentials_used": false,
+  "roles": {
+    "app": {
+      "cap_eff": "0000000000000000",
+      "credential_names_in_diagnostic_env": [],
+      "credential_names_seen_in_proc": [],
+      "files": {
+        "/Users/happyhome/Desktop/pro-tour/.env.local": "unreadable",
+        "/home/protour/private-canary": "unreadable",
+        "/host/.env.local": "unreadable",
+        "/proc/1/root/tmp/controller-canary": "unreadable",
+        "/root/.docker/config.json": "unreadable",
+        "/tmp/controller-canary": "unreadable",
+        "/var/run/docker.sock": "unreadable",
+        "/workspace/.env.local": "unreadable"
+      },
+      "interfaces": [
+        {
+          "addr_info": [
+            {
+              "family": "inet",
+              "label": "lo",
+              "local": "127.0.0.1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 8,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            },
+            {
+              "family": "inet6",
+              "local": "::1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 128,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            }
+          ],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "00:00:00:00:00:00",
+          "flags": [
+            "LOOPBACK",
+            "UP",
+            "LOWER_UP"
+          ],
+          "group": "default",
+          "ifindex": 1,
+          "ifname": "lo",
+          "link_type": "loopback",
+          "mtu": 65536,
+          "operstate": "UNKNOWN",
+          "qdisc": "noqueue",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 2,
+          "ifname": "tunl0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 3,
+          "ifname": "gre0",
+          "link": null,
+          "link_type": "gre",
+          "mtu": 1476,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 4,
+          "ifname": "gretap0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1462,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 5,
+          "ifname": "erspan0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1450,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 6,
+          "ifname": "ip_vti0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 7,
+          "ifname": "ip6_vti0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1428,
+          "operstate": "DOWN",
+          "permaddr": "7a86:11d7:11d4::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 8,
+          "ifname": "sit0",
+          "link": null,
+          "link_type": "sit",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 9,
+          "ifname": "ip6tnl0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1452,
+          "operstate": "DOWN",
+          "permaddr": "9ee3:325a:f907::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 10,
+          "ifname": "ip6gre0",
+          "link": null,
+          "link_type": "gre6",
+          "mtu": 1448,
+          "operstate": "DOWN",
+          "permaddr": "aeed:1334:d7cf::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        }
+      ],
+      "namespace_creation_denied": true,
+      "namespaces": {
+        "mnt": "mnt:[4026532556]",
+        "net": "net:[4026532561]",
+        "pid": "pid:[4026532559]"
+      },
+      "no_new_privs": "1",
+      "outbound": {
+        "controller-loopback": "denied",
+        "desktop-gateway": "denied",
+        "docker-gateway": "denied",
+        "external-ipv4": "denied",
+        "external-ipv6": "denied",
+        "metadata": "denied",
+        "private-ipv6": "denied"
+      },
+      "root_escalation_denied": true,
+      "root_readonly": true,
+      "routes": {
+        "4": [
+          {
+            "dev": "lo",
+            "dst": "127.0.0.0/8",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.0.0.1",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.255.255.255",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "link",
+            "table": "local",
+            "type": "broadcast"
+          }
+        ],
+        "6": [
+          {
+            "dev": "lo",
+            "dst": "::1",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          }
+        ]
+      },
+      "runtime_constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 1000000000,
+        "NetworkMode": "none",
+        "PidMode": "",
+        "PidsLimit": 256,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "text_model_settings": [],
+      "uid": 10000,
+      "writable_channels": {
+        "app": true,
+        "control": false
+      }
+    },
+    "browser": {
+      "cap_eff": "0000000000000000",
+      "credential_names_in_diagnostic_env": [],
+      "credential_names_seen_in_proc": [],
+      "files": {
+        "/Users/happyhome/Desktop/pro-tour/.env.local": "unreadable",
+        "/home/protour/private-canary": "unreadable",
+        "/host/.env.local": "unreadable",
+        "/proc/1/root/tmp/controller-canary": "unreadable",
+        "/root/.docker/config.json": "unreadable",
+        "/tmp/controller-canary": "unreadable",
+        "/var/run/docker.sock": "unreadable",
+        "/workspace/.env.local": "unreadable"
+      },
+      "interfaces": [
+        {
+          "addr_info": [
+            {
+              "family": "inet",
+              "label": "lo",
+              "local": "127.0.0.1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 8,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            },
+            {
+              "family": "inet6",
+              "local": "::1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 128,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            }
+          ],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "00:00:00:00:00:00",
+          "flags": [
+            "LOOPBACK",
+            "UP",
+            "LOWER_UP"
+          ],
+          "group": "default",
+          "ifindex": 1,
+          "ifname": "lo",
+          "link_type": "loopback",
+          "mtu": 65536,
+          "operstate": "UNKNOWN",
+          "qdisc": "noqueue",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 2,
+          "ifname": "tunl0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 3,
+          "ifname": "gre0",
+          "link": null,
+          "link_type": "gre",
+          "mtu": 1476,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 4,
+          "ifname": "gretap0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1462,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 5,
+          "ifname": "erspan0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1450,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 6,
+          "ifname": "ip_vti0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 7,
+          "ifname": "ip6_vti0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1428,
+          "operstate": "DOWN",
+          "permaddr": "3e78:956d:4d8f::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 8,
+          "ifname": "sit0",
+          "link": null,
+          "link_type": "sit",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 9,
+          "ifname": "ip6tnl0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1452,
+          "operstate": "DOWN",
+          "permaddr": "aac0:9028:5cd1::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 10,
+          "ifname": "ip6gre0",
+          "link": null,
+          "link_type": "gre6",
+          "mtu": 1448,
+          "operstate": "DOWN",
+          "permaddr": "2201:5543:6cdc::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        }
+      ],
+      "namespace_creation_denied": true,
+      "namespaces": {
+        "mnt": "mnt:[4026532690]",
+        "net": "net:[4026532695]",
+        "pid": "pid:[4026532693]"
+      },
+      "no_new_privs": "1",
+      "outbound": {
+        "controller-loopback": "denied",
+        "desktop-gateway": "denied",
+        "docker-gateway": "denied",
+        "external-ipv4": "denied",
+        "external-ipv6": "denied",
+        "metadata": "denied",
+        "private-ipv6": "denied"
+      },
+      "root_escalation_denied": true,
+      "root_readonly": true,
+      "routes": {
+        "4": [
+          {
+            "dev": "lo",
+            "dst": "127.0.0.0/8",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.0.0.1",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.255.255.255",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "link",
+            "table": "local",
+            "type": "broadcast"
+          }
+        ],
+        "6": [
+          {
+            "dev": "lo",
+            "dst": "::1",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          }
+        ]
+      },
+      "runtime_constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 805306368,
+        "MemorySwap": 805306368,
+        "NanoCpus": 1000000000,
+        "NetworkMode": "none",
+        "PidMode": "",
+        "PidsLimit": 256,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "text_model_settings": [],
+      "uid": 10000,
+      "writable_channels": {
+        "app": false,
+        "control": true
+      }
+    },
+    "controller": {
+      "cap_eff": "0000000000000000",
+      "credential_names_in_diagnostic_env": [],
+      "credential_names_seen_in_proc": [
+        "CURSOR_API_KEY",
+        "GH_MEDIA_TOKEN",
+        "TYPESAFE_API_KEY"
+      ],
+      "files": {
+        "/Users/happyhome/Desktop/pro-tour/.env.local": "unreadable",
+        "/home/protour/private-canary": "readable",
+        "/host/.env.local": "unreadable",
+        "/proc/1/root/tmp/controller-canary": "readable",
+        "/root/.docker/config.json": "unreadable",
+        "/tmp/controller-canary": "readable",
+        "/var/run/docker.sock": "unreadable",
+        "/workspace/.env.local": "unreadable"
+      },
+      "interfaces": [
+        {
+          "addr_info": [
+            {
+              "family": "inet",
+              "label": "lo",
+              "local": "127.0.0.1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 8,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            },
+            {
+              "family": "inet6",
+              "local": "::1",
+              "preferred_life_time": 4294967295,
+              "prefixlen": 128,
+              "scope": "host",
+              "valid_life_time": 4294967295
+            }
+          ],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "00:00:00:00:00:00",
+          "flags": [
+            "LOOPBACK",
+            "UP",
+            "LOWER_UP"
+          ],
+          "group": "default",
+          "ifindex": 1,
+          "ifname": "lo",
+          "link_type": "loopback",
+          "mtu": 65536,
+          "operstate": "UNKNOWN",
+          "qdisc": "noqueue",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 2,
+          "ifname": "tunl0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 3,
+          "ifname": "gre0",
+          "link": null,
+          "link_type": "gre",
+          "mtu": 1476,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 4,
+          "ifname": "gretap0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1462,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "00:00:00:00:00:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST"
+          ],
+          "group": "default",
+          "ifindex": 5,
+          "ifname": "erspan0",
+          "link": null,
+          "link_type": "ether",
+          "mtu": 1450,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 6,
+          "ifname": "ip_vti0",
+          "link": null,
+          "link_type": "ipip",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 7,
+          "ifname": "ip6_vti0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1428,
+          "operstate": "DOWN",
+          "permaddr": "d276:694d:7570::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "0.0.0.0",
+          "broadcast": "0.0.0.0",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 8,
+          "ifname": "sit0",
+          "link": null,
+          "link_type": "sit",
+          "mtu": 1480,
+          "operstate": "DOWN",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 9,
+          "ifname": "ip6tnl0",
+          "link": null,
+          "link_type": "tunnel6",
+          "mtu": 1452,
+          "operstate": "DOWN",
+          "permaddr": "e619:5793:b386::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        },
+        {
+          "addr_info": [],
+          "address": "::",
+          "broadcast": "::",
+          "flags": [
+            "NOARP"
+          ],
+          "group": "default",
+          "ifindex": 10,
+          "ifname": "ip6gre0",
+          "link": null,
+          "link_type": "gre6",
+          "mtu": 1448,
+          "operstate": "DOWN",
+          "permaddr": "56a4:9bd0:ee85::",
+          "qdisc": "noop",
+          "txqlen": 1000
+        }
+      ],
+      "namespace_creation_denied": true,
+      "namespaces": {
+        "mnt": "mnt:[4026532824]",
+        "net": "net:[4026532829]",
+        "pid": "pid:[4026532827]"
+      },
+      "no_new_privs": "1",
+      "outbound": {
+        "controller-loopback": "connected",
+        "desktop-gateway": "denied",
+        "docker-gateway": "denied",
+        "external-ipv4": "denied",
+        "external-ipv6": "denied",
+        "metadata": "denied",
+        "private-ipv6": "denied"
+      },
+      "root_escalation_denied": true,
+      "root_readonly": true,
+      "routes": {
+        "4": [
+          {
+            "dev": "lo",
+            "dst": "127.0.0.0/8",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.0.0.1",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.255.255.255",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "link",
+            "table": "local",
+            "type": "broadcast"
+          }
+        ],
+        "6": [
+          {
+            "dev": "lo",
+            "dst": "::1",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          }
+        ]
+      },
+      "runtime_constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 1000000000,
+        "NetworkMode": "none",
+        "PidMode": "",
+        "PidsLimit": 256,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "text_model_settings": [],
+      "uid": 10000,
+      "writable_channels": {
+        "app": false,
+        "control": false
+      }
+    }
+  },
+  "runner": {
+    "Architecture": "aarch64",
+    "KernelVersion": "6.12.76-linuxkit",
+    "OSType": "linux",
+    "OperatingSystem": "Docker Desktop",
+    "ServerVersion": "29.5.3"
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-24T21:00:41+00:00",
+  "status": "failed"
+}
