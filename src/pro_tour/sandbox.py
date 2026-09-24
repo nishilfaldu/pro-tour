@@ -70,6 +70,15 @@ class SandboxSession:
     client egress will require a separate, proven policy before integration.
     """
 
+    # Code-owned policies. PR configuration never supplies these maps.
+    CHANNELS = ("app", "control")
+    MOUNTS = {
+        "app": (("app", False),),
+        "browser": (("app", True), ("control", False)),
+        "controller": (("control", True),),
+    }
+    NETWORKS: dict[str, str] = {}
+
     def __init__(self, docker: Docker, image_id: str):
         if not re.fullmatch(r"sha256:[a-f0-9]{64}", image_id):
             raise SandboxError("Supply an immutable trusted local image ID")
@@ -89,7 +98,7 @@ class SandboxSession:
             info = json.loads(self.docker.run("info", "--format", "{{json .}}"))
             if info.get("OSType") != "linux":
                 raise SandboxError("A Linux Docker daemon is required")
-            for kind in ("app", "control"):
+            for kind in self.CHANNELS:
                 name = f"{self.prefix}-{kind}"
                 # Register names before mutation so even an interrupted command
                 # or lost successful response is covered by cleanup.
@@ -108,7 +117,7 @@ class SandboxSession:
     def start(self, role: str, argv: list[str]) -> str:
         if not self._entered:
             raise SandboxError("Open the sandbox session before starting processes")
-        if role not in {"app", "browser", "controller"} or role in self.containers:
+        if role not in self.MOUNTS or role in self.containers:
             raise SandboxError("Use each supported sandbox role once per session")
         if (
             not argv
@@ -118,11 +127,7 @@ class SandboxSession:
             raise SandboxError("Supply a nonempty command argument array")
         name = f"{self.prefix}-{role}"
         self.containers[role] = name
-        mounts = {
-            "app": [("app", False)],
-            "browser": [("app", True), ("control", False)],
-            "controller": [("control", True)],
-        }[role]
+        mounts = self.MOUNTS[role]
         memory = "768m" if role == "browser" else "128m"
         options = [
             "create",
@@ -134,7 +139,7 @@ class SandboxSession:
             "never",
             "--init",
             "--network",
-            "none",
+            self.NETWORKS.get(role, "none"),
             "--user",
             "10000:10000",
             "--cap-drop",

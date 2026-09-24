@@ -1,0 +1,99 @@
+{
+  "browser": {
+    "browser_fetch": {
+      "http://169.254.169.254/": "denied",
+      "http://[::1]:8182/": "denied",
+      "https://api.github.com/": "denied",
+      "https://api.typesafe.ai/": "denied"
+    },
+    "harness_prestarted": true,
+    "heading": "Example Domain",
+    "spawn_restriction_active": true
+  },
+  "cleanup": "verified",
+  "error": "Fixture marker mismatch",
+  "finished_at": "2026-09-24T21:29:19+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:9b9eb4ee78ce74938e813e00782d68b1ede6a0132a782938741c7edd42f63631",
+  "kind": "pristine-jev-example",
+  "negative_control": true,
+  "phase": "credential-free-boundary",
+  "real_credentials_used": false,
+  "requested_model": "jev-latest",
+  "runtime": {
+    "browser": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 805306368,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": true
+        }
+      ]
+    },
+    "controller": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": false
+        }
+      ]
+    },
+    "gateway": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "bridge",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": true
+        },
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": true
+        }
+      ]
+    }
+  },
+  "started_at": "2026-09-24T21:29:16+00:00",
+  "status": "failed"
+}

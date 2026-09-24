@@ -1,0 +1,46 @@
+{
+  "cleanup": "verified",
+  "image_id": "sha256:a26c2e3578d44b37234d624d98909ed9a95af3568b3655ab1d107f684541fdd3",
+  "recorded_at": "2026-09-24T21:33:13+00:00",
+  "runner": {
+    "Architecture": "aarch64",
+    "KernelVersion": "6.12.76-linuxkit",
+    "OSType": "linux",
+    "OperatingSystem": "Docker Desktop",
+    "ServerVersion": "29.5.3"
+  },
+  "support_source_sha256": {
+    "containers/jev-preflight/Dockerfile": "04c951f2d608fdb273df8cfbfbd759538f7d0f33004ba9c52943cb0951a85973",
+    "containers/jev-preflight/runtime.py": "c9846f58891f04567f2247febf99110a2d62db020eb802f356586a38f7a2071d",
+    "containers/jev-preflight/sitecustomize.py": "05c821338efa80834aac6f6205776a7bbda3e506445ff5f6bae299d971c63c52",
+    "scripts/check_jev_pristine.py": "af810761928b5dcfb690fd79c80990b754831569c93da39fe44beec7aab35c8c",
+    "scripts/prepare_jev_preflight.py": "745e2559e1e911a7cae9cffb34c8902a33e7af5ced2287c7973ee6d4abbb94fc",
+    "src/pro_tour/egress_proxy.py": "7a99253725d1f5c8bb5538279c267a0062aeb9f844548a3a5e5bcdedcbaed14c",
+    "src/pro_tour/jev_preflight.py": "225afb1b7216bed7abddac3d73d76fc96716ad852c974f54c35cbf0e979d8e88",
+    "src/pro_tour/sandbox.py": "e9dca73c5a4982534f16dd56092c42bfb4d6b38c069da65f35282e2c773c32f2",
+    "tests/test_egress_proxy.py": "0d0d2bcc775a964160bd64e07c9a22a45647bf7e92232ff5624aab4030d0fbf8",
+    "tests/test_jev_preflight.py": "7c6bf19397472a542231e426a342fe29c39112a79ab33f140c3e1f7ac9efefff"
+  },
+  "versions": {
+    "chromium": "Chromium 153.0.8010.52 built on Debian GNU/Linux 12 (bookworm)",
+    "packages": {
+      "anyio": "4.15.1",
+      "browser-harness": "0.1.13",
+      "cdp-use": "1.4.5",
+      "certifi": "2026.7.22",
+      "fetch-use": "0.4.0",
+      "h11": "0.16.0",
+      "h2": "4.4.1",
+      "hpack": "4.2.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.28.1",
+      "hyperframe": "6.1.0",
+      "idna": "3.19",
+      "pillow": "12.3.0",
+      "pip": "25.0.1",
+      "typing_extensions": "4.16.0",
+      "websockets": "15.0.1"
+    },
+    "python": "3.12.12 (main, Feb 24 2026, 20:41:46) [GCC 12.2.0]"
+  }
+}

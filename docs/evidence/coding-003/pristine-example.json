@@ -1,0 +1,397 @@
+{
+  "boundary": {
+    "browser": {
+      "controller_file_readable": false,
+      "direct_outbound": {
+        "1.1.1.1": "denied",
+        "169.254.169.254": "denied",
+        "172.17.0.1": "denied",
+        "2606:4700:4700::1111": "denied"
+      },
+      "namespaces": {
+        "mnt": "mnt:[4026532692]",
+        "net": "net:[4026532697]",
+        "pid": "pid:[4026532695]"
+      },
+      "pristine": true,
+      "proc_secret_names": [],
+      "proc_text_settings": [],
+      "provider_socket_visible": false,
+      "public_socket_visible": true,
+      "uid": 10000
+    },
+    "controller": {
+      "controller_file_readable": true,
+      "direct_outbound": {
+        "1.1.1.1": "denied",
+        "169.254.169.254": "denied",
+        "172.17.0.1": "denied",
+        "2606:4700:4700::1111": "denied"
+      },
+      "namespaces": {
+        "mnt": "mnt:[4026532826]",
+        "net": "net:[4026532831]",
+        "pid": "pid:[4026532829]"
+      },
+      "pristine": true,
+      "proc_secret_names": [
+        "CURSOR_API_KEY",
+        "GH_MEDIA_TOKEN",
+        "TYPESAFE_API_KEY"
+      ],
+      "proc_text_settings": [],
+      "provider_socket_visible": true,
+      "public_socket_visible": false,
+      "uid": 10000
+    }
+  },
+  "browser": {
+    "browser_fetch": {
+      "http://169.254.169.254/": "denied",
+      "http://[::1]:8182/": "denied",
+      "https://api.github.com/": "denied",
+      "https://api.typesafe.ai/": "denied"
+    },
+    "harness_prestarted": true,
+    "heading": "Example Domain",
+    "spawn_restriction_active": true
+  },
+  "cleanup": "verified",
+  "command": [
+    "python",
+    "examples/run.py",
+    "--url",
+    "https://example.com/",
+    "--goal",
+    "Click the Learn more link to open IANA's Example Domains page, then finish. Do not type."
+  ],
+  "egress": {
+    "browser": {
+      "fixture": 200,
+      "github": "denied",
+      "helper": "denied",
+      "ipv6": "denied",
+      "metadata": "denied",
+      "private": "denied",
+      "typesafe": "denied"
+    },
+    "controller": {
+      "fixture": "denied",
+      "github": "denied",
+      "helper": "denied",
+      "ipv6": "denied",
+      "metadata": "denied",
+      "private": "denied",
+      "typesafe": 404
+    }
+  },
+  "example": {
+    "launch": {
+      "credential_names": [
+        "TYPESAFE_API_KEY"
+      ],
+      "helper_settings": [],
+      "seccomp_filters": 2
+    },
+    "pristine": true,
+    "provider_errors": [],
+    "stderr_present": false,
+    "stdout": [
+      "  704 ms  1 actions  ready",
+      "  854 ms  1 actions  done",
+      "https://www.iana.org/help/example-domains"
+    ],
+    "trace": [
+      {
+        "choice": "e1",
+        "confidence": 0.98,
+        "event": "decision",
+        "latency_ms": 228,
+        "model": "jev-1.13.0",
+        "operation": "CLICK",
+        "raw_answers": {
+          "click_target": {
+            "choice": "1",
+            "confidence": 1.0,
+            "probabilities": {
+              "1": 1.0
+            },
+            "type": "choice"
+          },
+          "operation": {
+            "choice": "CLICK",
+            "confidence": 0.98,
+            "probabilities": {
+              "BLOCKED": 0.01,
+              "CLICK": 0.99,
+              "DONE": 0.0,
+              "WAIT": 0.0
+            },
+            "type": "choice"
+          }
+        },
+        "target": "1",
+        "usage": {
+          "input_tokens": 1108,
+          "output_tokens": 69
+        }
+      },
+      {
+        "event": "state",
+        "history": [],
+        "status": "predicted",
+        "text_calls": 0,
+        "title": "Example Domain",
+        "url": "https://example.com/"
+      },
+      {
+        "event": "state",
+        "history": [
+          {
+            "action": "Learn more",
+            "choice": "e1",
+            "confidence": 0.98,
+            "elapsed_ms": 704,
+            "executed_ms": 237,
+            "kind": "click",
+            "latency_ms": 228,
+            "operation": "CLICK",
+            "page_changed": true,
+            "probability": 1.0,
+            "step": 1,
+            "target": "1",
+            "text": null,
+            "text_helper": null,
+            "text_latency_ms": 0,
+            "url": "https://www.iana.org/help/example-domains",
+            "usage": {
+              "input_tokens": 1108,
+              "output_tokens": 69
+            }
+          }
+        ],
+        "status": "ready",
+        "text_calls": 0,
+        "title": "Example Domains",
+        "url": "https://www.iana.org/help/example-domains"
+      },
+      {
+        "choice": "DONE",
+        "confidence": 0.89,
+        "event": "decision",
+        "latency_ms": 115,
+        "model": "jev-1.13.0",
+        "operation": "DONE",
+        "raw_answers": {
+          "click_target": {
+            "choice": "9",
+            "confidence": 0.59,
+            "probabilities": {
+              "1": 0.09999999999999999,
+              "10": 0.01,
+              "11": 0.0,
+              "12": 0.0,
+              "13": 0.0,
+              "14": 0.0,
+              "15": 0.0,
+              "16": 0.0,
+              "17": 0.0,
+              "18": 0.0,
+              "19": 0.0,
+              "2": 0.14,
+              "20": 0.0,
+              "21": 0.0,
+              "22": 0.0,
+              "23": 0.0,
+              "24": 0.0,
+              "25": 0.0,
+              "26": 0.0,
+              "27": 0.0,
+              "28": 0.0,
+              "29": 0.0,
+              "3": 0.0,
+              "4": 0.0,
+              "5": 0.0,
+              "6": 0.11,
+              "7": 0.03,
+              "8": 0.0,
+              "9": 0.61
+            },
+            "type": "choice"
+          },
+          "operation": {
+            "choice": "DONE",
+            "confidence": 0.89,
+            "probabilities": {
+              "BLOCKED": 0.06,
+              "CLICK": 0.02,
+              "DONE": 0.92,
+              "SCROLL_DOWN": 0.0,
+              "WAIT": 0.0
+            },
+            "type": "choice"
+          }
+        },
+        "target": null,
+        "usage": {
+          "input_tokens": 3833,
+          "output_tokens": 294
+        }
+      },
+      {
+        "event": "state",
+        "history": [
+          {
+            "action": "Learn more",
+            "choice": "e1",
+            "confidence": 0.98,
+            "elapsed_ms": 704,
+            "executed_ms": 237,
+            "kind": "click",
+            "latency_ms": 228,
+            "operation": "CLICK",
+            "page_changed": true,
+            "probability": 1.0,
+            "step": 1,
+            "target": "1",
+            "text": null,
+            "text_helper": null,
+            "text_latency_ms": 0,
+            "url": "https://www.iana.org/help/example-domains",
+            "usage": {
+              "input_tokens": 1108,
+              "output_tokens": 69
+            }
+          }
+        ],
+        "status": "predicted",
+        "text_calls": 0,
+        "title": "Example Domains",
+        "url": "https://www.iana.org/help/example-domains"
+      },
+      {
+        "event": "state",
+        "history": [
+          {
+            "action": "Learn more",
+            "choice": "e1",
+            "confidence": 0.98,
+            "elapsed_ms": 704,
+            "executed_ms": 237,
+            "kind": "click",
+            "latency_ms": 228,
+            "operation": "CLICK",
+            "page_changed": true,
+            "probability": 1.0,
+            "step": 1,
+            "target": "1",
+            "text": null,
+            "text_helper": null,
+            "text_latency_ms": 0,
+            "url": "https://www.iana.org/help/example-domains",
+            "usage": {
+              "input_tokens": 1108,
+              "output_tokens": 69
+            }
+          }
+        ],
+        "status": "done",
+        "text_calls": 0,
+        "title": "Example Domains",
+        "url": "https://www.iana.org/help/example-domains"
+      }
+    ]
+  },
+  "example_exit_code": 0,
+  "finished_at": "2026-09-24T21:32:04+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:a26c2e3578d44b37234d624d98909ed9a95af3568b3655ab1d107f684541fdd3",
+  "kind": "pristine-jev-example",
+  "missing_harness": {
+    "restart_denied": true
+  },
+  "negative_control": false,
+  "phase": "unchanged-example",
+  "precredential_gate": "passed",
+  "real_credentials_used": true,
+  "requested_model": "jev-latest",
+  "runtime": {
+    "browser": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 805306368,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": true
+        }
+      ]
+    },
+    "controller": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": false
+        }
+      ]
+    },
+    "gateway": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "bridge",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": true
+        },
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": true
+        }
+      ]
+    }
+  },
+  "spawn_check": {
+    "spawn_denied": true
+  },
+  "started_at": "2026-09-24T21:31:59+00:00",
+  "status": "passed"
+}

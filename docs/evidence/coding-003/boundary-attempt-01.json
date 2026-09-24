@@ -1,0 +1,171 @@
+{
+  "boundary": {
+    "browser": {
+      "controller_file_readable": false,
+      "direct_outbound": {
+        "1.1.1.1": "denied",
+        "169.254.169.254": "denied",
+        "172.17.0.1": "denied",
+        "2606:4700:4700::1111": "denied"
+      },
+      "namespaces": {
+        "mnt": "mnt:[4026532692]",
+        "net": "net:[4026532697]",
+        "pid": "pid:[4026532695]"
+      },
+      "pristine": true,
+      "proc_secret_names": [],
+      "proc_text_settings": [],
+      "provider_socket_visible": false,
+      "public_socket_visible": true,
+      "uid": 10000
+    },
+    "controller": {
+      "controller_file_readable": true,
+      "direct_outbound": {
+        "1.1.1.1": "denied",
+        "169.254.169.254": "denied",
+        "172.17.0.1": "denied",
+        "2606:4700:4700::1111": "denied"
+      },
+      "namespaces": {
+        "mnt": "mnt:[4026532826]",
+        "net": "net:[4026532831]",
+        "pid": "pid:[4026532829]"
+      },
+      "pristine": true,
+      "proc_secret_names": [
+        "CURSOR_API_KEY",
+        "GH_MEDIA_TOKEN",
+        "TYPESAFE_API_KEY"
+      ],
+      "proc_text_settings": [],
+      "provider_socket_visible": true,
+      "public_socket_visible": false,
+      "uid": 10000
+    }
+  },
+  "browser": {
+    "browser_fetch": {
+      "http://169.254.169.254/": "denied",
+      "http://[::1]:8182/": "denied",
+      "https://api.github.com/": "denied",
+      "https://api.typesafe.ai/": "denied"
+    },
+    "harness_prestarted": true,
+    "heading": "Example Domain",
+    "spawn_restriction_active": true
+  },
+  "cleanup": "verified",
+  "egress": {
+    "browser": {
+      "fixture": 200,
+      "github": "denied",
+      "helper": "denied",
+      "ipv6": "denied",
+      "metadata": "denied",
+      "private": "denied",
+      "typesafe": "denied"
+    },
+    "controller": {
+      "fixture": "denied",
+      "github": "denied",
+      "helper": "denied",
+      "ipv6": "denied",
+      "metadata": "denied",
+      "private": "denied",
+      "typesafe": 404
+    }
+  },
+  "finished_at": "2026-09-24T21:28:44+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:9b9eb4ee78ce74938e813e00782d68b1ede6a0132a782938741c7edd42f63631",
+  "kind": "pristine-jev-example",
+  "missing_harness": {
+    "restart_denied": true
+  },
+  "negative_control": false,
+  "phase": "credential-free-boundary",
+  "precredential_gate": "passed",
+  "real_credentials_used": false,
+  "requested_model": "jev-latest",
+  "runtime": {
+    "browser": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 805306368,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": true
+        }
+      ]
+    },
+    "controller": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "none",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": false
+        },
+        {
+          "Destination": "/run/pro-tour/control",
+          "RW": false
+        }
+      ]
+    },
+    "gateway": {
+      "constraints": {
+        "CapDrop": [
+          "ALL"
+        ],
+        "Memory": 134217728,
+        "NetworkMode": "bridge",
+        "PidsLimit": 256,
+        "ReadonlyRootfs": true,
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ]
+      },
+      "mounts": [
+        {
+          "Destination": "/run/pro-tour/public",
+          "RW": true
+        },
+        {
+          "Destination": "/run/pro-tour/provider",
+          "RW": true
+        }
+      ]
+    }
+  },
+  "spawn_check": {
+    "spawn_denied": true
+  },
+  "started_at": "2026-09-24T21:28:40+00:00",
+  "status": "boundary-only"
+}
