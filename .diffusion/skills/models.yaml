@@ -1,4 +1,14 @@
 skills:
+  df-easy-loop-implementation-experiment:
+    coding:
+      model: gpt-6-sol
+      reasoning_effort: low
+    validation:
+      model: grok-4.7
+      reasoning_effort: low
+    review:
+      model: grok-4.7
+      reasoning_effort: low
   df-easy-loop-e2e:
     requirements:
       model: gpt-6-astra
