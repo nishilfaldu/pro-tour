@@ -1,0 +1,9 @@
+{
+  "cleanup": "verified",
+  "dispatched_at": "2026-09-24T23:39:44+00:00",
+  "implementation_commit": "8ddf41af6c8d6c7cf4c58dcf658c218f3c5a7d09",
+  "runs": [],
+  "uploader_credential": "GH_MEDIA_TOKEN mapped to GH_TOKEN; no connector credential used for upload",
+  "workflow_commit": "c7de091bb67a8d944d21ae6301ac39d196b7c8d1",
+  "workflow_installation": "GitHub connector create_file; normal OAuth Git push lacked workflow scope"
+}

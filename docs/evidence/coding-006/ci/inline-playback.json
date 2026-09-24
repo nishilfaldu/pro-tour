@@ -1,0 +1,225 @@
+{
+  "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1#issuecomment-5824095753",
+  "verifiedAt": "2026-09-24T23:45:36.387Z",
+  "anonymous": true,
+  "videoCount": 2,
+  "fullProductTours": false,
+  "players": [
+    {
+      "label": "App tour · upload check",
+      "events": [
+        {
+          "event": "timeupdate",
+          "time": 0.000243,
+          "wall": 1790293536406
+        },
+        {
+          "event": "playing",
+          "time": 0.000613,
+          "wall": 1790293536406
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.259332,
+          "wall": 1790293536665
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.525507,
+          "wall": 1790293536931
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.791146,
+          "wall": 1790293537196
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.057404,
+          "wall": 1790293537463
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.321701,
+          "wall": 1790293537727
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.588094,
+          "wall": 1790293537993
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.853652,
+          "wall": 1790293538259
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.118267,
+          "wall": 1790293538523
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.383694,
+          "wall": 1790293538789
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.650164,
+          "wall": 1790293539055
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.916098,
+          "wall": 1790293539321
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.181633,
+          "wall": 1790293539587
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.446844,
+          "wall": 1790293539852
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.712428,
+          "wall": 1790293540118
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.979042,
+          "wall": 1790293540384
+        },
+        {
+          "event": "timeupdate",
+          "time": 4,
+          "wall": 1790293540406
+        },
+        {
+          "event": "ended",
+          "time": 4,
+          "wall": 1790293540406
+        }
+      ],
+      "time": 4,
+      "duration": 4,
+      "ended": true,
+      "error": null,
+      "controls": true,
+      "decodedFrames": 100,
+      "sourceOrigin": "https://private-user-images.githubusercontent.com"
+    },
+    {
+      "label": "Feature tour · upload check",
+      "events": [
+        {
+          "event": "timeupdate",
+          "time": 0.000191,
+          "wall": 1790293553793
+        },
+        {
+          "event": "playing",
+          "time": 0.000363,
+          "wall": 1790293553793
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.26247,
+          "wall": 1790293554055
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.528258,
+          "wall": 1790293554321
+        },
+        {
+          "event": "timeupdate",
+          "time": 0.793026,
+          "wall": 1790293554586
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.058784,
+          "wall": 1790293554851
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.325478,
+          "wall": 1790293555118
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.591014,
+          "wall": 1790293555383
+        },
+        {
+          "event": "timeupdate",
+          "time": 1.857293,
+          "wall": 1790293555650
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.121788,
+          "wall": 1790293555914
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.38726,
+          "wall": 1790293556180
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.653737,
+          "wall": 1790293556446
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.919421,
+          "wall": 1790293556712
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.18465,
+          "wall": 1790293556977
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.450693,
+          "wall": 1790293557243
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.716667,
+          "wall": 1790293557509
+        },
+        {
+          "event": "timeupdate",
+          "time": 3.98171,
+          "wall": 1790293557774
+        },
+        {
+          "event": "timeupdate",
+          "time": 4,
+          "wall": 1790293557795
+        },
+        {
+          "event": "ended",
+          "time": 4,
+          "wall": 1790293557795
+        }
+      ],
+      "time": 4,
+      "duration": 4,
+      "ended": true,
+      "error": null,
+      "controls": true,
+      "decodedFrames": 100,
+      "sourceOrigin": "https://private-user-images.githubusercontent.com"
+    }
+  ],
+  "finishedAt": "2026-09-24T23:46:12.552Z",
+  "notes": "Both CI-uploaded clips played from zero to ended at four seconds in an anonymous GitHub PR conversation. Screenshots show different synthetic animated patterns. No product journeys are claimed. Signed media URL queries are omitted."
+}

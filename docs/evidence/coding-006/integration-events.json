@@ -1,0 +1,26 @@
+{
+  "kind": "coding-006-setup-observations",
+  "events": [
+    {
+      "operation": "unauthenticated_exact_private_source_download",
+      "http_status": 404,
+      "evidence": "ci-setup.json",
+      "resolution": "Exported only ten explicitly selected newly authored preflight files with per-file SHA-256 values; no unrelated private contents."
+    },
+    {
+      "operation": "git_push_workflow_using_normal_configured_oauth_credential",
+      "rejected_local_commit": "14326e5d6920c6934b74b34c7f4130dd035d4c4f",
+      "observed_remote_reason": "refusing to allow an OAuth App to create or update workflow '.github/workflows/media-preflight.yml' without 'workflow' scope",
+      "evidence_kind": "Sanitized observation transcribed from the actual git push result; raw log not retained.",
+      "resolution": "Amended only the unpublished local commit to export sources without the workflow; pushed d9f6d579291405c75ab9497e437b8c0c801ecac4. The installed GitHub connector committed the exact workflow as c7de091bb67a8d944d21ae6301ac39d196b7c8d1."
+    },
+    {
+      "operation": "workflow_dispatch_and_token_only_upload",
+      "run_id": 36073840252,
+      "conclusion": "success",
+      "credential": "GH_MEDIA_TOKEN mapped to GH_TOKEN only in the isolated CLI",
+      "evidence": "ci/run.json and ci/media-preflight.json"
+    }
+  ],
+  "full_pipeline_verified": false
+}

@@ -1,0 +1,139 @@
+{
+  "cleanup": "verified",
+  "cli_version": "gh version 2.101.0 (2026-09-15)\nhttps://github.com/cli/cli/releases/tag/v2.101.0",
+  "clips": {
+    "app": {
+      "bytes": 382375,
+      "codec_name": "h264",
+      "duration": "4.000000",
+      "height": 360,
+      "nb_frames": "96",
+      "pix_fmt": "yuv420p",
+      "sha256": "806d17a4052b7a1064430b05898a8afa06f22e83fef971fd69a9ae80e6ebd784",
+      "width": 640
+    },
+    "feature": {
+      "bytes": 360552,
+      "codec_name": "h264",
+      "duration": "4.000000",
+      "height": 360,
+      "nb_frames": "96",
+      "pix_fmt": "yuv420p",
+      "sha256": "e329e898f7fa1947194afa017566f0e26f20684993cf63e4f0b2db6417b08c2a",
+      "width": 640
+    }
+  },
+  "comment": {
+    "body": "App tour \u00b7 upload check\n\nhttps://github.com/user-attachments/assets/bd8cae68-5677-46d8-8259-1881ffafad84\n\nFeature tour \u00b7 upload check\n\nhttps://github.com/user-attachments/assets/d16e411e-f73b-4b9d-a9a3-a597da83c4b2\n",
+    "id": 5824095753,
+    "media_urls": [
+      "https://github.com/user-attachments/assets/bd8cae68-5677-46d8-8259-1881ffafad84",
+      "https://github.com/user-attachments/assets/d16e411e-f73b-4b9d-a9a3-a597da83c4b2"
+    ],
+    "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1#issuecomment-5824095753"
+  },
+  "egress": [
+    "api.github.com",
+    "denied-or-malformed",
+    "denied:127.0.0.1",
+    "denied:api.typesafe.ai",
+    "denied:api2.cursor.sh",
+    "denied:cafe.github.com",
+    "uploads.github.com"
+  ],
+  "finished_at": "2026-09-24T23:40:30+00:00",
+  "full_pipeline_verified": false,
+  "image_id": "sha256:fc209f86512d0ff1853f8c6b52104f75a4b4a59ec42222546aa1aafaff622d9a",
+  "inline_playback_verified": false,
+  "kind": "github-media-upload-preflight",
+  "operations": [
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "authenticate_media_token"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_repository"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_pull_request"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "operation": "upload_two_attachments"
+    },
+    {
+      "ambient_config_excluded": true,
+      "credential_names": [
+        "GH_TOKEN"
+      ],
+      "exit_code": 0,
+      "http_status": 200,
+      "operation": "read_media_comment"
+    }
+  ],
+  "owner": "nishilfaldu",
+  "phase": "readback",
+  "pr": 1,
+  "precredential_egress": {
+    "127.0.0.1": "HTTP/1.1 403 Forbidden",
+    "[::1]": "HTTP/1.1 403 Forbidden",
+    "api.github.com": "HTTP/1.1 200 Connection Established",
+    "api.typesafe.ai": "HTTP/1.1 403 Forbidden",
+    "api2.cursor.sh": "HTTP/1.1 403 Forbidden",
+    "uploads.github.com": "HTTP/1.1 200 Connection Established"
+  },
+  "pull_request": {
+    "base_sha": "7d8db9d5a6807e9ba235bb6d2d02d323c65355f1",
+    "head_sha": "52a22b77799cbdb8eb57e4fb5c39454d4d01e5ae",
+    "url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700/pull/1"
+  },
+  "real_media_credential_used": true,
+  "repo": "nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+  "repository": {
+    "full_name": "nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+    "html_url": "https://github.com/nishilfaldu/pro-tour-task-board-demo-20260924-122700",
+    "id": 1386476546,
+    "permissions": {
+      "admin": true,
+      "maintain": true,
+      "pull": true,
+      "push": true,
+      "triage": true
+    },
+    "visibility": "public"
+  },
+  "runtime": {
+    "CapDrop": [
+      "ALL"
+    ],
+    "Memory": 268435456,
+    "NetworkMode": "none",
+    "ReadonlyRootfs": true,
+    "SecurityOpt": [
+      "no-new-privileges=true"
+    ]
+  },
+  "started_at": "2026-09-24T23:40:24+00:00",
+  "status": "passed"
+}

@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-09-24T23:49:51.004612+00:00",
+  "yaml": "passed",
+  "bash_syntax_steps": 4,
+  "embedded_python_blocks": 3,
+  "installed_workflow_matches": true,
+  "workflow_sha256": "a16c7c4b87176a1898cf3663eba1b5addad249fe370419e2fe1f9d72b21ebae1",
+  "exported_source_files_match": 10,
+  "implementation_commit": "8ddf41af6c8d6c7cf4c58dcf658c218f3c5a7d09",
+  "actual_ci_run_id": 36073840252,
+  "actual_ci_conclusion": "success"
+}

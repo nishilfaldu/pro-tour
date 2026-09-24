@@ -1,0 +1,23 @@
+{
+  "cleanup": "verified",
+  "finished_at": "2026-09-24T23:34:12+00:00",
+  "secret_setup": {
+    "ambient_config_excluded": true,
+    "credential_names": [
+      "GH_TOKEN"
+    ],
+    "exit_code": 0,
+    "name": "GH_MEDIA_TOKEN",
+    "repository": "nishilfaldu/pro-tour-task-board-demo-20260924-122700"
+  },
+  "source_fetch_experiment": {
+    "authenticated": false,
+    "status": 404,
+    "url": "https://codeload.github.com/nishilfaldu/pro-tour/tar.gz/8ddf41af6c8d6c7cf4c58dcf658c218f3c5a7d09"
+  },
+  "source_repository": {
+    "full_name": "nishilfaldu/pro-tour",
+    "visibility": "private"
+  },
+  "started_at": "2026-09-24T23:34:08+00:00"
+}
