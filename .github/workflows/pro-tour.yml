@@ -78,6 +78,12 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: node scripts/plan-tours.js tour-profile.json "$PR_TITLE" > "$RUNNER_TEMP/pro-tour-plan.json"
+      - name: Install video encoder
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -1
       - name: Record two Jev tours
         if: steps.classify.outputs.run == 'true'
         env:
