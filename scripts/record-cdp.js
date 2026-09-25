@@ -23,7 +23,7 @@ process.stdout.write('READY\n');
 let frames = 0;
 while (running || frames < 2) {
   const started = Date.now();
-  const frame = await page.screenshot({ type: 'jpeg', quality: 85, timeout: 5000 });
+  const frame = await page.screenshot({ type: 'jpeg', quality: 85, timeout: 30000 });
   if (!ffmpeg.stdin.write(frame)) await new Promise(resolve => ffmpeg.stdin.once('drain', resolve));
   frames++;
   await new Promise(resolve => setTimeout(resolve, Math.max(0, 200 - (Date.now() - started))));
