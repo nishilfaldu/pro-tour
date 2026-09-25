@@ -7,6 +7,7 @@ import { createServer, request } from 'node:http';
 import { spawnSync } from 'node:child_process';
 import { createAppOnlyProxy } from '../scripts/app-only-proxy.js';
 import { loadConfig, probeApp } from '../scripts/app-container.js';
+import { inspectChromeProcesses } from '../scripts/check-chrome-processes.js';
 
 const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const close = server => new Promise(resolve => server.close(resolve));
@@ -79,8 +80,40 @@ test('runner browser firewall fails closed for IPv4, IPv6, and changed network U
   assert.ok(step.indexOf('sudo ip6tables -I OUTPUT') < step.indexOf('google-chrome'));
   assert.ok(step.indexOf('verify-browser-network.sh') < step.indexOf('ensure_daemon'));
   const check = await readFile('scripts/verify-browser-network.sh', 'utf8');
-  assert.match(check, /network\.mojom\.NetworkService/);
-  assert.match(check, /\$real.*\$browser_uid.*\$effective.*\$browser_uid/);
-  assert.match(check, /sudo -u pro-tour-browser curl.*127\.0\.0\.1:9223/);
+  assert.match(check, /check-chrome-processes\.js/);
+  assert.match(check, /sudo -u pro-tour-browser curl.*--noproxy '\*'.*127\.0\.0\.1:9223/);
   assert.match(check, /sudo -u pro-tour-browser curl.*\[::1\]:9225/);
+});
+
+
+test('Chrome network service is identified through ancestry without child user-data-dir', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'tour-proc-'));
+  const home = '/tmp/pro-tour-chrome-test';
+  const uid = 900;
+  const process = async (pid, parent, name, args, uids = [uid, uid, uid, uid]) => {
+    const root = join(directory, String(pid));
+    const { mkdir } = await import('node:fs/promises');
+    await mkdir(root);
+    await writeFile(join(root, 'comm'), `${name}\n`);
+    await writeFile(join(root, 'status'), `Name:\t${name}\nPPid:\t${parent}\nUid:\t${uids.join('\t')}\n`);
+    await writeFile(join(root, 'cmdline'), args.join('\0') + '\0');
+  };
+  try {
+    await process(100, 1, 'chrome', ['/opt/google/chrome/chrome', `--user-data-dir=${home}`, '--remote-debugging-port=9223']);
+    await process(101, 100, 'chrome', ['/opt/google/chrome/chrome', '--type=zygote']);
+    await process(102, 101, 'chrome', ['/opt/google/chrome/chrome', '--type=utility', '--utility-sub-type=network.mojom.NetworkService']);
+    await process(103, 1, 'chrome', ['/opt/google/chrome/chrome', '--utility-sub-type=network.mojom.NetworkService'], [1000, 1000, 1000, 1000]);
+    let result = await inspectChromeProcesses(uid, home, directory);
+    assert.equal(result.ok, true);
+    assert.equal(result.networkCount, 1);
+    assert.deepEqual(result.processes.map(item => item.pid), [100, 102]);
+    await writeFile(join(directory, '102', 'status'), 'Name:\tchrome\nPPid:\t101\nUid:\t900\t65534\t900\t900\n');
+    result = await inspectChromeProcesses(uid, home, directory);
+    assert.equal(result.ok, false);
+    assert.equal(result.networkCount, 1);
+    await rm(join(directory, '102'), { recursive: true });
+    result = await inspectChromeProcesses(uid, home, directory);
+    assert.equal(result.ok, false);
+    assert.equal(result.networkCount, 0);
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });

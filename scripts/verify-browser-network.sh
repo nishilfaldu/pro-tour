@@ -4,25 +4,12 @@ set -euo pipefail
 browser_uid=$1
 chrome_home=$2
 
-# All Chrome network service processes must keep the firewall-matched host UID.
-found=0
-for proc in /proc/[0-9]*; do
-  executable=$(readlink "$proc/exe" 2>/dev/null || true)
-  [[ "${executable##*/}" == chrome ]] || continue
-  command=$(tr '\0' ' ' < "$proc/cmdline" 2>/dev/null || true)
-  [[ "$command" == *"--user-data-dir=$chrome_home"* && "$command" == *"network.mojom.NetworkService"* ]] || continue
-  found=1
-  read -r real effective saved filesystem < <(awk '/^Uid:/ { print $2, $3, $4, $5 }' "$proc/status")
-  [[ "$real" == "$browser_uid" && "$effective" == "$browser_uid" && "$saved" == "$browser_uid" && "$filesystem" == "$browser_uid" ]] || {
-    echo 'Chrome network process escaped the firewall UID' >&2
-    exit 1
-  }
-done
-[[ "$found" == 1 ]] || { echo 'Chrome network process was not found' >&2; exit 1; }
+# Chrome utility children may omit the root process's user-data-dir flag.
+node scripts/check-chrome-processes.js "$browser_uid" "$chrome_home"
 
 # Exercise the owner rules. Browser UID can reach the proxy, but not CDP directly.
 sudo -u pro-tour-browser curl --fail --silent --proxy http://127.0.0.1:9224 --noproxy '' --output /dev/null "$APP_URL"
-if sudo -u pro-tour-browser curl --max-time 2 --silent --output /dev/null http://127.0.0.1:9223/json/version; then
+if sudo -u pro-tour-browser curl --max-time 2 --silent --noproxy '*' --output /dev/null http://127.0.0.1:9223/json/version; then
   echo 'Browser UID reached CDP directly' >&2
   exit 1
 fi
