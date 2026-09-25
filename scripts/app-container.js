@@ -52,14 +52,18 @@ function docker(args) {
   });
 }
 
+export async function probeApp(url, fetchImpl = fetch) {
+  const response = await fetchImpl(url, { signal: AbortSignal.timeout(2000), redirect: 'error' });
+  return response.ok;
+}
+
 export async function startApp(prDirectory, timeoutMs = 90_000) {
   const config = await loadConfig(prDirectory);
   const id = await docker(containerArgs(config));
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(config.url, { signal: AbortSignal.timeout(2000) });
-      if (response.ok) return { id, url: config.url.href };
+      if (await probeApp(config.url)) return { id, url: config.url.href };
     } catch { /* App is still starting. */ }
     await new Promise(resolvePromise => setTimeout(resolvePromise, 1000));
   }

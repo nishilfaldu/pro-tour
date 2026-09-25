@@ -12,7 +12,14 @@ const files = new Map([
 
 export function createAppServer() {
   return createServer(async (request, response) => {
-    const item = files.get(new URL(request.url, 'http://localhost').pathname);
+    let item;
+    try {
+      item = files.get(new URL(request.url, 'http://localhost').pathname);
+    } catch {
+      response.writeHead(400);
+      response.end('Bad request');
+      return;
+    }
     if (!item || request.method !== 'GET') {
       response.writeHead(404);
       response.end('Not found');

@@ -18,3 +18,19 @@ test('serves the task board and its local assets', async () => {
     server.close();
   }
 });
+
+test('malformed URL returns 400 and server remains available', async () => {
+  const { request } = await import('node:http');
+  const server = createAppServer();
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const send = path => new Promise((resolve, reject) => {
+    const call = request({ host: '127.0.0.1', port: server.address().port, path }, response => {
+      response.resume(); response.on('end', () => resolve(response.statusCode));
+    });
+    call.on('error', reject); call.end();
+  });
+  try {
+    assert.equal(await send('//%'), 400);
+    assert.equal(await send('/'), 200);
+  } finally { server.close(); }
+});
