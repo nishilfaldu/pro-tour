@@ -67,3 +67,20 @@ test('browser proxy permits app requests and denies internal targets and CONNECT
     assert.match(workflow, /iptables -I OUTPUT 1 -m owner --uid-owner "\$BROWSER_UID" -j REJECT/);
   } finally { await close(proxy); await close(app); await close(internal); }
 });
+
+test('runner browser firewall fails closed for IPv4, IPv6, and changed network UID', async () => {
+  const workflow = await readFile('.github/workflows/pro-tour.yml', 'utf8');
+  const step = workflow.split('      - name: Start app-only browser proxy and credential-free Chrome\n')[1]
+    .split('      - name: Install Cursor CLI')[0];
+  assert.match(step, /run: \|\n          set -euo pipefail/);
+  assert.match(step, /sudo iptables -I OUTPUT 1 -m owner --uid-owner "\$BROWSER_UID" -j REJECT/);
+  assert.match(step, /sudo ip6tables -I OUTPUT 1 -m owner --uid-owner "\$BROWSER_UID" -j REJECT/);
+  assert.match(step, /bash scripts\/verify-browser-network\.sh "\$BROWSER_UID" "\$CHROME_HOME"/);
+  assert.ok(step.indexOf('sudo ip6tables -I OUTPUT') < step.indexOf('google-chrome'));
+  assert.ok(step.indexOf('verify-browser-network.sh') < step.indexOf('ensure_daemon'));
+  const check = await readFile('scripts/verify-browser-network.sh', 'utf8');
+  assert.match(check, /network\.mojom\.NetworkService/);
+  assert.match(check, /\$real.*\$browser_uid.*\$effective.*\$browser_uid/);
+  assert.match(check, /sudo -u pro-tour-browser curl.*127\.0\.0\.1:9223/);
+  assert.match(check, /sudo -u pro-tour-browser curl.*\[::1\]:9225/);
+});

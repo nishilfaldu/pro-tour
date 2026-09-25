@@ -70,6 +70,7 @@ jobs:
         env:
           APP_URL: ${{ steps.app.outputs.url }}
         run: |
+          set -euo pipefail
           node scripts/app-only-proxy.js > "$RUNNER_TEMP/pro-tour-proxy.log" 2>&1 &
           for attempt in $(seq 1 30); do
             if curl --silent --proxy http://127.0.0.1:9224 --noproxy '' --output /dev/null "$APP_URL"; then break; fi
@@ -84,6 +85,7 @@ jobs:
           sudo iptables -I OUTPUT 1 -m owner --uid-owner "$BROWSER_UID" -j REJECT
           sudo iptables -I OUTPUT 1 -m owner --uid-owner "$BROWSER_UID" -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
           sudo iptables -I OUTPUT 1 -m owner --uid-owner "$BROWSER_UID" -p tcp -d 127.0.0.1 --dport 9224 -j ACCEPT
+          sudo ip6tables -I OUTPUT 1 -m owner --uid-owner "$BROWSER_UID" -j REJECT
           Xvfb :99 -screen 0 1280x800x24 > "$RUNNER_TEMP/pro-tour-xvfb.log" 2>&1 &
           sudo -u pro-tour-browser env -i HOME="$CHROME_HOME" PATH="$PATH" DISPLAY=:99 google-chrome --disable-dev-shm-usage --no-first-run --window-size=1280,800 --proxy-server=http://127.0.0.1:9224 --proxy-bypass-list='<-loopback>' --disable-quic --disable-webrtc --remote-debugging-address=127.0.0.1 --remote-debugging-port=9223 --user-data-dir="$CHROME_HOME" about:blank > "$RUNNER_TEMP/pro-tour-chrome.log" 2>&1 &
           for attempt in $(seq 1 30); do
@@ -91,6 +93,7 @@ jobs:
             sleep 1
           done
           curl --fail --silent http://127.0.0.1:9223/json/version > /dev/null
+          bash scripts/verify-browser-network.sh "$BROWSER_UID" "$CHROME_HOME"
           env -i HOME="$HOME" PATH="$PATH" BU_CDP_URL=http://127.0.0.1:9223 .venv/bin/python -c 'from browser_harness.admin import ensure_daemon; ensure_daemon(wait=20)'
       - name: Install Cursor CLI for trusted planning
         if: steps.classify.outputs.run == 'true'
