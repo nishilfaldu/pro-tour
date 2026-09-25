@@ -90,7 +90,7 @@ test('Chrome network service is identified through ancestry without child user-d
   const directory = await mkdtemp(join(tmpdir(), 'tour-proc-'));
   const home = '/tmp/pro-tour-chrome-test';
   const uid = 900;
-  const process = async (pid, parent, name, args, uids = [uid, uid, uid, uid]) => {
+  const createProcess = async (pid, parent, name, args, uids = [uid, uid, uid, uid]) => {
     const root = join(directory, String(pid));
     const { mkdir } = await import('node:fs/promises');
     await mkdir(root);
@@ -99,10 +99,10 @@ test('Chrome network service is identified through ancestry without child user-d
     await writeFile(join(root, 'cmdline'), args.join('\0') + '\0');
   };
   try {
-    await process(100, 1, 'chrome', ['/opt/google/chrome/chrome', `--user-data-dir=${home}`, '--remote-debugging-port=9223']);
-    await process(101, 100, 'chrome', ['/opt/google/chrome/chrome', '--type=zygote']);
-    await process(102, 101, 'chrome', ['/opt/google/chrome/chrome', '--type=utility', '--utility-sub-type=network.mojom.NetworkService']);
-    await process(103, 1, 'chrome', ['/opt/google/chrome/chrome', '--utility-sub-type=network.mojom.NetworkService'], [1000, 1000, 1000, 1000]);
+    await createProcess(100, 1, 'chrome', ['/opt/google/chrome/chrome', `--user-data-dir=${home}`, '--remote-debugging-port=9223']);
+    await createProcess(101, 100, 'chrome', ['/opt/google/chrome/chrome', '--type=zygote']);
+    await createProcess(102, 101, 'chrome', ['/opt/google/chrome/chrome', '--type=utility', '--utility-sub-type=network.mojom.NetworkService']);
+    await createProcess(103, 1, 'chrome', ['/opt/google/chrome/chrome', '--utility-sub-type=network.mojom.NetworkService'], [1000, 1000, 1000, 1000]);
     let result = await inspectChromeProcesses(uid, home, directory);
     assert.equal(result.ok, true);
     assert.equal(result.networkCount, 1);
@@ -111,6 +111,16 @@ test('Chrome network service is identified through ancestry without child user-d
     result = await inspectChromeProcesses(uid, home, directory);
     assert.equal(result.ok, false);
     assert.equal(result.networkCount, 1);
+    const secretMarker = 'SECRET_SENTINEL_DO_NOT_PRINT';
+    await writeFile(join(directory, '102', 'cmdline'),
+      ['/opt/google/chrome/chrome', '--utility-sub-type=network.mojom.NetworkService', `--token=${secretMarker}`].join('\0') + '\0');
+    const cli = spawnSync(process.execPath,
+      ['scripts/check-chrome-processes.js', String(uid), home, directory], { encoding: 'utf8' });
+    assert.equal(cli.status, 1);
+    assert.equal(cli.stdout, '');
+    assert.match(cli.stderr, /^Chrome process verification failed: roots=1 network=1\n/);
+    assert.match(cli.stderr, /pid=102 ppid=101 uid=900\/65534\/900\/900 name=chrome/);
+    assert.doesNotMatch(cli.stderr, /TypeError|SECRET_SENTINEL_DO_NOT_PRINT|--token=/);
     await rm(join(directory, '102'), { recursive: true });
     result = await inspectChromeProcesses(uid, home, directory);
     assert.equal(result.ok, false);

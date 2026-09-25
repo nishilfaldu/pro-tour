@@ -66,13 +66,13 @@ export async function inspectChromeProcesses(browserUid, chromeHome, procRoot = 
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
-  const [uid, chromeHome] = process.argv.slice(2);
+  const [uid, chromeHome, procRoot = '/proc'] = process.argv.slice(2);
   if (!/^\d+$/.test(uid) || !chromeHome) throw new Error('Expected browser UID and Chrome home');
-  const result = await inspectChromeProcesses(Number(uid), chromeHome);
+  const result = await inspectChromeProcesses(Number(uid), chromeHome, procRoot);
   if (!result.ok) {
     process.stderr.write(`Chrome process verification failed: roots=${result.rootCount} network=${result.networkCount}\n`);
-    for (const process of result.processes) {
-      process.stderr.write(`pid=${process.pid} ppid=${process.parent} uid=${process.uids.join('/')} name=${process.name}\n`);
+    for (const entry of result.processes) {
+      process.stderr.write(`pid=${entry.pid} ppid=${entry.parent} uid=${entry.uids.join('/')} name=${entry.name}\n`);
     }
     process.exitCode = 1;
   }
