@@ -57,10 +57,17 @@ jobs:
           uv venv --python 3.12 .venv
           uv pip install --python .venv/bin/python 'git+https://github.com/browser-use/jev-ultrafast.git@1231850a0bf1a0c0341fe408ef1668dbbfdfac46'
           .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
+      - name: Install video encoder
+        if: steps.classify.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg xvfb
+          ffmpeg -version | head -1
       - name: Start credential-free Chrome and browser daemon
         if: steps.classify.outputs.run == 'true'
         run: |
-          env -i HOME="$HOME" PATH="$PATH" google-chrome --headless=new --disable-dev-shm-usage --remote-debugging-address=127.0.0.1 --remote-debugging-port=9223 --user-data-dir="$RUNNER_TEMP/pro-tour-chrome" about:blank > "$RUNNER_TEMP/pro-tour-chrome.log" 2>&1 &
+          Xvfb :99 -screen 0 1280x800x24 > "$RUNNER_TEMP/pro-tour-xvfb.log" 2>&1 &
+          env -i HOME="$HOME" PATH="$PATH" DISPLAY=:99 google-chrome --disable-dev-shm-usage --no-first-run --window-size=1280,800 --remote-debugging-address=127.0.0.1 --remote-debugging-port=9223 --user-data-dir="$RUNNER_TEMP/pro-tour-chrome" about:blank > "$RUNNER_TEMP/pro-tour-chrome.log" 2>&1 &
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:9223/json/version > /dev/null; then break; fi
             sleep 1
@@ -78,17 +85,12 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: node scripts/plan-tours.js tour-profile.json "$PR_TITLE" > "$RUNNER_TEMP/pro-tour-plan.json"
-      - name: Install video encoder
-        if: steps.classify.outputs.run == 'true'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          ffmpeg -version | head -1
       - name: Record two Jev tours
         if: steps.classify.outputs.run == 'true'
         env:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
           BU_CDP_URL: http://127.0.0.1:9223
+          DISPLAY: :99
           APP_URL: ${{ steps.app.outputs.url }}
         run: |
           jq '.full' "$RUNNER_TEMP/pro-tour-plan.json" > "$RUNNER_TEMP/full-goals.json"

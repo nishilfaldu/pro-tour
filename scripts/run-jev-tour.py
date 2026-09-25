@@ -46,7 +46,7 @@ def run_tour(url, goals, values, output, cdp_url):
         recorder = subprocess.Popen(
             ["node", str(Path(__file__).with_name("record-cdp.js")), cdp_url, url, str(output)],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-            env={"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", "")},
+            env={"PATH": os.environ.get("PATH", ""), "DISPLAY": os.environ.get("DISPLAY", "")},
         )
         try:
             if not select.select([recorder.stdout], [], [], 20)[0]:
