@@ -1,9 +1,23 @@
 import json
 import re
+import shutil
 import tempfile
 from pathlib import Path
 
 from .common import TourError, clean_env, run
+
+
+def github_cli():
+    executable = shutil.which('gh')
+    if not executable:
+        raise TourError('GitHub CLI (gh) was not found on PATH. Install it from https://cli.github.com, then run gh auth login.')
+    return executable
+
+
+def require_media_support(gh):
+    help_text = run([gh, 'pr', 'comment', '--help'], env=clean_env())
+    if '--attach' not in help_text:
+        raise TourError('Your GitHub CLI cannot attach videos. Update gh until gh pr comment --help lists --attach. The local video is preserved.')
 
 
 def resolve_pr(gh, repo, target=None, branch=None):
@@ -46,9 +60,7 @@ def publish(gh, video, pr, token):
     if not token:
         raise TourError('GH_MEDIA_TOKEN is required to publish; local video is preserved')
     env = clean_env(GH_TOKEN=token)
-    help_text = run([gh, 'pr', 'comment', '--help'], env=clean_env())
-    if '--attach' not in help_text:
-        raise TourError('Publishing requires GitHub CLI 2.101+ with --attach; use --gh')
+    require_media_support(gh)
     with tempfile.TemporaryDirectory(prefix='pro-tour-publish-') as directory:
         body = Path(directory) / 'comment.md'
         body.write_text(f'Feature tour · {video.name}\n\n![]({video.resolve()})\n')

@@ -10,7 +10,7 @@ from unittest.mock import patch
 from pro_tour.common import TourError, clean_env, run
 from pro_tour.executor import safe_text, verify_checks
 from pro_tour.providers import validate_plan
-from pro_tour.publishing import publish, resolve_pr
+from pro_tour.publishing import github_cli, publish, require_media_support, resolve_pr
 from pro_tour.repository import branch_diff, local_url, reserve_video
 
 
@@ -74,6 +74,25 @@ class LocalTests(unittest.TestCase):
         self.assertTrue(all(c['passed'] for c in verify_checks(page, checks)))
         page['text'] += '\nDraft release notes'
         self.assertFalse(verify_checks(page, checks)[1]['passed'])
+
+    def test_missing_github_cli_has_installation_message(self):
+        with patch('pro_tour.publishing.shutil.which', return_value=None):
+            with self.assertRaisesRegex(TourError, 'not found on PATH.*cli.github.com.*gh auth login'):
+                github_cli()
+
+    def test_github_cli_uses_path_and_requires_media_capability(self):
+        with patch('pro_tour.publishing.shutil.which', return_value='/trusted/bin/gh'):
+            self.assertEqual(github_cli(), '/trusted/bin/gh')
+        with patch('pro_tour.publishing.run', return_value='--body-file'):
+            with self.assertRaisesRegex(TourError, 'Update gh.*local video is preserved'):
+                require_media_support('/trusted/bin/gh')
+        with patch('pro_tour.publishing.run', return_value='--attach --body-file'):
+            require_media_support('/trusted/bin/gh')
+
+    def test_cli_no_longer_exposes_github_executable_option(self):
+        from pro_tour.cli import parser
+        args = parser().parse_args(['publish', '--video', 'demo.mp4', '--pr', '4'])
+        self.assertFalse(hasattr(args, 'gh'))
 
     def test_pr_lookup_distinguishes_missing_pr_from_github_failure(self):
         with patch('pro_tour.publishing.run', return_value='[]'):

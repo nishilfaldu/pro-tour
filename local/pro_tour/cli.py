@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .common import TourError, clean_env, run, stop, write_json
 from .providers import PROVIDERS
-from .publishing import probe_video, publish, resolve_pr
+from .publishing import github_cli, probe_video, publish, resolve_pr
 from .repository import branch_diff, credential_file, local_url, repository, reserve_video
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,9 +32,10 @@ def check_pin():
 
 def record(args, secrets):
     url = local_url(args.url)
+    gh = github_cli()
     repo = repository(Path.cwd())
     branch, diff = branch_diff(repo, args.base)
-    pr = resolve_pr(args.gh, repo, target=args.pr) if args.pr else resolve_pr(args.gh, repo, branch=branch)
+    pr = resolve_pr(gh, repo, target=args.pr) if args.pr else resolve_pr(gh, repo, branch=branch)
     if pr and pr['headRefName'] != branch:
         raise TourError('Associated PR head must match the current app branch')
     if not secrets.get('TYPESAFE_API_KEY'):
@@ -118,7 +119,7 @@ def record(args, secrets):
             if args.publish and report['status'] != 'failure':
                 if not pr:
                     raise TourError('No associated PR; local recording saved. Publish later with --pr')
-                report['publication'] = publish(args.gh, video, pr, secrets.get('GH_MEDIA_TOKEN'))
+                report['publication'] = publish(gh, video, pr, secrets.get('GH_MEDIA_TOKEN'))
     except (TourError, KeyboardInterrupt) as exc:
         report['error'] = str(exc) if isinstance(exc, TourError) else 'Interrupted'
         if report['status'] != 'failure' and video.exists() and video.stat().st_size:
@@ -154,7 +155,6 @@ def parser():
     for command in (rec, pub):
         command.add_argument('--secrets-file', type=Path, default=DEFAULT_SECRETS,
                              help='Trusted credentials file; never read from the app repository implicitly')
-        command.add_argument('--gh', default='gh', help='GitHub CLI executable (2.101+ needed for publishing)')
     return cli
 
 
@@ -172,10 +172,11 @@ def main():
         if args.command == 'record':
             return_code = record(args, secrets)
         else:
+            gh = github_cli()
             video = args.video.resolve()
-            pr = resolve_pr(args.gh, Path.cwd(), target=args.pr)
+            pr = resolve_pr(gh, Path.cwd(), target=args.pr)
             try:
-                result = publish(args.gh, video, pr, secrets.get('GH_MEDIA_TOKEN'))
+                result = publish(gh, video, pr, secrets.get('GH_MEDIA_TOKEN'))
             except TourError as exc:
                 write_json(video.with_suffix('.publish-failure.json'),
                            {'status': 'failure', 'pr_url': pr['url'], 'error': str(exc), 'video_preserved': video.exists()})

@@ -6,6 +6,14 @@ marker rather than the status-filter UI; the feature demonstration covers the sa
 status filter. The app ran from an isolated checkout of the real PR head, not from this implementation
 worktree. Neither the original `/Users/happyhome/Desktop/pro-tour` nor the Astra worktree was edited.
 
+## CLI simplification follow-up
+
+`--gh` has been removed. The CLI resolves `gh` from `PATH`, gives an installation message if it is
+missing, and gives an update message when media attachments are unsupported. For reproducing these
+publish checks, put a media-capable GitHub CLI on `PATH`. The follow-up passed 17 Python tests, a real
+missing-CLI invocation, capability detection of the downloaded CLI through `PATH`, and the installed
+older CLI’s friendly publishing error. The existing local video was preserved.
+
 ## Real record and publish
 
 App checkout: `/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/.tools/app-pr4`
@@ -17,7 +25,8 @@ setup started one credential-free headless Chrome with a temporary profile and p
 connected to it using Browser Harness. The test setup's server, browser, and preview server were
 stopped after validation. The CLI closed its owned tabs, harness daemon, and recorder each time.
 
-Executed from the app checkout:
+The equivalent current command, run from the app checkout (the original validation used an executable
+override that has since been removed):
 
 ```sh
 ../../bin/pro-tour record \
@@ -26,7 +35,6 @@ Executed from the app checkout:
   --goal 'Show the status filter: select To do and Done, visibly showing matching task inclusion and exclusion of tasks with other statuses. Use the existing synthetic tasks.' \
   --model gpt-6-sol \
   --cdp-url http://127.0.0.1:9223 \
-  --gh /Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/.tools/gh_2.101.0_macOS_arm64/bin/gh \
   --publish
 ```
 
@@ -48,8 +56,7 @@ The standalone publish command was also exercised successfully for v1:
 
 ```sh
 ../../bin/pro-tour publish \
-  --video .videos/demo-sol-low-security-final-20260925-pr4-v1.mp4 --pr 4 \
-  --gh /Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/.tools/gh_2.101.0_macOS_arm64/bin/gh
+  --video .videos/demo-sol-low-security-final-20260925-pr4-v1.mp4 --pr 4
 ```
 
 Versions v1 and v2 each received their own new PR comment and were played inline to completion.
