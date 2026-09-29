@@ -1,0 +1,8 @@
+#!/bin/sh
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+python="$root/.tools/local-venv/bin/python"
+if [ ! -x "$python" ]; then
+  echo 'Set up Pro Tour tooling first: uv venv --python 3.12 .tools/local-venv && uv pip install --python .tools/local-venv/bin/python -e .' >&2
+  exit 1
+fi
+PYTHONPATH="$root/local" exec "$python" -m pro_tour.cli "$@"

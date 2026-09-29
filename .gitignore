@@ -6,3 +6,6 @@ node_modules/
 .jev-upstream/
 tour-output/
 .tools/
+*.egg-info/
+build/
+dist/
