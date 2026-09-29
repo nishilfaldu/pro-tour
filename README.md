@@ -26,13 +26,14 @@ From the app repository, use the installed `pro-tour` command or this checkout's
 
 ```sh
 pro-tour record --url http://localhost:3000 --base origin/main \
-  --goal "Show the new status filter" --model gpt-6-sol
+  --goal "Show the new status filter"
 pro-tour record --url http://localhost:3000 --base origin/main \
-  --goal "Show the new status filter" --model gpt-6-sol --publish
+  --goal "Show the new status filter" --publish
 pro-tour publish --video .videos/feat-status-filter-pr42-v1.mp4 --pr 42
 ```
 
-`--model` goes directly to the authenticated Codex CLI; choose a model available to your account.
+`--model` defaults to `gpt-6-luna` for planning and on-demand text entry. Override it with
+`--model <available-codex-model>`; the selected value goes directly to the authenticated Codex CLI.
 The planner runs read-only in a temporary directory with user configuration, shell tools, and web search
 disabled. It receives the current branch's committed merge-base diff (`base...HEAD`) and an initial
 visible-page observation. Credential-like files are excluded. Uncommitted app edits are not part of the

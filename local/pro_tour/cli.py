@@ -143,8 +143,9 @@ def parser():
     cli = argparse.ArgumentParser(prog='pro-tour', description='Manual local-first feature walkthroughs')
     sub = cli.add_subparsers(dest='command', required=True)
     rec = sub.add_parser('record')
-    for name in ('url', 'base', 'goal', 'model'):
+    for name in ('url', 'base', 'goal'):
         rec.add_argument('--' + name, required=True)
+    rec.add_argument('--model', default='gpt-6-luna', help='Codex model (default: gpt-6-luna)')
     rec.add_argument('--provider', choices=list(PROVIDERS), default='codex')
     rec.add_argument('--publish', action='store_true')
     rec.add_argument('--pr', help='Optional explicit associated PR number or URL')
