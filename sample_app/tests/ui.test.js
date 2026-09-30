@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { chromium } from 'playwright';
-import { createAppServer } from '../sample_app/server.js';
+import { createAppServer } from '../server.js';
 
 test('create, edit, change status, filter inclusion and exclusion, then reset', async () => {
   const server = createAppServer();

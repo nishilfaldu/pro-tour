@@ -27,13 +27,13 @@ You can now use `pro-tour` from an app repository in the terminal where you expo
 
 ```sh
 uv run python scripts/check-local-release.py
-npm ci
-npm test
+npm --prefix sample_app ci
+npm --prefix sample_app test
 ```
 
 The release check runs Python tests, checks the dependency lock, and builds a wheel. The JavaScript tests include a real Chrome journey.
 
-`npm start` runs the synthetic task board at <http://127.0.0.1:4173>. Use **Reset demo** between tours.
+`npm --prefix sample_app start` runs the synthetic task board at <http://127.0.0.1:4173>. Use **Reset demo** between tours. Its package files, JavaScript tests, and Node dependencies live entirely inside `sample_app/`.
 
 The opt-in [benchmark](benchmarks/README.md) exercises the full pipeline and video playback with real, metered Codex and TypeSafe calls:
 

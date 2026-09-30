@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { createAppServer } from '../sample_app/server.js';
+import { createAppServer } from '../server.js';
 
 test('serves the task board and its local assets', async () => {
   const server = createAppServer();
