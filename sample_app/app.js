@@ -104,11 +104,13 @@ render();
 document.querySelector('#apply-search').addEventListener('click', () => {
   if (searchPending) return;
   searchPending = true;
+  list.setAttribute('aria-busy', 'true');
   document.querySelector('#search-state').textContent = 'Searching, please wait';
   const term = document.querySelector('#search').value.trim();
   setTimeout(() => {
     searchTerm = term;
     searchPending = false;
+    list.setAttribute('aria-busy', 'false');
     document.querySelector('#search-state').textContent = 'Search updated';
     render();
   }, 900);
