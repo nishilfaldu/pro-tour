@@ -1,10 +1,39 @@
+# Patterns without a leading slash also cover nested directories.
+
+# macOS metadata
 .DS_Store
+._*
+.AppleDouble/
+.LSOverride
+
+# Python caches, environments, and build output
 __pycache__/
-*.pyc
-node_modules/
-.env.local
-.tools/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 *.egg-info/
 build/
 dist/
 .venv/
+venv/
+
+# Node dependencies and browser-test output
+node_modules/
+playwright-report/
+test-results/
+
+# Local credentials (keep safe example/template files trackable)
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.template
+!.env.*.template
+
+# Local tooling, recordings, and adjacent plans/traces/reports
+.tools/
+.videos/
