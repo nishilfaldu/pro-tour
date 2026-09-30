@@ -1,9 +1,11 @@
 """Real, opt-in Codex/Jev/recording benchmark. No automatic PR trigger or browser launch."""
+import sys
+sys.dont_write_bytecode = True
+
 import argparse
 import json
 import os
 import subprocess
-import sys
 import tempfile
 import time
 import urllib.request
@@ -47,15 +49,25 @@ def call(url, method='GET'):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('.artifacts/benchmarks') / time.strftime('%Y%m%d-%H%M%S'))
+    parser.add_argument('--output', type=Path, help='Keep artifacts in this new directory (default: temporary, removed after the run)')
+    parser.add_argument('--keep-artifacts', action='store_true', help='Keep artifacts under .artifacts/benchmarks for debugging')
     parser.add_argument('--cdp-url')
     parser.add_argument('--model', default='gpt-6-luna')
     parser.add_argument('--cases', nargs='+')
     parser.add_argument('--secrets-file', type=Path, default=DEFAULT_SECRETS)
     args = parser.parse_args()
     os.umask(0o077)
-    output = args.output.resolve()
-    output.mkdir(parents=True, exist_ok=False)
+    os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+    if args.output or args.keep_artifacts:
+        output = (args.output or Path('.artifacts/benchmarks') / time.strftime('%Y%m%d-%H%M%S')).resolve()
+        output.mkdir(parents=True, exist_ok=False)
+        print('Keeping validation artifacts: ' + str(output), flush=True)
+        return benchmark(args, output)
+    with tempfile.TemporaryDirectory(prefix='pro-tour-benchmark-') as directory:
+        return benchmark(args, Path(directory))
+
+
+def benchmark(args, output):
     repo = output / 'app'
     repo.mkdir()
     run(['git', 'init', '-b', 'main', str(repo)])

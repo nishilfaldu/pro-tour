@@ -26,7 +26,7 @@ You can now use `pro-tour` from an app repository in the terminal where you expo
 ## Checks and sample app
 
 ```sh
-uv run python scripts/check-local-release.py
+uv run --no-sync python -B scripts/check-local-release.py
 npm --prefix sample_app ci
 npm --prefix sample_app test
 ```
@@ -38,10 +38,10 @@ The release check runs Python tests, reports the installed Jev and Browser Harne
 The opt-in [benchmark](benchmarks/README.md) exercises the full pipeline and video playback with real, metered Codex and TypeSafe calls:
 
 ```sh
-uv run python benchmarks/run.py
+uv run --no-sync python -B benchmarks/run.py
 ```
 
-`.artifacts/` holds ignored benchmark runs and release artifacts. `.venv/` holds checkout dependencies. Keep credentials and generated recordings out of tracked files.
+Validation uses temporary directories and removes its videos, logs, wheels, and build files on success, failure, or interruption. Add `--keep-artifacts` to either runner to retain debugging output in ignored `.artifacts/`, or `--output <new-directory>` to retain it elsewhere. `.venv/` holds checkout dependencies. Normal `pro-tour record` videos remain saved in the app repository’s `.videos/`.
 
 ## Build a standalone wheel
 

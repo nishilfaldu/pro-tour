@@ -3,9 +3,9 @@
 Run from the trusted Pro Tour checkout after `uv sync --upgrade --python 3.12` and `pro-tour connect`:
 
 ```sh
-uv run python benchmarks/run.py
-uv run python benchmarks/run.py --cases delayed-search-empty-recovery cancel-unsaved-edit
-uv run python scripts/check-local-release.py
+uv run --no-sync python -B benchmarks/run.py
+uv run --no-sync python -B benchmarks/run.py --cases delayed-search-empty-recovery cancel-unsaved-edit
+uv run --no-sync python -B scripts/check-local-release.py
 ```
 
 This is an opt-in suite with real Codex (`gpt-6-luna` by default), TypeSafe Jev, Browser Harness,
@@ -20,8 +20,9 @@ no fake login or cookie. It does not change the product's outcome-check rules.
 Each case records one version, decodes the MP4 fully, and opens its own Chrome player to verify
 playback reaches the end. Playback tabs may become foreground and are closed afterward. Fixture
 tabs, servers, and temporary browser connections are cleaned up in `finally`; an existing shared connector
-is left alive for its owner. Output defaults to a new ignored `.artifacts/benchmarks/<timestamp>/`
-directory. Do not reuse an output directory. Reports include task completion, false success,
+is left alive for its owner. Output uses a temporary directory and is removed on success, failure,
+or interruption. Add `--keep-artifacts` to retain it in ignored `.artifacts/benchmarks/<timestamp>/`,
+or `--output <new-directory>` to keep it elsewhere. Existing output directories are never reused. Reports include task completion, false success,
 video playability, duration, provider token usage, and preserved version paths. Dollar costs remain
 unknown because provider billing totals are unavailable. Runs make paid/provider-metered calls.
 
@@ -39,5 +40,5 @@ Those checks must include playing the saved video and the inline GitHub player. 
 alone is insufficient. Existing BrowserGym/browser-use benchmarks are not integrated.
 
 Release target: macOS, Python 3.12, existing visible Chrome, localhost, synthetic data. This small suite
-is a regression signal, not a broad reliability estimate. Retain failing runs when diagnosing changes.
+is a regression signal, not a broad reliability estimate. Use `--keep-artifacts` when diagnosing changes.
 Do not call a release ready if any case falsely reports success or its video cannot be played.

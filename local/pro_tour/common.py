@@ -48,7 +48,7 @@ def retry_read(operation, *, attempts=3, retryable=None):
 
 def clean_env(**extra):
     # Never inherit credential variables, app hooks, PYTHONPATH, or proxy settings.
-    env = {k: os.environ[k] for k in ("PATH", "HOME", "TMPDIR", "SYSTEMROOT") if k in os.environ}
+    env = {k: os.environ[k] for k in ("PATH", "HOME", "TMPDIR", "SYSTEMROOT", "PYTHONDONTWRITEBYTECODE") if k in os.environ}
     return {**env, **extra}
 
 
