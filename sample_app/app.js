@@ -1,10 +1,12 @@
+let searchTerm = '';
+let searchPending = false;
 const seed = [
   { id: 'task-1', name: 'Draft release notes', details: 'Summarize the latest changes for the team.', status: 'todo' },
   { id: 'task-2', name: 'Review onboarding flow', details: 'Check the first-run experience.', status: 'in-progress' },
   { id: 'task-3', name: 'Approve color palette', details: 'Final visual sign-off.', status: 'done' },
 ];
 const labels = { todo: 'To do', 'in-progress': 'In progress', done: 'Done' };
-const storageKey = 'fieldnotes-tasks-v1';
+const storageKey = 'fieldnotes-long-demo-v2';
 let tasks;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -20,7 +22,7 @@ const filter = document.querySelector('#status-filter');
 const save = () => localStorage.setItem(storageKey, JSON.stringify(tasks));
 
 function render() {
-  const visible = tasks.filter(task => filter.value === 'all' || task.status === filter.value);
+  const visible = tasks.filter(task => (filter.value === 'all' || task.status === filter.value) && (task.name + ' ' + task.details).toLowerCase().includes(searchTerm.toLowerCase()));
   document.querySelector('#visible-count').textContent = visible.length;
   document.querySelector('#total-count').textContent = tasks.length;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
@@ -78,6 +80,9 @@ document.querySelector('#close-dialog').addEventListener('click', () => dialog.c
 document.querySelector('#cancel-dialog').addEventListener('click', () => dialog.close());
 document.querySelector('#reset').addEventListener('click', () => {
   tasks = structuredClone(seed);
+  searchTerm = '';
+  document.querySelector('#search').value = '';
+  document.querySelector('#search-state').textContent = 'Search ready';
   filter.value = 'all';
   save();
   render();
@@ -96,3 +101,23 @@ form.addEventListener('submit', event => {
   render();
 });
 render();
+document.querySelector('#apply-search').addEventListener('click', () => {
+  if (searchPending) return;
+  searchPending = true;
+  document.querySelector('#search-state').textContent = 'Searching, please wait';
+  const term = document.querySelector('#search').value.trim();
+  setTimeout(() => {
+    searchTerm = term;
+    searchPending = false;
+    document.querySelector('#search-state').textContent = 'Search updated';
+    render();
+  }, 900);
+});
+document.querySelector('#clear-search').addEventListener('click', () => {
+  if (searchPending) return;
+  searchTerm = '';
+  document.querySelector('#search').value = '';
+  document.querySelector('#search-state').textContent = 'Search ready';
+  render();
+});
+
