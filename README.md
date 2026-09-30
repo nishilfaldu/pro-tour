@@ -15,7 +15,7 @@ uv tool install --upgrade --python 3.12 ./pro-tour-install
 uv tool update-shell
 ```
 
-This installs `pro-tour` in an isolated environment with the newest compatible indirect dependencies. Jev and Browser Harness retain their explicit pins. Restart your terminal if `pro-tour` is not on PATH.
+This installs `pro-tour` in an isolated environment with the newest compatible dependencies and Jev from its upstream default branch. Restart your terminal if `pro-tour` is not on PATH.
 
 Put `TYPESAFE_API_KEY` in `~/.config/pro-tour/.env.local`. Publishing also needs `GH_MEDIA_TOKEN` and authenticated `gh` on PATH with support for `gh pr comment --attach`. GitHub access is optional for recording.
 

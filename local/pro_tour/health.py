@@ -7,7 +7,7 @@ import sys
 import tempfile
 import urllib.request
 from pathlib import Path
-from importlib.metadata import PackageNotFoundError, distribution, version
+from importlib.metadata import PackageNotFoundError, version
 
 from .browser import connected_browser, existing_connection, select_connection
 from .common import TourError, clean_env, run
@@ -15,13 +15,11 @@ from .publishing import github_cli, require_media_support
 from .repository import derive_base, local_url, repository
 
 
-def check_pin():
+def installed_dependencies():
     try:
-        provenance = json.loads(distribution('jev-ultrafast').read_text('direct_url.json'))
-        if provenance['vcs_info']['commit_id'] != '1231850a0bf1a0c0341fe408ef1668dbbfdfac46' or version('browser-harness') != '0.1.13':
-            raise ValueError()
-    except (ValueError, KeyError, TypeError, PackageNotFoundError) as exc:
-        raise TourError('Install the pinned Pro Tour Python dependencies before recording') from exc
+        return {name: version(name) for name in ('jev-ultrafast', 'browser-harness')}
+    except PackageNotFoundError as exc:
+        raise TourError('Install Pro Tour Python dependencies before recording; run pro-tour doctor for setup instructions') from exc
 
 
 def app_ready(url):
@@ -39,7 +37,7 @@ def app_ready(url):
 
 
 def record_dependencies(secrets):
-    check_pin()
+    installed_dependencies()
     for command in ('ffmpeg', 'ffprobe', 'codex'):
         if not shutil.which(command):
             raise TourError(f'{command} must already be installed; run pro-tour doctor for setup instructions')
@@ -59,7 +57,7 @@ def doctor(args, secrets):
             checks.append({'check': name, 'status': 'failure' if required else 'warning', 'detail': str(exc)})
     check('platform', lambda: platform.system() + (' (validated release target)' if platform.system() == 'Darwin' else ' (experimental; macOS is the release target)'))
     check('python', lambda: sys.version.split()[0])
-    check('pinned-dependencies', lambda: (check_pin(), 'Jev and Browser Harness pins verified')[1])
+    check('python-dependencies', installed_dependencies)
     for name in ('ffmpeg', 'ffprobe', 'codex'):
         def tool(name=name):
             path = shutil.which(name)
