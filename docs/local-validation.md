@@ -1,5 +1,9 @@
 # Local MVP validation — September 29, 2026
 
+Historical report from before the September 30 branch split. The GitHub Actions implementation
+and its runner tests now live on [`codex/github-actions`](https://github.com/nishilfaldu/pro-tour/tree/codex/github-actions).
+The local CLI and sample app remain on this branch; test counts below describe the original run.
+
 The user approved PR #4's sample app as the final target, replacing the original separate-app
 requirement. No independent application repository was validated. PR #4 changes a security-runner
 marker rather than the status-filter UI; the feature demonstration covers the sample app's existing

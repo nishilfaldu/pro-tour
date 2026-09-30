@@ -1,5 +1,9 @@
 # Local release validation — 2026-09-29
 
+Historical report from before the September 30 branch split. The GitHub Actions implementation
+and its runner tests now live on [`codex/github-actions`](https://github.com/nishilfaldu/pro-tour/tree/codex/github-actions).
+The local CLI and sample app remain on this branch; test counts below describe the original run.
+
 Validated on macOS arm64, Python 3.12.12, existing everyday Chrome 153.0.8010.54,
 Codex 0.156.1, and media-capable GitHub CLI 2.101.0. The local implementation is
 separate from the existing Actions integration; its workflow is unchanged.
