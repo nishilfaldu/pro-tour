@@ -55,6 +55,19 @@ and credential fields are rejected. Authenticate manually before recording. Brow
 processes receive no model or GitHub token. Only the Jev worker receives the TypeSafe key; only the upload
 command receives the media token. The CLI never reads or executes app configuration or app code.
 
+Data sent outside your machine during a local tour:
+
+| Recipient | Data sent | When |
+| --- | --- | --- |
+| Codex's model provider | Feature goal, filtered Git diff, initial page text and controls; observed field context and recent synthetic values when text is needed | Planning and optional text entry |
+| TypeSafe | Step goal, current page URL/title/text, available controls and values, and recent browser actions including entered synthetic text | Browser action decisions |
+| GitHub | MP4 and its concise PR comment | Only when you request publishing |
+
+Pro Tour saves videos, plans, traces, and reports in the app repository's ignored `.videos/` directory.
+It does not upload those artifacts to a Pro Tour service. Local-first refers to artifact storage;
+Codex and TypeSafe calls still use remote model services. Use synthetic test data, because visible
+app content can appear in model inputs, traces, and video frames. Review the MP4 before publishing it.
+
 Each recording reserves `.videos/<sanitized-branch>-pr<number>-v<N>.mp4` without overwriting earlier
 versions; a branch with no verified PR association uses `-no-pr-v<N>.mp4`. `.videos/` is added to
 `.gitignore` once. Missing GitHub tooling, authentication, or connectivity does not block local recording.
