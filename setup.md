@@ -41,7 +41,7 @@ The opt-in [benchmark](benchmarks/README.md) exercises the full pipeline and vid
 uv run python benchmarks/run.py
 ```
 
-`.tools/` holds ignored local tooling, benchmark runs, and release artifacts. `.venv/` holds checkout dependencies. Keep credentials and generated recordings out of tracked files.
+`.artifacts/` holds ignored benchmark runs and release artifacts. `.venv/` holds checkout dependencies. Keep credentials and generated recordings out of tracked files.
 
 ## Build a standalone wheel
 

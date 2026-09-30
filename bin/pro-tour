@@ -1,9 +1,6 @@
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-python="$root/.tools/local-venv/bin/python"
-if [ ! -x "$python" ] && [ -x "$root/.venv/bin/python" ]; then
-  python="$root/.venv/bin/python"
-fi
+python="$root/.venv/bin/python"
 if [ ! -x "$python" ]; then
   echo 'Set up trusted Pro Tour tooling first: run uv sync --frozen --python 3.12 in the Pro Tour checkout' >&2
   exit 1

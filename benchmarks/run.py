@@ -47,7 +47,7 @@ def call(url, method='GET'):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=Path('.tools/benchmark-runs') / time.strftime('%Y%m%d-%H%M%S'))
+    parser.add_argument('--output', type=Path, default=Path('.artifacts/benchmarks') / time.strftime('%Y%m%d-%H%M%S'))
     parser.add_argument('--cdp-url')
     parser.add_argument('--model', default='gpt-6-luna')
     parser.add_argument('--cases', nargs='+')

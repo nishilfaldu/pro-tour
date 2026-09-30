@@ -19,7 +19,7 @@ product's outcome-check rules. No real login credentials are entered or exported
 Each case records one version, decodes the MP4 fully, and opens its own Chrome player to verify
 playback reaches the end. Playback tabs may become foreground and are closed afterward. Fixture
 servers and temporary browser connections are stopped in `finally`; an existing shared connector
-is left alive for its owner. Output defaults to a new ignored `.tools/benchmark-runs/<timestamp>/`
+is left alive for its owner. Output defaults to a new ignored `.artifacts/benchmarks/<timestamp>/`
 directory. Do not reuse an output directory. Reports include task completion, false success,
 video playability, duration, provider token usage, and preserved version paths. Dollar costs remain
 unknown because provider billing totals are unavailable. Runs make paid/provider-metered calls.

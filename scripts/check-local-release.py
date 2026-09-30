@@ -20,7 +20,7 @@ def main():
     environment = clean_env(PYTHONPATH=str(ROOT / 'local') + os.pathsep + str(ROOT))
     commands = [[sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py'],
                 ['git', 'diff', '--check'], ['uv', 'lock', '--check'],
-                ['uv', 'build', '--wheel', '--out-dir', '.tools/release-artifacts']]
+                ['uv', 'build', '--wheel', '--out-dir', '.artifacts/release']]
     if args.live_benchmark: commands.append([sys.executable, 'benchmarks/run.py'])
     checks = []
     for command in commands:
@@ -29,7 +29,7 @@ def main():
         result = subprocess.run(command, cwd=ROOT, env=environment)
         checks.append({'command': label, 'exit_code': result.returncode})
         if result.returncode: break
-    output = ROOT / '.tools/release-artifacts'
+    output = ROOT / '.artifacts/release'
     output.mkdir(parents=True, exist_ok=True)
     wheels = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in output.glob('pro_tour_local-0.2.0-*.whl')}
     report = {'checks': checks, 'wheels_sha256': wheels, 'passed': all(c['exit_code'] == 0 for c in checks)}
