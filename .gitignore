@@ -3,8 +3,6 @@ __pycache__/
 *.pyc
 node_modules/
 .env.local
-.jev-upstream/
-tour-output/
 .tools/
 *.egg-info/
 build/

@@ -165,7 +165,3 @@ tests remain here for local development and validation.
 The local CLI uses [`browser-use/jev-ultrafast`](https://github.com/browser-use/jev-ultrafast)
 commit `1231850a0bf1a0c0341fe408ef1668dbbfdfac46`; its MIT license is in
 [`licenses/jev-ultrafast-MIT.txt`](licenses/jev-ultrafast-MIT.txt).
-
-The imported skills are preserved in [`skills-main/`](skills-main/).
-
-The updated Easy Loop workflow is installed at [`.agents/skills/df-easy-loop-e2e/`](.agents/skills/df-easy-loop-e2e/). Its repo-level model assignments are in [`.diffusion/skills/models.yaml`](.diffusion/skills/models.yaml): Codex Astra xhigh writes the plan and code; Cursor Grok 4.7 xhigh critiques, validates, and reviews. Override those role assignments on experiment branches to compare combinations.
