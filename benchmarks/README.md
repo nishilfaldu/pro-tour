@@ -12,13 +12,14 @@ This is an opt-in suite with real Codex (`gpt-6-luna` by default), TypeSafe Jev,
 and the production MP4 recorder. It starts only its own dependency-free synthetic fixture server;
 the product CLI does not start app code. It never starts Chrome and never publishes automatically.
 The fixture is the same Fieldnotes sample app, extended with delayed search, empty states, forms,
-cancellation, and a synthetic HTTP-only demo session cookie. Its independent event oracle checks
-actual state changes, including session reuse across newly owned tabs. It does not change the
-product's outcome-check rules. No real login credentials are entered or exported.
+and cancellation. Its independent event oracle checks actual state changes. The runner opens one
+fixture tab in existing Chrome, resets it between cases, and checks that inspection and recording
+reuse that same tab and window without reloading its document or opening extra app tabs. There is
+no fake login or cookie. It does not change the product's outcome-check rules.
 
 Each case records one version, decodes the MP4 fully, and opens its own Chrome player to verify
 playback reaches the end. Playback tabs may become foreground and are closed afterward. Fixture
-servers and temporary browser connections are stopped in `finally`; an existing shared connector
+tabs, servers, and temporary browser connections are cleaned up in `finally`; an existing shared connector
 is left alive for its owner. Output defaults to a new ignored `.artifacts/benchmarks/<timestamp>/`
 directory. Do not reuse an output directory. Reports include task completion, false success,
 video playability, duration, provider token usage, and preserved version paths. Dollar costs remain

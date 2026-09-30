@@ -29,13 +29,13 @@ For contributing or running from a checkout, see [setup.md](setup.md).
 
 ## Connect your browser
 
-Log into your app in Chrome, open `chrome://inspect/#remote-debugging`, and enable remote debugging. Run in a separate terminal:
+Open Chrome, visit `chrome://inspect/#remote-debugging`, and enable remote debugging. If your app requires login, sign in first. Run in a separate terminal:
 
 ```sh
 pro-tour connect
 ```
 
-Approve Chrome’s prompt and leave the connector running. Tours reuse your app login and close their own tabs afterward. Ctrl-C stops the connector; your Chrome stays open. Optional `--cdp-url` selects an existing Chrome debugging endpoint when discovery is ambiguous.
+Approve Chrome’s prompt and leave the connector running. Tours reuse your open app tab, preserving its current page and state. If the app is not open, Pro Tour opens its URL in that Chrome window. The app tab stays open afterward. Ctrl-C stops the connector; your Chrome stays open. Optional `--cdp-url` selects an existing Chrome debugging endpoint when discovery is ambiguous.
 
 ## Record and publish
 
@@ -44,6 +44,8 @@ Run from the app’s Git repository with its app already running:
 ```sh
 pro-tour record --url http://localhost:3000 --goal "Show the new status filter"
 ```
+
+The selected tab and window are shown before planning. If several tabs match, select one with `--tab-id <id>` using the IDs in the error message.
 
 The model defaults to `gpt-6-luna`. Branch, PR, and base ref are inferred when available. Override them with `--model`, `--pr`, or `--base origin/main`. Pro Tour uses committed changes against the base; it does not fetch refs, install app dependencies, or start the app.
 
@@ -66,7 +68,7 @@ Use `pro-tour <command> --help` for all options.
 
 ## Data and limits
 
-Use synthetic/demo data and log into the app before recording. Codex receives the goal, filtered diff, and page/field context; TypeSafe receives page observations and actions, including entered synthetic text. Videos and traces stay local until you request publishing. Pro Tour has no central collection service. Secrets are passed only to the processes that need them, never to the browser or app.
+Use synthetic/demo data. If the app requires login, sign in before recording. Codex receives the goal, filtered diff, and page/field context; TypeSafe receives page observations and actions, including entered synthetic text. Videos and traces stay local until you request publishing. Pro Tour has no central collection service. Secrets are passed only to the processes that need them, never to the browser or app.
 
 App URLs must be localhost HTTP(S), without credentials, query strings, or fragments. Checks cover visible text and controls. Frames, shadow DOM, canvas, uploads, pop-up tabs, and arbitrary keyboard widgets are known limitations. Concurrent tours are unvalidated; Linux is experimental and Windows recording is unsupported.
 

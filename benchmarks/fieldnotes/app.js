@@ -1,5 +1,4 @@
-const session = await fetch('/session').then(r => r.json());
-document.querySelector('#session-label').textContent = session.signed_in ? 'Signed in: Demo reviewer' : 'Demo session missing';
+const fixture = await fetch('/fixture').then(r => r.json());
 let searchTerm = '';
 let searchPending = false;
 const seed = [
@@ -8,7 +7,7 @@ const seed = [
   { id: 'task-3', name: 'Approve color palette', details: 'Final visual sign-off.', status: 'done' },
 ];
 const labels = { todo: 'To do', 'in-progress': 'In progress', done: 'Done' };
-const storageKey = 'fieldnotes-benchmark-' + session.epoch;
+const storageKey = 'fieldnotes-benchmark-' + fixture.epoch;
 let tasks;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -28,7 +27,7 @@ function render() {
   document.querySelector('#visible-count').textContent = visible.length;
   document.querySelector('#total-count').textContent = tasks.length;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
-  fetch('/events', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({kind: 'render', filter: filter.value, search: searchTerm, visible: visible.map(t => t.name), tasks, session: session.signed_in})});
+  fetch('/events', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({kind: 'render', filter: filter.value, search: searchTerm, visible: visible.map(t => t.name), tasks})});
   list.replaceChildren(...visible.map(task => {
     const row = document.createElement('article');
     row.className = 'task';

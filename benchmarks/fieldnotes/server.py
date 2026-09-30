@@ -23,21 +23,18 @@ class FixtureServer(ThreadingHTTPServer):
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args): pass
 
-    def send(self, body, content_type='application/json', cookie=False):
+    def send(self, body, content_type='application/json'):
         if isinstance(body, dict): body = json.dumps(body).encode()
         self.send_response(200)
         self.send_header('Content-Type', content_type)
         self.send_header('Cache-Control', 'no-store')
         self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'")
-        if cookie: self.send_header('Set-Cookie', 'pro_tour_demo_session=synthetic-only; HttpOnly; SameSite=Strict; Path=/')
         self.end_headers()
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == '/session':
-            self.send({'epoch': self.server.epoch, 'signed_in': 'pro_tour_demo_session=synthetic-only' in self.headers.get('Cookie', '')})
-        elif self.path == '/setup':
-            self.send({'status': 'Synthetic demo session ready'}, cookie=True)
+        if self.path == '/fixture':
+            self.send({'epoch': self.server.epoch})
         elif self.path == '/events':
             with self.server.lock: self.send({'events': list(self.server.events)})
         elif self.path.startswith('/videos/'):
@@ -49,7 +46,9 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.startswith('/player/'):
             name = self.path.removeprefix('/player/')
             if Path(name).name != name or not name.endswith('.mp4'): return self.send_error(404)
-            self.send(('<!doctype html><title>Pro Tour playback</title><video controls autoplay muted style="width:100%;max-height:100vh" src="/videos/' + escape(name, quote=True) + '"></video>').encode(), 'text/html')
+            self.send(('<!doctype html><title>Pro Tour playback</title><link rel="stylesheet" href="/player.css"><video controls autoplay muted src="/videos/' + escape(name, quote=True) + '"></video>').encode(), 'text/html')
+        elif self.path == '/player.css':
+            self.send(b'body{margin:0;background:#111}video{width:100%;height:100vh;object-fit:contain}', 'text/css')
         elif self.path in {'/', '/app.js', '/style.css'}:
             name = 'index.html' if self.path == '/' else self.path[1:]
             types = {'index.html': 'text/html', 'app.js': 'text/javascript', 'style.css': 'text/css'}

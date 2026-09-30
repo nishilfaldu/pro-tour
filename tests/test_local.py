@@ -109,11 +109,12 @@ class LocalTests(unittest.TestCase):
             with self.subTest(failure=failure, publish=wants_publish), tempfile.TemporaryDirectory() as tmp:
                 repo = Path(tmp)
                 args = parser().parse_args(['record', '--url', 'http://localhost:3000', '--base', 'main',
-                                           '--goal', 'Show filter'] + (['--publish'] if wants_publish else []))
+                                           '--goal', 'Show filter', '--tab-id', 'app'] + (['--publish'] if wants_publish else []))
                 def fake_run(command, **kwargs):
                     if command[1:4] == ['-m', 'pro_tour.executor', 'inspect']:
-                        Path(command[-1]).write_text('{}')
+                        Path(command[5]).write_text(json.dumps({'tab': {'id': 'app', 'window_id': 1, 'created': False}}))
                     elif command[1:4] == ['-m', 'pro_tour.executor', 'run']:
+                        self.assertEqual(json.loads(Path(command[-2]).read_text())['tab']['id'], 'app')
                         video = Path(command[-1])
                         video.write_bytes(b'encoded-video-fixture')
                         video.with_suffix('.trace.json').write_text(json.dumps({'status': 'success', 'error': None}))

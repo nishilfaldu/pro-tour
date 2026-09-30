@@ -163,16 +163,13 @@ class ReleaseTests(unittest.TestCase):
                 publish('gh', video, pr, 'fixture', retry_upload=True)
                 self.assertEqual(upload.call_count, 1)
 
-    def test_benchmark_oracle_rejects_completion_without_cancel_or_without_session(self):
+    def test_benchmark_oracle_rejects_completion_without_cancel_or_with_fixture_error(self):
         tasks = [{'name': 'Draft release notes', 'details': 'Summarize the latest changes for the team.', 'status': 'todo'}, {'name': 'Review onboarding flow'}, {'name': 'Approve color palette'}]
-        events = [{'kind': 'render', 'session': True, 'filter': 'todo', 'visible': ['Draft release notes'], 'tasks': tasks},
-                  {'kind': 'render', 'session': True, 'filter': 'all', 'visible': [t['name'] for t in tasks], 'tasks': tasks}]
+        events = [{'kind': 'render', 'filter': 'todo', 'visible': ['Draft release notes'], 'tasks': tasks},
+                  {'kind': 'render', 'filter': 'all', 'visible': [t['name'] for t in tasks], 'tasks': tasks}]
         self.assertFalse(oracle('cancel_edit', events))
         events.insert(0, {'kind': 'cancel', 'name': 'Discarded synthetic draft', 'details': 'Discarded synthetic details'})
         self.assertTrue(oracle('cancel_edit', events))
-        events[-1]['session'] = False
-        self.assertFalse(oracle('cancel_edit', events))
-        events[-1]['session'] = True
         events.append({'kind': 'fixture-error', 'message': 'synthetic fixture failure'})
         self.assertFalse(oracle('cancel_edit', events))
 

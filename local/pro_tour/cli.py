@@ -56,9 +56,21 @@ def record(args, secrets, *, browser_session=None):
                 report['browser'] = identity
                 report['phase'] = 'inspection'
                 page_path = workspace / 'page.json'
-                run([sys.executable, '-m', 'pro_tour.executor', 'inspect', url, str(page_path)],
-                    cwd=directory, env=env, timeout=30)
+                inspection = [sys.executable, '-m', 'pro_tour.executor', 'inspect', url, str(page_path)]
+                if args.tab_id:
+                    inspection.append(args.tab_id)
+                try:
+                    run(inspection, cwd=directory, env=env, timeout=30)
+                except TourError:
+                    if page_path.exists():
+                        diagnostic = json.loads(page_path.read_text())
+                        if diagnostic.get('error'):
+                            raise TourError(diagnostic['error']) from None
+                    raise
                 page = json.loads(page_path.read_text())
+                tab = page.pop('tab')
+                report['tab'] = tab
+                print(f'App tab: {tab["id"]}; window {tab["window_id"]}; {"opened" if tab["created"] else "reused"}. It will stay open.', flush=True)
                 # Known credential values are never sent to planners, browser goals, or trace files.
                 for secret in secrets.values():
                     if secret and any(secret in text for text in (diff, args.goal, json.dumps(page))):
@@ -71,11 +83,12 @@ def record(args, secrets, *, browser_session=None):
                         raise TourError('Credential detected in generated plan')
                 report['planner_usage'] = list(getattr(PROVIDERS[args.provider], 'usage', []))
                 plan['planner'] = {'provider': args.provider, 'model': args.model}
+                plan['tab'] = tab
                 plan_path = workspace / 'plan.json'
                 write_json(plan_path, plan)
                 write_json(video.with_suffix('.plan.json'), plan)
                 report['phase'] = 'execution'
-                print('Jev is choosing browser actions; recording the owned tab…', flush=True)
+                print('Jev is choosing browser actions; recording the app tab…', flush=True)
                 worker_env = {**env, 'TYPESAFE_API_KEY': secrets['TYPESAFE_API_KEY']}
                 if os.environ.get('CODEX_HOME'):
                     worker_env['CODEX_HOME'] = os.environ['CODEX_HOME']
@@ -145,6 +158,7 @@ def parser():
     rec.add_argument('--publish', action='store_true')
     rec.add_argument('--pr', help='Optional explicit associated PR number or URL')
     rec.add_argument('--cdp-url', help='Optional existing local Chrome CDP endpoint')
+    rec.add_argument('--tab-id', help='Select a matching app tab when several are open (otherwise discovered or opened)')
     pub = sub.add_parser('publish')
     pub.add_argument('--video', required=True, type=Path)
     pub.add_argument('--pr', help='PR number or URL (default: video metadata)')

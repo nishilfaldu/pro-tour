@@ -54,21 +54,55 @@ def safe_text(values, fallback=None):
     return provide
 
 
-def initialize():
+def initialize(tab=None, tab_id=None):
     import jev_ultrafast.browser as browser
     from browser_harness.admin import require_existing_daemon
     browser.ensure_daemon = require_existing_daemon
     original = browser.Browser
 
-    class OwnedBrowser(original):
+    class AppBrowser(original):
+        attached = []
+
         def __init__(self, url):
+            from .tabs import select_app_tab
             self.allowed_origin = urlsplit(url).netloc
+            self.session = None
+            self.target = None
             try:
-                super().__init__(url)
+                require_existing_daemon()
+                self.tab = select_app_tab(url, tab['id'] if tab else tab_id,
+                                          expected_window=tab['window_id'] if tab else None)
+                self.target = self.tab['id']
+                self.session = browser.cdp('Target.attachToTarget', targetId=self.target, flatten=True)['sessionId']
+                self.attached.append(self)
+                self.call('Page.bringToFront')
+                deadline = time.monotonic() + 15
+                while self.evaluate('document.readyState') != 'complete':
+                    if time.monotonic() >= deadline:
+                        raise TourError('App tab did not finish loading before recording')
+                    time.sleep(.05)
             except BaseException:
-                if getattr(self, 'target', None):
-                    self.close()
+                self.close()
                 raise
+
+        def close(self):
+            # Both reused and newly opened app tabs remain available for the user.
+            if self.session:
+                session, self.session = self.session, None
+                try:
+                    browser.cdp('Target.detachFromTarget', sessionId=session)
+                except RuntimeError:
+                    pass  # Chrome also detaches when its user closes a tab.
+            self.target = None
+            if self in self.attached:
+                self.attached.remove(self)
+
+        @classmethod
+        def detach_all(cls):
+            # Agent construction can fail during its first observation, before the caller
+            # receives the Agent. Keep that attachment reachable for final cleanup too.
+            for instance in tuple(cls.attached):
+                instance.close()
 
         def observe(self, screenshot=True):
             # Readiness only: keep the existing outcome assertions unchanged. Accessible apps
@@ -95,9 +129,9 @@ def initialize():
                 time.sleep(.75)
             return result
 
-    browser.Browser = OwnedBrowser
+    browser.Browser = AppBrowser
     import jev_ultrafast.agent as jev_agent
-    jev_agent.Browser = OwnedBrowser
+    jev_agent.Browser = AppBrowser
     return browser
 
 
@@ -126,17 +160,17 @@ def install_model_retries():
     model.post_json = request
 
 
-def inspect(url, output):
-    browser = initialize().Browser(url)
+def inspect(url, output, tab_id=None):
+    browser = initialize(tab_id=tab_id).Browser(url)
     try:
-        write_json(output, page_evidence(browser.observe(screenshot=False)))
+        write_json(output, {**page_evidence(browser.observe(screenshot=False)), 'tab': browser.tab})
     finally:
         browser.close()
 
 
 def execute(url, plan, video):
     import jev_ultrafast.agent as jev_agent
-    initialize()
+    adapter = initialize(tab=plan['tab']).Browser
     install_model_retries()
     from jev_ultrafast import Agent
     def observed_text(context):
@@ -160,6 +194,7 @@ def execute(url, plan, video):
     agent = None
     try:
         agent = Agent(url, plan['steps'][0]['goal'])
+        trace['tab'] = agent.browser.tab
         # Reject unsupported credential fields before capturing any page pixels.
         if agent.browser.evaluate("Boolean(document.querySelector('input[type=password]'))"):
             raise TourError('Authenticate before recording; password forms are unsupported')
@@ -222,7 +257,11 @@ def execute(url, plan, video):
             try:
                 agent.close()
             except Exception:
-                trace['status'], trace['error'] = 'failure', 'Owned browser tab cleanup failed'
+                trace['status'], trace['error'] = 'failure', 'App tab detachment failed'
+        try:
+            adapter.detach_all()
+        except Exception:
+            trace['status'], trace['error'] = 'failure', 'App tab detachment failed'
         token = os.environ.get('TYPESAFE_API_KEY', '')
         if token and token in json.dumps(trace):
             trace = json.loads(json.dumps(trace).replace(token, '[REDACTED]'))
@@ -233,12 +272,14 @@ def execute(url, plan, video):
 if __name__ == '__main__':
     try:
         if sys.argv[1] == 'inspect':
-            inspect(sys.argv[2], Path(sys.argv[3]))
+            inspect(sys.argv[2], Path(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else None)
         else:
             result = execute(sys.argv[2], json.loads(Path(sys.argv[3]).read_text()), Path(sys.argv[4]))
             sys.exit(1 if result['status'] == 'failure' else 0)
     except BaseException as exc:
         if isinstance(exc, SystemExit):
             raise
+        if sys.argv[1] == 'inspect' and isinstance(exc, TourError):
+            write_json(Path(sys.argv[3]), {'error': str(exc)})
         print('Browser inspection or tour failed', file=sys.stderr)
         sys.exit(1)

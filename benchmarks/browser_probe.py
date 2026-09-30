@@ -3,8 +3,10 @@ import base64
 import json
 import sys
 import time
+import uuid
 from pathlib import Path
 from browser_harness.helpers import cdp
+from pro_tour.tabs import select_app_tab
 
 
 def owned_tab():
@@ -21,17 +23,46 @@ def evaluate(session, expression):
     return result.get('result', {}).get('value')
 
 
-def setup(url):
-    target, session = owned_tab()
+def prepare(url, output, reset=False):
+    previous = json.loads(output.read_text()) if reset else None
+    tab = select_app_tab(url, previous['id'] if previous else None)
+    if previous:
+        tab['created'] = previous['created']
+    output.write_text(json.dumps(tab))  # Track ownership before any later setup failure.
+    session = cdp('Target.attachToTarget', targetId=tab['id'], flatten=True)['sessionId']
     try:
-        cdp('Page.navigate', session_id=session, url=url + '/setup')
+        if reset:
+            cdp('Page.reload', session_id=session, ignoreCache=True)
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
-            if evaluate(session, "document.readyState === 'complete' && document.body.innerText.includes('Synthetic demo session ready')"):
+            if evaluate(session, "document.readyState === 'complete' && document.querySelectorAll('.task').length === 3"):
+                tab['marker'] = str(uuid.uuid4())
+                evaluate(session, 'window.proTourBenchmarkMarker = ' + json.dumps(tab['marker']))
+                tab['targets'] = sorted(t['targetId'] for t in cdp('Target.getTargets')['targetInfos'] if t['type'] == 'page')
+                output.write_text(json.dumps(tab))
                 return
             time.sleep(.1)
-        raise RuntimeError('Benchmark session setup failed')
-    finally: cdp('Target.closeTarget', targetId=target)
+        raise RuntimeError('Benchmark app setup failed')
+    finally: cdp('Target.detachFromTarget', sessionId=session)
+
+
+def check(url, descriptor, output):
+    expected = json.loads(descriptor.read_text())
+    tab = select_app_tab(url, expected['id'], expected_window=expected['window_id'])
+    session = cdp('Target.attachToTarget', targetId=tab['id'], flatten=True)['sessionId']
+    try:
+        marker = evaluate(session, 'window.proTourBenchmarkMarker')
+        targets = sorted(t['targetId'] for t in cdp('Target.getTargets')['targetInfos'] if t['type'] == 'page')
+        output.write_text(json.dumps({**tab, 'document_preserved': marker == expected['marker'],
+                                      'tabs_unchanged': targets == expected['targets']}))
+    finally: cdp('Target.detachFromTarget', sessionId=session)
+
+
+def cleanup(descriptor):
+    if descriptor.exists():
+        tab = json.loads(descriptor.read_text())
+        if tab['created']:
+            cdp('Target.closeTarget', targetId=tab['id'])
 
 
 def play(url, output):
@@ -59,7 +90,9 @@ def play(url, output):
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'setup': setup(sys.argv[2])
+    if sys.argv[1] in {'prepare', 'reset'}: prepare(sys.argv[2], Path(sys.argv[3]), reset=sys.argv[1] == 'reset')
+    elif sys.argv[1] == 'check': check(sys.argv[2], Path(sys.argv[3]), Path(sys.argv[4]))
+    elif sys.argv[1] == 'cleanup': cleanup(Path(sys.argv[3]))
     elif sys.argv[1] == 'play':
         try: play(sys.argv[2], Path(sys.argv[3]))
         except Exception as exc:
