@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Protocol
 
-from .common import TourError, clean_env, run, write_json
+from .common import CommandError, TourError, clean_env, retry_read, run, write_json
 
 CHECK = {"type": "object", "additionalProperties": False,
          "properties": {"kind": {"type": "string", "enum": ["text_present", "text_absent", "control_value"]},
@@ -68,6 +68,9 @@ TEXT_SCHEMA = {"type": "object", "additionalProperties": False,
 
 
 class CodexPlanner:
+    def __init__(self):
+        self.usage = []
+
     def text(self, *, model, context):
         started = time.monotonic()
         with tempfile.TemporaryDirectory(prefix="pro-tour-text-") as directory:
@@ -88,19 +91,29 @@ justify a safe value, return an empty string so execution will stop. No explanat
                 raise TourError("Codex text helper returned an invalid value") from exc
             if not isinstance(value, str) or not value.strip() or len(value) > 500:
                 raise TourError("Codex could not supply safe demonstration text")
-            return value, {"model": f"codex/{model}", "latency_ms": round((time.monotonic()-started)*1000), "usage": {}}
+            return value, {"model": f"codex/{model}", "latency_ms": round((time.monotonic()-started)*1000),
+                           "usage": self.usage[-1] if self.usage else {}}
 
-    @staticmethod
-    def _invoke(model, prompt, schema, output, directory):
-        run(["codex", "exec", "--ignore-user-config", "--ignore-rules", "--ephemeral",
+    def _invoke(self, model, prompt, schema, output, directory):
+        stdout = retry_read(lambda: run(["codex", "exec", "--json", "--ignore-user-config", "--ignore-rules", "--ephemeral",
              "--skip-git-repo-check", "--sandbox", "read-only", "--model", model,
              "-c", 'model_reasoning_effort="low"', "-c", "features.shell_tool=false",
              "-c", 'web_search="disabled"', "--output-schema", str(schema),
              "--output-last-message", str(output), "-"], cwd=directory,
             env=clean_env(**({"CODEX_HOME": os.environ["CODEX_HOME"]} if "CODEX_HOME" in os.environ else {})),
-            input=prompt, timeout=180)
+            input=prompt, timeout=180), attempts=2,
+            retryable=lambda exc: isinstance(exc, CommandError) and (exc.timed_out or exc.exit_code == 1))
+        for line in stdout.splitlines():
+            try:
+                event = json.loads(line)
+                if event.get('type') == 'turn.completed':
+                    self.usage.append({key: value for key, value in event.get('usage', {}).items()
+                                       if key in {'input_tokens', 'cached_input_tokens', 'output_tokens'} and isinstance(value, int)})
+            except (ValueError, AttributeError):
+                pass
 
     def plan(self, *, model, goal, diff, page):
+        self.usage = []
         with tempfile.TemporaryDirectory(prefix="pro-tour-planner-") as directory:
             workspace = Path(directory)
             schema, output = workspace / "schema.json", workspace / "plan.json"
@@ -115,7 +128,10 @@ the bounded Codex text helper can supply it only after Jev observes and selects 
 text values keyed by observed field labels if typing is needed. Never type passwords, tokens, authentication
 codes, personal data, or credentials; an already-authenticated app session must be provided by the user.
 Each step must have a narrow, independently observable outcome check using visible text or an observed
-control's value. Use text_present/text_absent with expected literal text and label empty; control_value
+control's value AFTER the entire step finishes, not an intermediate state (a cancelled dialog is closed).
+Split steps when a later action hides a state you need to check. Never require mutually exclusive
+states in the same step, such as an empty search result and the restored task list.
+Use text_present/text_absent with expected literal text and label empty; control_value
 requires the exact visible control label and expected value. Do not assert merely that the page loaded.
 Use only observed labels, values, or expectations justified by the diff. Prefer 2–4 steps, including visibly
 showing changed state and its contrast. Avoid destructive actions, external navigation, and unrelated tours.

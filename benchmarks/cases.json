@@ -1,0 +1,17 @@
+[
+  {
+    "id": "create-edit-filter",
+    "goal": "Demonstrate creating and editing a synthetic task and filtering its new status. Start with All statuses. Create a task named Prepare tour rehearsal with Details equal to Synthetic release checklist and status To do, then save it. Reopen its edit form, rename it to Prepare product tour, change Details to Synthetic checklist reviewed and status to Done, then save. Select the Done status filter to show Prepare product tour together with Approve color palette while excluding Draft release notes and Review onboarding flow. Finish with the Done filter selected.",
+    "oracle": "create_edit_filter"
+  },
+  {
+    "id": "delayed-search-empty-recovery",
+    "goal": "Demonstrate the delayed Search tasks feature. Search for onboarding using Apply search and wait for Search updated; show only Review onboarding flow. Clear search to restore all three tasks. Search for synthetic-no-match using Apply search and wait for Search updated; visibly show No tasks match the selected filters. Finally Clear search again and finish showing all three original tasks.",
+    "oracle": "search_recovery"
+  },
+  {
+    "id": "cancel-unsaved-edit",
+    "goal": "Demonstrate that cancelling an edit preserves the task. Open Edit Draft release notes. Replace Task name with Discarded synthetic draft and Details with Discarded synthetic details, then click Cancel without saving. Confirm Draft release notes still appears with its original details Summarize the latest changes for the team., and Discarded synthetic draft is absent. Select To do to show Draft release notes, then restore All statuses and finish with the original three tasks.",
+    "oracle": "cancel_edit"
+  }
+]

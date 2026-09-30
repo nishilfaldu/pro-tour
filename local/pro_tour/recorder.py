@@ -5,7 +5,7 @@ import subprocess
 import sys
 import time
 
-from .common import clean_env, stop
+from .common import clean_env, stop, tab_capture_lock
 
 
 def record(session, output):
@@ -22,8 +22,9 @@ def record(session, output):
         while True:
             if select.select([sys.stdin], [], [], 0)[0]:
                 break  # STOP or parent EOF; both finalize the file.
-            frame = cdp('Page.captureScreenshot', session_id=session, format='jpeg', quality=85,
-                        captureBeyondViewport=False)['data']
+            with tab_capture_lock(session):
+                frame = cdp('Page.captureScreenshot', session_id=session, format='jpeg', quality=85,
+                            captureBeyondViewport=False)['data']
             encoder.stdin.write(base64.b64decode(frame))
             encoder.stdin.flush()
             frames += 1

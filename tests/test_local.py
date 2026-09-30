@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import sys
 import unittest
-from contextlib import ExitStack, redirect_stdout
+from contextlib import ExitStack, nullcontext, redirect_stdout
 from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -117,17 +117,17 @@ class LocalTests(unittest.TestCase):
                         video = Path(command[-1])
                         video.write_bytes(b'encoded-video-fixture')
                         video.with_suffix('.trace.json').write_text(json.dumps({'status': 'success', 'error': None}))
+                    if command[:2] == ['git', 'symbolic-ref']: return 'feat/filter'
                     return ''
                 with ExitStack() as stack:
                     stack.enter_context(redirect_stdout(StringIO()))
                     for name, value in [('repository', repo), ('branch_diff', ('feat/filter', '+filter')),
-                                        ('check_pin', None), ('shutil.which', '/trusted/tool'),
-                                        ('subprocess.Popen', Mock(poll=Mock(return_value=None))), ('stop', None),
+                                        ('record_dependencies', None), ('app_ready', None),
+                                        ('connected_browser', nullcontext(({}, {}))),
                                         ('probe_video', {'codec': 'h264'})]:
                         stack.enter_context(patch('pro_tour.cli.' + name, return_value=value))
                     stack.enter_context(patch('pro_tour.cli.run', side_effect=fake_run))
-                    stack.enter_context(patch('pro_tour.cli.urllib.request.urlopen')).return_value.__enter__.return_value.status = 200
-                    stack.enter_context(patch('pro_tour.cli.PROVIDERS', {'codex': Mock(
+                    stack.enter_context(patch('pro_tour.cli.PROVIDERS', {'codex': Mock(usage=[],
                         plan=Mock(return_value={'steps': [], 'text_values': []}))}))
                     gh = stack.enter_context(patch('pro_tour.cli.github_cli', return_value='/trusted/gh'))
                     lookup = stack.enter_context(patch('pro_tour.cli.resolve_pr'))
@@ -161,8 +161,9 @@ class LocalTests(unittest.TestCase):
             video = Path(tmp) / 'demo.mp4'
             video.write_bytes(b'local-video')
             pr = {'number': 4, 'repo': 'nishilfaldu/pro-tour', 'url': 'https://github.com/nishilfaldu/pro-tour/pull/4'}
-            with patch('pro_tour.publishing.probe_video'), patch('pro_tour.publishing.run',
-                    side_effect=['--attach', TourError('gh failed')]):
+            with patch('pro_tour.publishing.probe_video'), patch('pro_tour.publishing.require_media_support'), \
+                    patch('pro_tour.publishing.find_upload', return_value=None), \
+                    patch('pro_tour.publishing.run', side_effect=TourError('gh failed')):
                 with self.assertRaises(TourError):
                     publish('gh', video, pr, 'credential')
             self.assertEqual(video.read_bytes(), b'local-video')

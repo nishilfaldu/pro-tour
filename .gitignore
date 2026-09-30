@@ -9,3 +9,4 @@ tour-output/
 *.egg-info/
 build/
 dist/
+.venv/

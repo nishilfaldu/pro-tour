@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Fieldnotes · Tour benchmark</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><div class="mark">F<span>·</span></div><span>FIELDNOTES / WORKSPACE</span><span id="session-label">Checking demo session</span><button id="reset" type="button">Reset demo</button></header>
+    <div class="heading"><div><p class="eyebrow">PROJECT / AUTUMN RELEASE</p><h1>Task board<span class="period">.</span></h1><p class="subtitle">A small place to keep the work moving.</p></div><button id="new-task" class="primary" type="button">+ New task</button></div>
+    <div class="toolbar"><div class="summary"><strong id="visible-count">0</strong> tasks in view <span class="sep">/</span> <span id="total-count">0</span> total</div><label for="status-filter">Status <select id="status-filter"><option value="all">All statuses</option><option value="todo">To do</option><option value="in-progress">In progress</option><option value="done">Done</option></select></label></div>
+    <div class="toolbar"><label>Search tasks<input id="search" type="search" placeholder="Task name or details"></label><button id="apply-search" type="button">Apply search</button><button id="clear-search" type="button">Clear search</button><span id="search-state" role="status">Search ready</span></div>
+    <section id="task-list" class="task-list" aria-label="Tasks"></section>
+    <p id="empty-state" class="empty" hidden>No tasks match the selected filters.</p>
+    <footer>FIELDNOTES <span>·</span> A REPEATABLE DEMO WORKSPACE</footer>
+  </main>
+  <dialog id="task-dialog"><form id="task-form"><div class="dialog-head"><p class="eyebrow" id="dialog-mode">NEW TASK</p><button id="close-dialog" type="button" aria-label="Close">×</button></div><h2 id="dialog-title">Add a task</h2><label>Task name<input id="task-name" name="name" required maxlength="100" autocomplete="off"></label><label>Details<textarea id="task-details" name="details" rows="3" maxlength="300"></textarea></label><label>Status<select id="task-status" name="status"><option value="todo">To do</option><option value="in-progress">In progress</option><option value="done">Done</option></select></label><div class="dialog-actions"><button id="cancel-dialog" type="button">Cancel</button><button class="primary" type="submit">Save task</button></div></form></dialog>
+</body>
+</html>

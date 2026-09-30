@@ -9,11 +9,11 @@ import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .common import TourError, clean_env, stop, write_json
+from .common import TourError, clean_env, stop, write_json, tab_capture_lock
 
 
 def harness_env():
-    names = ('BU_NAME', 'BH_RUNTIME_DIR', 'BH_CONFIG_DIR', 'BH_AGENT_WORKSPACE', 'BH_TMP_DIR')
+    names = ('BU_NAME', 'BH_RUNTIME_DIR', 'BH_CONFIG_DIR', 'BH_AGENT_WORKSPACE', 'BH_TMP_DIR', 'BH_TELEMETRY')
     return clean_env(**{k: os.environ[k] for k in names if k in os.environ},
                      PYTHONPATH=str(Path(__file__).resolve().parents[1]))
 
@@ -70,6 +70,17 @@ def initialize():
                     self.close()
                 raise
 
+        def observe(self, screenshot=True):
+            # Readiness only: keep the existing outcome assertions unchanged. Accessible apps
+            # announce pending updates with aria-busy; don't decide from their intermediate DOM.
+            deadline = time.monotonic() + 5
+            while self.evaluate("Boolean(document.querySelector('[aria-busy=true]'))"):
+                if time.monotonic() >= deadline:
+                    raise TourError('App remained busy for 5 seconds; no action executed from its intermediate state')
+                time.sleep(.1)
+            with tab_capture_lock(self.session):
+                return super().observe(screenshot=screenshot)
+
         def act(self, action, page, text=None):
             if urlsplit(page['url']).netloc != self.allowed_origin:
                 raise TourError('Browser left the local app origin')
@@ -77,12 +88,42 @@ def initialize():
                 node = action['node']
                 if self.evaluate(f"window.__jevFast?.nodes.get({node})?.type === 'password'"):
                     raise TourError('Password entry is unsupported')
-            return super().act(action, page, text=text)
+            with tab_capture_lock(self.session):
+                result = super().act(action, page, text=text)
+            # Let the recording show each chosen interaction before the next decision.
+            if action['kind'] != 'wait':
+                time.sleep(.75)
+            return result
 
     browser.Browser = OwnedBrowser
     import jev_ultrafast.agent as jev_agent
     jev_agent.Browser = OwnedBrowser
     return browser
+
+
+def install_model_retries():
+    """Retry only decision requests, before Jev executes an action."""
+    import httpx
+    import jev_ultrafast.model as model
+    def request(url, key, body):
+        for attempt in range(3):
+            try:
+                response = model.CLIENT.post(url, json=body, headers={'Authorization': f'Bearer {key}'})
+            except httpx.HTTPError:
+                if attempt < 2:
+                    time.sleep(.5 * 2**attempt)
+                    continue
+                raise TourError('TypeSafe connection failed after 3 attempts; no action executed') from None
+            if response.status_code in {429, 500, 502, 503, 504, 529} and attempt < 2:
+                time.sleep(.5 * 2**attempt)
+                continue
+            if response.is_error:
+                raise TourError(f'TypeSafe returned HTTP {response.status_code}; no action executed')
+            try:
+                return response.json()
+            except ValueError:
+                raise TourError('TypeSafe returned invalid JSON; no action executed') from None
+    model.post_json = request
 
 
 def inspect(url, output):
@@ -96,6 +137,7 @@ def inspect(url, output):
 def execute(url, plan, video):
     import jev_ultrafast.agent as jev_agent
     initialize()
+    install_model_retries()
     from jev_ultrafast import Agent
     def observed_text(context):
         from .providers import PROVIDERS
@@ -134,12 +176,18 @@ def execute(url, plan, video):
             entry = {'goal': step['goal'], 'before': page_evidence(agent.browser.observe(screenshot=False)),
                      'checks': [], 'jev_status': 'running'}
             trace['steps'].append(entry)
+            last_action_count, stalled = len(agent.state['history']), 0
             for state in agent.run():
                 # Stop a navigation away from the local app, rather than following its instructions.
                 if urlsplit(state['page']['url']).netloc != urlsplit(url).netloc:
                     raise TourError('Jev left the local app origin')
                 if recorder.poll() is not None:
                     raise TourError('Recorder stopped during the tour')
+                count = len(agent.state['history'])
+                stalled = stalled + 1 if count == last_action_count and state['status'] == 'ready' else 0
+                last_action_count = count
+                if stalled >= 5:
+                    raise TourError('Browser target stayed stale or covered for 5 decisions; inspect the trace before retrying')
             entry['jev_status'] = agent.state['status']
             fresh = agent.browser.observe(screenshot=False)
             entry['after'] = page_evidence(fresh)

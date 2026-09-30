@@ -37,6 +37,56 @@ def branch_diff(repo, base):
     return branch, diff
 
 
+def derive_base(repo, explicit=None, pr=None):
+    if explicit:
+        return explicit, 'argument'
+    if pr:
+        # Fork PR bases belong to the target repository, which may differ from origin.
+        target_url = 'https://github.com/' + pr['repo'] + '.git'
+        remotes = run(['git', 'remote'], cwd=repo).splitlines()
+        for remote in remotes:
+            url = run(['git', 'remote', 'get-url', remote], cwd=repo)
+            normalized = url.replace('git@github.com:', 'https://github.com/').removesuffix('.git')
+            if normalized == target_url.removesuffix('.git'):
+                base = remote + '/' + pr['baseRefName']
+                try:
+                    run(['git', 'rev-parse', '--verify', base + '^{commit}'], cwd=repo)
+                    return base, 'pr'
+                except TourError:
+                    raise TourError(f'PR base {base} is not available locally. Fetch that ref yourself or supply --base.')
+        raise TourError('PR target repository has no matching local remote. Add/fetch its base yourself or supply --base.')
+    try:
+        base = run(['git', 'symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD'], cwd=repo)
+        return base.removeprefix('refs/remotes/'), 'remote-default'
+    except TourError as exc:
+        raise TourError('Cannot infer the base: no accessible PR or local origin/HEAD. Supply --base <ref>.') from exc
+
+
+def verify_pr_repository(repo, pr):
+    if not pr.get('head_repo'):
+        return
+    for remote in run(['git', 'remote'], cwd=repo).splitlines():
+        url = run(['git', 'remote', 'get-url', remote], cwd=repo)
+        match = re.search(r'github\.com[:/]([^/]+/[^/]+?)(?:\.git)?$', url)
+        if match and match[1].casefold() == pr['head_repo'].casefold():
+            return
+    raise TourError('PR head repository does not match a local Git remote; verify --pr and your checkout')
+
+
+def video_pr(video):
+    for suffix in ('.report.json', '.publish.json'):
+        path = video.with_suffix(suffix)
+        try:
+            import json
+            data = json.loads(path.read_text())
+            target = data.get('pr_url')
+            if target:
+                return target
+        except (OSError, ValueError, AttributeError):
+            continue
+    raise TourError('No PR recorded in video metadata. Supply --pr <number-or-url>.')
+
+
 def sanitized_branch(branch):
     return re.sub(r'[^a-zA-Z0-9._-]+', '-', branch).strip('.-')[:120] or "branch"
 

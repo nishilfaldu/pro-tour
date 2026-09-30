@@ -1,10 +1,12 @@
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools==75.8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pro-tour-local"
-version = "0.1.0"
+version = "0.2.0"
+description = "Local feature walkthroughs planned by Codex, driven by Jev, and recorded to MP4"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "jev-ultrafast @ git+https://github.com/browser-use/jev-ultrafast.git@1231850a0bf1a0c0341fe408ef1668dbbfdfac46",

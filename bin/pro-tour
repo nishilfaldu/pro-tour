@@ -1,8 +1,11 @@
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 python="$root/.tools/local-venv/bin/python"
+if [ ! -x "$python" ] && [ -x "$root/.venv/bin/python" ]; then
+  python="$root/.venv/bin/python"
+fi
 if [ ! -x "$python" ]; then
-  echo 'Set up Pro Tour tooling first: uv venv --python 3.12 .tools/local-venv && uv pip install --python .tools/local-venv/bin/python -e .' >&2
+  echo 'Set up trusted Pro Tour tooling first: run uv sync --frozen --python 3.12 in the Pro Tour checkout' >&2
   exit 1
 fi
 PYTHONPATH="$root/local" exec "$python" -m pro_tour.cli "$@"
