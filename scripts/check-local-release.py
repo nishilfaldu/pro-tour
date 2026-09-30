@@ -19,7 +19,8 @@ def main():
     args = parser.parse_args()
     environment = clean_env(PYTHONPATH=str(ROOT / 'local') + os.pathsep + str(ROOT))
     commands = [[sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py'],
-                ['git', 'diff', '--check'], ['uv', 'lock', '--check'],
+                ['git', 'diff', '--check'],
+                [sys.executable, '-c', 'from pro_tour.health import check_pin; check_pin()'],
                 ['uv', 'build', '--wheel', '--out-dir', '.artifacts/release']]
     if args.live_benchmark: commands.append([sys.executable, 'benchmarks/run.py'])
     checks = []

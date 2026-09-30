@@ -11,12 +11,11 @@ Install from the current local-CLI branch. The repository is currently private, 
 ```sh
 git clone --depth 1 --single-branch --branch exp/sol-low-author-grok47-low-reviewer \
   https://github.com/nishilfaldu/pro-tour.git pro-tour-install
-uv tool install --python 3.12 \
-  --constraints pro-tour-install/requirements-runtime.lock ./pro-tour-install
+uv tool install --upgrade --python 3.12 ./pro-tour-install
 uv tool update-shell
 ```
 
-This installs `pro-tour` in an isolated environment using the pinned runtime dependencies. Restart your terminal if `pro-tour` is not on PATH.
+This installs `pro-tour` in an isolated environment with the newest compatible indirect dependencies. Jev and Browser Harness retain their explicit pins. Restart your terminal if `pro-tour` is not on PATH.
 
 Put `TYPESAFE_API_KEY` in `~/.config/pro-tour/.env.local`. Publishing also needs `GH_MEDIA_TOKEN` and authenticated `gh` on PATH with support for `gh pr comment --attach`. GitHub access is optional for recording.
 

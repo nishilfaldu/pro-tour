@@ -9,7 +9,7 @@ Use macOS with Python 3.12+, `uv`, `ffmpeg`/`ffprobe`, an authenticated Codex CL
 From the Pro Tour checkout:
 
 ```sh
-uv sync --frozen --python 3.12
+uv sync --upgrade --python 3.12
 export PATH="$PWD/bin:$PATH"
 ```
 
@@ -31,7 +31,7 @@ npm --prefix sample_app ci
 npm --prefix sample_app test
 ```
 
-The release check runs Python tests, checks the dependency lock, and builds a wheel. The JavaScript tests include a real Chrome journey.
+The release check runs Python tests, checks the installed Jev and Browser Harness pins, and builds a wheel. The JavaScript tests include a real Chrome journey.
 
 `npm --prefix sample_app start` runs the synthetic task board at <http://127.0.0.1:4173>. Use **Reset demo** between tours. Its package files, JavaScript tests, and Node dependencies live entirely inside `sample_app/`.
 
@@ -49,6 +49,6 @@ uv run python benchmarks/run.py
 uv build --wheel
 ```
 
-Install the resulting wheel in a dedicated Python 3.12 environment with `uv pip install --python <environment-python> --constraint requirements-runtime.lock <wheel-path>`. Add that environment’s `bin` to PATH. Standalone installations read credentials from `~/.config/pro-tour/.env.local` by default.
+Install the resulting wheel in a dedicated Python 3.12 environment with `uv pip install --upgrade --python <environment-python> <wheel-path>`. Add that environment’s `bin` to PATH. Standalone installations read credentials from `~/.config/pro-tour/.env.local` by default.
 
-Dependencies and Jev’s exact commit pin are defined in [pyproject.toml](pyproject.toml); `uv.lock` and `requirements-runtime.lock` preserve the resolved versions.
+Dependencies and Jev’s exact commit pin are defined in [pyproject.toml](pyproject.toml). Indirect dependencies resolve to the newest compatible versions during setup; run `uv sync --upgrade --python 3.12` to refresh an existing environment. UV generates a local ignored `uv.lock` for subsequent runs; it is not committed or used to constrain standalone installations. Recording never installs or updates dependencies.

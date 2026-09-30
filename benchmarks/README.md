@@ -1,6 +1,6 @@
 # Local pipeline benchmark
 
-Run from the trusted Pro Tour checkout after `uv sync --frozen` and `pro-tour connect`:
+Run from the trusted Pro Tour checkout after `uv sync --upgrade --python 3.12` and `pro-tour connect`:
 
 ```sh
 uv run python benchmarks/run.py
