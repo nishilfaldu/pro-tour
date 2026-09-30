@@ -77,8 +77,8 @@ def benchmark(args, output):
     run(['git', 'commit', '-m', 'Benchmark baseline'], cwd=repo)
     run(['git', 'update-ref', 'refs/remotes/origin/main', 'HEAD'], cwd=repo)
     run(['git', 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main'], cwd=repo)
-    run(['git', 'checkout', '-b', 'bench/fieldnotes'], cwd=repo)
-    for name in ('index.html', 'app.js', 'style.css'): (repo / name).write_bytes((ROOT / 'fieldnotes' / name).read_bytes())
+    run(['git', 'checkout', '-b', 'bench/sample-todo-app'], cwd=repo)
+    for name in ('index.html', 'app.js', 'style.css'): (repo / name).write_bytes((ROOT / 'sample-todo-app' / name).read_bytes())
     run(['git', 'add', '.'], cwd=repo)
     run(['git', 'commit', '-m', 'Add synthetic forms, filters and delayed search'], cwd=repo)
     cases = json.loads((ROOT / 'cases.json').read_text())
@@ -136,7 +136,7 @@ def benchmark(args, output):
         with tempfile.TemporaryDirectory(prefix='pro-tour-bench-') as directory:
             workspace = Path(directory)
             ready = workspace / 'server.json'
-            server = subprocess.Popen([sys.executable, str(ROOT / 'fieldnotes/server.py'), '--ready', str(ready), '--videos', str(repo / '.videos')], env=clean_env(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            server = subprocess.Popen([sys.executable, str(ROOT / 'sample-todo-app/server.py'), '--ready', str(ready), '--videos', str(repo / '.videos')], env=clean_env(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             for _ in range(100):
                 if ready.exists(): break
                 if server.poll() is not None: raise TourError('Benchmark fixture server failed')

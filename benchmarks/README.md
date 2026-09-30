@@ -11,7 +11,7 @@ uv run --no-sync python -B scripts/check-local-release.py
 This is an opt-in suite with real Codex (`gpt-6-luna` by default), TypeSafe Jev, Browser Harness,
 and the production MP4 recorder. It starts only its own dependency-free synthetic fixture server;
 the product CLI does not start app code. It never starts Chrome and never publishes automatically.
-The fixture is the same Fieldnotes sample app, extended with delayed search, empty states, forms,
+The task-board fixture in `sample-todo-app/` is based on the sample app, extended with delayed search, empty states, forms,
 and cancellation. Its independent event oracle checks actual state changes. The runner opens one
 fixture tab in existing Chrome, resets it between cases, and checks that inspection and recording
 reuse that same tab and window without reloading its document or opening extra app tabs. There is
