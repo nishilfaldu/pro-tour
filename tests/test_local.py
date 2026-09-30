@@ -4,13 +4,15 @@ import subprocess
 import tempfile
 import sys
 import unittest
+from contextlib import ExitStack, redirect_stdout
+from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from pro_tour.common import TourError, clean_env, run
 from pro_tour.executor import safe_text, verify_checks
 from pro_tour.providers import validate_plan
-from pro_tour.publishing import github_cli, publish, require_media_support, resolve_pr
+from pro_tour.publishing import PrAssociationError, github_cli, publish, require_media_support, resolve_pr
 from pro_tour.repository import branch_diff, local_url, reserve_video
 
 
@@ -100,6 +102,59 @@ class LocalTests(unittest.TestCase):
         with patch('pro_tour.publishing.run', side_effect=TourError('GitHub unavailable')):
             with self.assertRaises(TourError):
                 resolve_pr('gh', Path('.'), branch='feat/no-pr')
+
+    def test_recording_survives_missing_cli_and_failed_lookup_and_saves_before_publish_error(self):
+        from pro_tour.cli import parser, record
+        for failure, wants_publish in [('cli', False), ('lookup', False), ('cli', True), ('lookup', True)]:
+            with self.subTest(failure=failure, publish=wants_publish), tempfile.TemporaryDirectory() as tmp:
+                repo = Path(tmp)
+                args = parser().parse_args(['record', '--url', 'http://localhost:3000', '--base', 'main',
+                                           '--goal', 'Show filter'] + (['--publish'] if wants_publish else []))
+                def fake_run(command, **kwargs):
+                    if command[1:4] == ['-m', 'pro_tour.executor', 'inspect']:
+                        Path(command[-1]).write_text('{}')
+                    elif command[1:4] == ['-m', 'pro_tour.executor', 'run']:
+                        video = Path(command[-1])
+                        video.write_bytes(b'encoded-video-fixture')
+                        video.with_suffix('.trace.json').write_text(json.dumps({'status': 'success', 'error': None}))
+                    return ''
+                with ExitStack() as stack:
+                    stack.enter_context(redirect_stdout(StringIO()))
+                    for name, value in [('repository', repo), ('branch_diff', ('feat/filter', '+filter')),
+                                        ('check_pin', None), ('shutil.which', '/trusted/tool'),
+                                        ('subprocess.Popen', Mock(poll=Mock(return_value=None))), ('stop', None),
+                                        ('probe_video', {'codec': 'h264'})]:
+                        stack.enter_context(patch('pro_tour.cli.' + name, return_value=value))
+                    stack.enter_context(patch('pro_tour.cli.run', side_effect=fake_run))
+                    stack.enter_context(patch('pro_tour.cli.urllib.request.urlopen')).return_value.__enter__.return_value.status = 200
+                    stack.enter_context(patch('pro_tour.cli.PROVIDERS', {'codex': Mock(
+                        plan=Mock(return_value={'steps': [], 'text_values': []}))}))
+                    gh = stack.enter_context(patch('pro_tour.cli.github_cli', return_value='/trusted/gh'))
+                    lookup = stack.enter_context(patch('pro_tour.cli.resolve_pr'))
+                    if failure == 'cli':
+                        gh.side_effect = TourError('GitHub CLI missing')
+                    else:
+                        lookup.side_effect = TourError('GitHub unavailable')
+                    upload = stack.enter_context(patch('pro_tour.cli.publish'))
+                    code = record(args, {'TYPESAFE_API_KEY': 'fixture'})
+                    upload.assert_not_called()
+                self.assertEqual(code, 1 if wants_publish else 0)
+                video = repo / '.videos/feat-filter-no-pr-v1.mp4'
+                self.assertEqual(video.read_bytes(), b'encoded-video-fixture')
+                report = json.loads(video.with_suffix('.report.json').read_text())
+                self.assertEqual(report['status'], 'success')
+                self.assertTrue(report['video_saved'])
+                self.assertEqual(report['pr_lookup']['status'], 'unavailable')
+                self.assertEqual((report['publication'] or {}).get('status'), 'failure' if wants_publish else None)
+
+    def test_invalid_or_ambiguous_pr_does_not_silently_fall_back(self):
+        with patch('pro_tour.publishing.run') as command:
+            with self.assertRaises(PrAssociationError):
+                resolve_pr('gh', Path('.'), target='not-a-pr')
+            command.assert_not_called()
+        with patch('pro_tour.publishing.run', return_value='[{}, {}]'):
+            with self.assertRaisesRegex(PrAssociationError, 'More than one PR'):
+                resolve_pr('gh', Path('.'), branch='feat/filter')
 
     def test_upload_failure_preserves_local_file(self):
         with tempfile.TemporaryDirectory() as tmp:

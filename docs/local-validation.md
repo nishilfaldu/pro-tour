@@ -8,6 +8,14 @@ worktree. Neither the original `/Users/happyhome/Desktop/pro-tour` nor the Astra
 
 ## CLI simplification follow-up
 
+Local recording now continues when `gh` is missing or PR lookup fails due to authentication/network
+access. Its report records `pr_lookup: unavailable`, separately from a confirmed missing PR. The
+`no-pr` filename fallback means no verified association. `--publish` still saves the video before
+reporting unavailable GitHub access; standalone publishing remains authenticated. Invalid or ambiguous
+explicit associations still fail rather than being silently ignored. All 19 Python tests passed,
+including orchestration fixtures for both unavailable-access paths with and without publishing. These
+follow-up fixtures stub browser/model/media operations; they are not another live video validation.
+
 `--gh` has been removed. The CLI resolves `gh` from `PATH`, gives an installation message if it is
 missing, and gives an update message when media attachments are unsupported. For reproducing these
 publish checks, put a media-capable GitHub CLI on `PATH`. The follow-up passed 17 Python tests, a real

@@ -15,8 +15,9 @@ uv venv --python 3.12 .tools/local-venv
 uv pip install --python .tools/local-venv/bin/python -e .
 ```
 
-Install `ffmpeg`/`ffprobe`, authenticated `codex`, and `gh` separately. Pro Tour discovers `gh` on
-`PATH` and gives an installation message if it is missing. Publishing requires `gh pr comment --attach`;
+Install `ffmpeg`/`ffprobe` and authenticated `codex` separately. GitHub access is optional for local
+recording. Pro Tour discovers `gh` on `PATH` to associate the current branch with a PR when available.
+Publishing requires authenticated `gh` with `gh pr comment --attach`;
 if your CLI lacks that feature, Pro Tour asks you to update it and preserves the local video. Put `TYPESAFE_API_KEY` and `GH_MEDIA_TOKEN` in this checkout's
 ignored `.env.local` (or supply a trusted `--secrets-file`); the app repository's env files are never
 loaded implicitly. A non-editable installation defaults to `~/.config/pro-tour/.env.local` instead.
@@ -55,9 +56,12 @@ processes receive no model or GitHub token. Only the Jev worker receives the Typ
 command receives the media token. The CLI never reads or executes app configuration or app code.
 
 Each recording reserves `.videos/<sanitized-branch>-pr<number>-v<N>.mp4` without overwriting earlier
-versions; a branch with no open PR uses `-no-pr-v<N>.mp4`. `.videos/` is added to `.gitignore` once.
-A GitHub lookup failure is an error, distinct from a confirmed missing PR. Use `--pr` to disambiguate an
-associated PR. Forks and GitHub Enterprise are outside this MVP.
+versions; a branch with no verified PR association uses `-no-pr-v<N>.mp4`. `.videos/` is added to
+`.gitignore` once. Missing GitHub tooling, authentication, or connectivity does not block local recording.
+The report's `pr_lookup` distinguishes `matched`, confirmed `missing`, and `unavailable`; the filename
+alone does not prove that no PR exists. If `--publish` cannot access GitHub, the video is saved first and
+publication returns an error. Publish it later with `pro-tour publish --video <path> --pr <number-or-url>`.
+Use `--pr` to disambiguate an associated PR. Forks and GitHub Enterprise are outside this MVP.
 
 The `.plan.json`, `.trace.json`, and `.report.json` beside the video record goals, safe text, Jev decisions,
 action timings, fresh observations, outcome assertions, and media validation. `success` requires executed

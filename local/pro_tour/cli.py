@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .common import TourError, clean_env, run, stop, write_json
 from .providers import PROVIDERS
-from .publishing import github_cli, probe_video, publish, resolve_pr
+from .publishing import PrAssociationError, github_cli, probe_video, publish, resolve_pr, validate_pr_target
 from .repository import branch_diff, credential_file, local_url, repository, reserve_video
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,10 +32,19 @@ def check_pin():
 
 def record(args, secrets):
     url = local_url(args.url)
-    gh = github_cli()
     repo = repository(Path.cwd())
     branch, diff = branch_diff(repo, args.base)
-    pr = resolve_pr(gh, repo, target=args.pr) if args.pr else resolve_pr(gh, repo, branch=branch)
+    validate_pr_target(args.pr)
+    gh, pr = None, None
+    try:
+        gh = github_cli()
+        pr = resolve_pr(gh, repo, target=args.pr) if args.pr else resolve_pr(gh, repo, branch=branch)
+        pr_lookup = {'status': 'matched' if pr else 'missing'}
+    except PrAssociationError:
+        raise
+    except TourError as exc:
+        pr_lookup = {'status': 'unavailable', 'error': str(exc)}
+        print('PR lookup unavailable; recording locally without a verified PR association.', flush=True)
     if pr and pr['headRefName'] != branch:
         raise TourError('Associated PR head must match the current app branch')
     if not secrets.get('TYPESAFE_API_KEY'):
@@ -53,7 +62,8 @@ def record(args, secrets):
         raise TourError('App is not reachable; start it yourself before recording') from exc
     video = reserve_video(repo, branch, pr['number'] if pr else None)
     report = {'status': 'failure', 'video': str(video), 'branch': branch, 'base': args.base,
-              'model': args.model, 'pr_url': pr['url'] if pr else None, 'publication': None}
+              'model': args.model, 'pr_url': pr['url'] if pr else None, 'pr_lookup': pr_lookup,
+              'publication': None}
     print(f'Recording target: {video}', flush=True)
     daemon = None
     try:
@@ -118,6 +128,8 @@ def record(args, secrets):
                 report['status'] = 'failure'
             if args.publish and report['status'] != 'failure':
                 if not pr:
+                    if pr_lookup['status'] == 'unavailable':
+                        raise TourError('GitHub access unavailable; local recording saved. Install gh and authenticate with gh auth login, then publish later with --pr')
                     raise TourError('No associated PR; local recording saved. Publish later with --pr')
                 report['publication'] = publish(gh, video, pr, secrets.get('GH_MEDIA_TOKEN'))
     except (TourError, KeyboardInterrupt) as exc:

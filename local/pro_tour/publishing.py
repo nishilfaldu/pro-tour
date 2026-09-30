@@ -7,6 +7,15 @@ from pathlib import Path
 from .common import TourError, clean_env, run
 
 
+class PrAssociationError(TourError):
+    """Invalid or ambiguous association that should not silently fall back."""
+
+
+def validate_pr_target(target):
+    if target and not re.fullmatch(r'[1-9]\d*|https://github\.com/[\w.-]+/[\w.-]+/pull/[1-9]\d*', target):
+        raise PrAssociationError('Invalid PR number or GitHub PR URL')
+
+
 def github_cli():
     executable = shutil.which('gh')
     if not executable:
@@ -21,22 +30,21 @@ def require_media_support(gh):
 
 
 def resolve_pr(gh, repo, target=None, branch=None):
-    if target and not re.fullmatch(r'[1-9]\d*|https://github\.com/[\w.-]+/[\w.-]+/pull/[1-9]\d*', target):
-        raise TourError('Invalid PR number or GitHub PR URL')
+    validate_pr_target(target)
     if branch is not None:
         # An empty array is the only evidence accepted for "no PR". Auth/network failures are errors.
         raw = run([gh, 'pr', 'list', '--head', branch, '--state', 'open', '--json',
                    'number,url,headRefName,headRepositoryOwner'], cwd=repo)
         entries = json.loads(raw)
         if len(entries) > 1:
-            raise TourError('More than one PR matches the branch; use --pr')
+            raise PrAssociationError('More than one PR matches the branch; use --pr')
         if not entries:
             return None
         target = entries[0]['url']
     data = json.loads(run([gh, 'pr', 'view', target, '--json', 'number,url,headRefName'], cwd=repo))
     match = re.fullmatch(r'https://github\.com/([\w.-]+/[\w.-]+)/pull/([1-9]\d*)', data['url'])
     if not match:
-        raise TourError('Unsupported PR URL')
+        raise PrAssociationError('Unsupported PR URL')
     data['repo'] = match[1]
     return data
 
