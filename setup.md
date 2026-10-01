@@ -4,22 +4,23 @@ These instructions are for developing Pro Tour or running it from a checkout. Fo
 
 ## Local environment
 
-Use macOS with Python 3.12+, `uv`, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and Chrome. Node.js is needed only for the sample app and its tests.
+Use macOS with Git, Python 3.12+, `uv`, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and Chrome. Node.js and npm are needed only for the sample app and its tests.
 
 From the Pro Tour checkout:
 
 ```sh
 uv sync --upgrade --python 3.12
 export PATH="$PWD/bin:$PATH"
+export PYTHONDONTWRITEBYTECODE=1
 ```
 
-Put `TYPESAFE_API_KEY` in this checkout’s ignored `.env.local`. For publishing, also provide `GH_MEDIA_TOKEN` and authenticated `gh` with support for `gh pr comment --attach`.
+Put `TYPESAFE_API_KEY` in this checkout’s ignored `.env.local`, using the format in [README.md](README.md#installation). For publishing, also provide `GH_MEDIA_TOKEN` and authenticated `gh` with support for `gh pr comment --attach`. Keep the file private with `chmod 600 .env.local`. Checkout commands read this file by default; standalone installations use `~/.config/pro-tour/.env.local`.
 
 ```sh
-uv run pro-tour doctor
+uv run --no-sync pro-tour doctor
 ```
 
-To reuse your logged-in Chrome, enable remote debugging at `chrome://inspect/#remote-debugging`. From this checkout in a separate terminal, run `uv run pro-tour connect`, approve Chrome’s prompt, and leave the connector running.
+To reuse your open Chrome, follow [Connect your browser](README.md#connect-your-browser). From this checkout in a separate terminal, run `uv run --no-sync pro-tour connect`, approve Chrome’s prompt, and leave the connector running.
 
 You can now use `pro-tour` from an app repository in the terminal where you exported PATH. In another terminal, use this checkout’s absolute `bin/pro-tour` path or export PATH there too. The app must already be running.
 
@@ -31,7 +32,7 @@ npm --prefix sample-app ci
 npm --prefix sample-app test
 ```
 
-The release check runs Python tests, reports the installed Jev and Browser Harness versions, and builds a wheel. The JavaScript tests include a real Chrome journey.
+The release check runs Python tests, reports the installed Jev and Browser Harness versions, and builds a wheel. The sample app’s JavaScript tests launch a separate headless Chrome and close it afterward. The Pro Tour CLI and live benchmark reuse your existing visible Chrome.
 
 `npm --prefix sample-app start` runs the synthetic task board at <http://127.0.0.1:4173>. Use **Reset demo** between tours. Its package files, JavaScript tests, and Node dependencies live entirely inside `sample-app/`.
 
@@ -41,13 +42,15 @@ The opt-in [benchmark](benchmarks/README.md) exercises the full pipeline and vid
 uv run --no-sync python -B benchmarks/run.py
 ```
 
-Validation uses temporary directories and removes its videos, logs, wheels, and build files on success, failure, or interruption. Add `--keep-artifacts` to either runner to retain debugging output in ignored `.artifacts/`, or `--output <new-directory>` to retain it elsewhere. `.venv/` holds checkout dependencies. Normal `pro-tour record` videos remain saved in the app repository’s `.videos/`.
+The release-check and benchmark runners use temporary directories and remove their videos, logs, wheels, and build files on success, failure, or interruption. Add `--keep-artifacts` to either runner to retain debugging output in ignored `.artifacts/`, or `--output <new-directory>` to retain it elsewhere. `.venv/` holds checkout dependencies. Normal `pro-tour record` videos remain saved in the app repository’s `.videos/`.
 
 ## Build a standalone wheel
 
 ```sh
 uv build --wheel
 ```
+
+This manual build retains its wheel in `dist/` and may leave ignored build files in the checkout. Use the release-check runner above when you want build output cleaned up automatically.
 
 Install the resulting wheel in a dedicated Python 3.12 environment with `uv pip install --upgrade --python <environment-python> <wheel-path>`. Add that environment’s `bin` to PATH. Standalone installations read credentials from `~/.config/pro-tour/.env.local` by default.
 
