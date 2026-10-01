@@ -4,13 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pro-tour-local"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local feature walkthroughs planned by Codex, driven by Jev, and recorded to MP4"
 readme = "README.md"
 requires-python = ">=3.12"
+license-files = ["licenses/*.txt"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+]
 dependencies = [
-  "jev-ultrafast @ git+https://github.com/browser-use/jev-ultrafast.git",
   "browser-harness",
+  "httpx[http2]",
 ]
 
 [project.scripts]
@@ -18,3 +25,6 @@ pro-tour = "pro_tour.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["local"]
+
+[tool.setuptools.package-data]
+"pro_tour._vendor.jev_ultrafast" = ["*.js"]

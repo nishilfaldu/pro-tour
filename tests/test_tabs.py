@@ -51,8 +51,8 @@ class AppTabTests(unittest.TestCase):
         self.assertFalse(any(method == 'Target.createTarget' for method, _ in self.calls))
 
     def test_attachment_detaches_without_closing_or_reloading_app_even_on_failure(self):
-        import jev_ultrafast.browser as browser
-        import jev_ultrafast.agent as agent
+        import pro_tour._vendor.jev_ultrafast.browser as browser
+        import pro_tour._vendor.jev_ultrafast.agent as agent
         with patch.object(browser, 'Browser', browser.Browser), patch.object(agent, 'Browser', agent.Browser), \
                 patch.object(browser, 'ensure_daemon'), patch('browser_harness.admin.require_existing_daemon'), \
                 patch('browser_harness.helpers.cdp', side_effect=self.cdp), patch.object(browser, 'cdp', side_effect=self.cdp):
@@ -67,8 +67,8 @@ class AppTabTests(unittest.TestCase):
         self.assertFalse(set(methods) & {'Target.closeTarget', 'Target.createTarget', 'Page.navigate', 'Page.reload', 'Emulation.setDeviceMetricsOverride'})
 
     def test_agent_initial_observation_failure_detaches_its_unreturned_browser(self):
-        import jev_ultrafast.browser as browser
-        import jev_ultrafast.agent as agent
+        import pro_tour._vendor.jev_ultrafast.browser as browser
+        import pro_tour._vendor.jev_ultrafast.agent as agent
         def fail_agent(url, goal):
             browser.Browser(url)
             raise TourError('Initial observation failed')
@@ -77,7 +77,7 @@ class AppTabTests(unittest.TestCase):
                 patch.object(agent, 'field_text', agent.field_text), patch.object(browser, 'ensure_daemon'), \
                 patch('browser_harness.admin.require_existing_daemon'), \
                 patch('browser_harness.helpers.cdp', side_effect=self.cdp), patch.object(browser, 'cdp', side_effect=self.cdp), \
-                patch('pro_tour.executor.install_model_retries'), patch('jev_ultrafast.Agent', side_effect=fail_agent):
+                patch('pro_tour.executor.install_model_retries'), patch('pro_tour._vendor.jev_ultrafast.Agent', side_effect=fail_agent):
             trace = execute('http://localhost:3000', {'tab': {'id': 'app', 'window_id': 17},
                 'text_values': [], 'steps': [{'goal': 'Show tasks'}]}, Path(tmp) / 'failure.mp4')
         self.assertEqual(trace['status'], 'failure')

@@ -11,11 +11,25 @@ import subprocess
 import shutil
 import tempfile
 import time
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'local'))
 from pro_tour.common import clean_env
+
+
+def validate_wheel(path):
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        metadata = archive.read(next(name for name in names if name.endswith('/METADATA'))).decode()
+        if any(' @ ' in line for line in metadata.splitlines() if line.startswith('Requires-Dist:')):
+            raise ValueError('PyPI does not accept direct URL dependencies')
+        required = ('pro_tour/configuration.py', 'pro_tour/_vendor/jev_ultrafast/snapshot.js')
+        if not all(name in names for name in required) or not any(name.endswith('/jev-ultrafast-MIT.txt') for name in names):
+            raise ValueError('Wheel is missing setup, Jev browser assets, or its license')
+        if any('/.env' in name or '__pycache__' in name for name in names):
+            raise ValueError('Wheel contains local credentials or generated caches')
 
 
 def main():
@@ -62,6 +76,16 @@ def check(args, output, source):
         checks.append({'command': label, 'exit_code': result.returncode})
         if result.returncode: break
     wheels = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in output.glob('*.whl')}
+    if all(c['exit_code'] == 0 for c in checks):
+        try:
+            if not wheels:
+                raise ValueError('No wheel was built')
+            for path in output.glob('*.whl'):
+                validate_wheel(path)
+            checks.append({'command': 'PyPI wheel metadata, assets, and license', 'exit_code': 0})
+        except (ValueError, KeyError, StopIteration, zipfile.BadZipFile) as exc:
+            print('Wheel validation failed: ' + str(exc), flush=True)
+            checks.append({'command': 'PyPI wheel metadata, assets, and license', 'exit_code': 1})
     report = {'checks': checks, 'wheels_sha256': wheels, 'passed': all(c['exit_code'] == 0 for c in checks)}
     (output / 'checks.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))

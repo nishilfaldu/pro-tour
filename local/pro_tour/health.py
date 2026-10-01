@@ -17,7 +17,9 @@ from .repository import derive_base, local_url, repository
 
 def installed_dependencies():
     try:
-        return {name: version(name) for name in ('jev-ultrafast', 'browser-harness')}
+        from ._vendor.jev_ultrafast._provenance import VERSION, COMMIT
+        return {**{name: version(name) for name in ('browser-harness', 'httpx')},
+                'jev-ultrafast': {'version': VERSION, 'commit': COMMIT, 'bundled': True}}
     except PackageNotFoundError as exc:
         raise TourError('Install Pro Tour Python dependencies before recording; run pro-tour doctor for setup instructions') from exc
 
@@ -42,12 +44,12 @@ def record_dependencies(secrets):
         if not shutil.which(command):
             raise TourError(f'{command} must already be installed; run pro-tour doctor for setup instructions')
     if not secrets.get('TYPESAFE_API_KEY'):
-        raise TourError('TYPESAFE_API_KEY is required; set it in the trusted credentials file or environment')
+        raise TourError('TYPESAFE_API_KEY is required; run pro-tour setup or set it in the environment')
     env = clean_env(**({'CODEX_HOME': os.environ['CODEX_HOME']} if os.environ.get('CODEX_HOME') else {}))
     run(['codex', 'login', 'status'], env=env, timeout=10)
 
 
-def doctor(args, secrets):
+def check_setup(args, secrets):
     checks = []
     def check(name, operation, *, required=True):
         try:
@@ -58,7 +60,7 @@ def doctor(args, secrets):
     check('platform', lambda: platform.system() + (' (validated release target)' if platform.system() == 'Darwin' else ' (experimental; macOS is the release target)'))
     check('python', lambda: sys.version.split()[0])
     check('python-dependencies', installed_dependencies)
-    for name in ('ffmpeg', 'ffprobe', 'codex'):
+    for name in ('git', 'ffmpeg', 'ffprobe', 'codex'):
         def tool(name=name):
             path = shutil.which(name)
             if not path: raise TourError(f'Install {name} and put it on PATH')
@@ -93,6 +95,10 @@ def doctor(args, secrets):
         _, metadata = select_connection(args.cdp_url)
         return {**metadata, 'health': 'discovered only; use --connect for a real handshake (Chrome may prompt)'}
     check('chrome', browser)
-    result = {'status': 'failure' if any(c['status'] == 'failure' for c in checks) else 'ready', 'checks': checks}
+    return {'status': 'failure' if any(c['status'] == 'failure' for c in checks) else 'ready', 'checks': checks}
+
+
+def doctor(args, secrets):
+    result = check_setup(args, secrets)
     print(json.dumps(result, indent=2))
     return 1 if result['status'] == 'failure' else 0

@@ -55,7 +55,7 @@ def safe_text(values, fallback=None):
 
 
 def initialize(tab=None, tab_id=None):
-    import jev_ultrafast.browser as browser
+    import pro_tour._vendor.jev_ultrafast.browser as browser
     from browser_harness.admin import require_existing_daemon
     browser.ensure_daemon = require_existing_daemon
     original = browser.Browser
@@ -130,7 +130,7 @@ def initialize(tab=None, tab_id=None):
             return result
 
     browser.Browser = AppBrowser
-    import jev_ultrafast.agent as jev_agent
+    import pro_tour._vendor.jev_ultrafast.agent as jev_agent
     jev_agent.Browser = AppBrowser
     return browser
 
@@ -138,7 +138,7 @@ def initialize(tab=None, tab_id=None):
 def install_model_retries():
     """Retry only decision requests, before Jev executes an action."""
     import httpx
-    import jev_ultrafast.model as model
+    import pro_tour._vendor.jev_ultrafast.model as model
     def request(url, key, body):
         for attempt in range(3):
             try:
@@ -169,10 +169,10 @@ def inspect(url, output, tab_id=None):
 
 
 def execute(url, plan, video):
-    import jev_ultrafast.agent as jev_agent
+    import pro_tour._vendor.jev_ultrafast.agent as jev_agent
     adapter = initialize(tab=plan['tab']).Browser
     install_model_retries()
-    from jev_ultrafast import Agent
+    from pro_tour._vendor.jev_ultrafast import Agent
     def observed_text(context):
         from .providers import PROVIDERS
         config = plan.get('planner')

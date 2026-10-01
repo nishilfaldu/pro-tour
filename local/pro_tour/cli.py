@@ -9,6 +9,7 @@ from pathlib import Path
 from contextlib import nullcontext
 
 from .common import TourError, run, write_json
+from .configuration import DEFAULT_MODEL, configured_model, setup
 from . import __version__
 from .browser import connected_browser, hold_connection
 from .health import app_ready, doctor, record_dependencies
@@ -21,6 +22,7 @@ DEFAULT_SECRETS = ROOT / '.env.local' if (ROOT / 'pyproject.toml').exists() else
 
 
 def record(args, secrets, *, browser_session=None):
+    args.model = args.model or configured_model()
     url = local_url(args.url)
     repo = repository(Path.cwd())
     branch = run(['git', 'symbolic-ref', '--quiet', '--short', 'HEAD'], cwd=repo)
@@ -146,6 +148,7 @@ def parser():
     cli = argparse.ArgumentParser(prog='pro-tour', description='Manual local-first feature walkthroughs')
     cli.add_argument('--version', action='version', version='%(prog)s ' + __version__)
     sub = cli.add_subparsers(dest='command', required=True)
+    onboarding = sub.add_parser('setup', help='Configure keys and the default model interactively; check prerequisites')
     connect = sub.add_parser('connect', help='Approve existing Chrome once and keep its connection for subsequent tours')
     connect.add_argument('--cdp-url')
     rec = sub.add_parser('record')
@@ -153,7 +156,7 @@ def parser():
         rec.add_argument('--' + name, required=True)
     rec.add_argument('--base', help='Git base ref (default: associated PR base, then local origin/HEAD)')
     rec.add_argument('--timeout', type=int, choices=range(30, 3601), default=600, metavar='SECONDS', help='Execution deadline, 30–3600 seconds (default: 600)')
-    rec.add_argument('--model', default='gpt-6-luna', help='Codex model (default: gpt-6-luna)')
+    rec.add_argument('--model', help=f'Codex model (default: configured preference, otherwise {DEFAULT_MODEL})')
     rec.add_argument('--provider', choices=list(PROVIDERS), default='codex')
     rec.add_argument('--publish', action='store_true')
     rec.add_argument('--pr', help='Optional explicit associated PR number or URL')
@@ -169,7 +172,7 @@ def parser():
     health.add_argument('--cdp-url')
     health.add_argument('--publish', action='store_true', help='Require publishing credentials and media support')
     health.add_argument('--connect', action='store_true', help='Perform a real Chrome handshake (may prompt); default only discovers')
-    for command in (rec, pub, health):
+    for command in (onboarding, rec, pub, health):
         command.add_argument('--secrets-file', type=Path, default=DEFAULT_SECRETS,
                              help='Trusted credentials file; never read from the app repository implicitly')
     return cli
@@ -185,6 +188,8 @@ def main():
         if args.command == 'connect':
             hold_connection(args.cdp_url)
             return
+        if args.command == 'setup':
+            sys.exit(setup(args))
         secrets = credential_file(args.secrets_file)
         for key in ('TYPESAFE_API_KEY', 'GH_MEDIA_TOKEN'):
             if os.environ.get(key):

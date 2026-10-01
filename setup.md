@@ -14,11 +14,13 @@ export PATH="$PWD/bin:$PATH"
 export PYTHONDONTWRITEBYTECODE=1
 ```
 
-Put `TYPESAFE_API_KEY` in this checkout’s ignored `.env.local`, using the format in [README.md](README.md#installation). For publishing, also provide `GH_MEDIA_TOKEN` and authenticated `gh` with support for `gh pr comment --attach`. Keep the file private with `chmod 600 .env.local`. Checkout commands read this file by default; standalone installations use `~/.config/pro-tour/.env.local`.
+Run the interactive setup from this checkout:
 
 ```sh
-uv run --no-sync pro-tour doctor
+uv run --no-sync pro-tour setup
 ```
+
+It saves keys in this checkout’s ignored `.env.local`. Checkout commands read that file by default; standalone installations use `~/.config/pro-tour/.env.local`. The default model preference is user-wide. For noninteractive development, set `TYPESAFE_API_KEY` and optional `GH_MEDIA_TOKEN` in your environment instead. Use `pro-tour doctor` to repeat prerequisite checks without prompts.
 
 To reuse your open Chrome, follow [Connect your browser](README.md#connect-your-browser). From this checkout in a separate terminal, run `uv run --no-sync pro-tour connect`, approve Chrome’s prompt, and leave the connector running.
 
@@ -32,7 +34,7 @@ npm --prefix sample-app ci
 npm --prefix sample-app test
 ```
 
-The release check runs Python tests, reports the installed Jev and Browser Harness versions, and builds a wheel. The sample app’s JavaScript tests launch a separate headless Chrome and close it afterward. The Pro Tour CLI and live benchmark reuse your existing visible Chrome.
+The release check runs Python tests, reports bundled Jev provenance and installed dependency versions, and builds a wheel. The sample app’s JavaScript tests launch a separate headless Chrome and close it afterward. The Pro Tour CLI and live benchmark reuse your existing visible Chrome.
 
 `npm --prefix sample-app start` runs the synthetic task board at <http://127.0.0.1:4173>. Use **Reset demo** between tours. Its package files, JavaScript tests, and Node dependencies live entirely inside `sample-app/`.
 
@@ -54,4 +56,6 @@ This manual build retains its wheel in `dist/` and may leave ignored build files
 
 Install the resulting wheel in a dedicated Python 3.12 environment with `uv pip install --upgrade --python <environment-python> <wheel-path>`. Add that environment’s `bin` to PATH. Standalone installations read credentials from `~/.config/pro-tour/.env.local` by default.
 
-Dependencies are defined without project version pins in [pyproject.toml](pyproject.toml). Setup resolves the newest compatible versions, including any constraints declared by dependencies themselves; Jev comes from its upstream default branch. Run `uv sync --upgrade --python 3.12` to refresh an existing environment. UV generates a local ignored `uv.lock` for subsequent runs; it is not committed or used to constrain standalone installations. Recording never installs or updates dependencies.
+Dependencies are defined without project version pins in [pyproject.toml](pyproject.toml). Setup resolves the newest compatible versions, including any constraints declared by dependencies themselves. Run `uv sync --upgrade --python 3.12` to refresh an existing environment. UV generates a local ignored `uv.lock` for subsequent runs; it is not committed or used to constrain standalone installations. Recording never installs or updates dependencies.
+
+Jev's runtime sources and browser snapshot script are bundled unchanged under `local/pro_tour/_vendor/jev_ultrafast/`, with their upstream version and commit in `_provenance.py`. The MIT notice ships in the wheel. This avoids a Git dependency, which PyPI does not accept. Updating Jev means replacing these upstream files, updating provenance, and running the release check and live benchmark.

@@ -4,31 +4,26 @@ Record a feature walkthrough from an already-running local app. Codex plans the 
 
 ## Installation
 
-Requires macOS, Git, Python 3.12+, `uv`, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and an existing Chrome session.
+Requires macOS, `uv`, Git, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and Chrome. Installation uses an isolated Python 3.12 environment.
 
-Install from the current local-CLI branch. The repository is currently private, so Git needs authenticated access:
+The first public PyPI release is being prepared; this install command becomes available once it is published:
 
 ```sh
-git clone --depth 1 --single-branch --branch exp/sol-low-author-grok47-low-reviewer \
-  https://github.com/nishilfaldu/pro-tour.git pro-tour-install
-uv tool install --upgrade --python 3.12 ./pro-tour-install
+uv tool install --python 3.12 pro-tour-local
 uv tool update-shell
 ```
 
-This installs `pro-tour` in an isolated environment with the newest compatible dependencies and Jev from its upstream default branch. Restart your terminal if `pro-tour` is not on PATH.
+Restart your terminal if `pro-tour` is not on PATH, then run:
 
-Put `TYPESAFE_API_KEY` in `~/.config/pro-tour/.env.local`. Publishing also needs `GH_MEDIA_TOKEN` and authenticated `gh` on PATH with support for `gh pr comment --attach`. GitHub access is optional for recording.
-
-Create that directory and file with these entries, replacing the placeholders with your own keys. Omit `GH_MEDIA_TOKEN` if you only record locally:
-
-```dotenv
-TYPESAFE_API_KEY=your-typesafe-key
-GH_MEDIA_TOKEN=your-github-media-token
+```sh
+pro-tour setup
 ```
 
-Keep the file private with `chmod 600 ~/.config/pro-tour/.env.local`.
+Setup asks for your default Codex model (`gpt-6-luna`), your TypeSafe API key, and whether you want to configure GitHub publishing. Key input is hidden. It saves configuration privately and checks prerequisites; run it again to change preferences or replace keys. Press Enter to keep an existing key.
 
-Environment variables override the credentials file. Use `--secrets-file <trusted-path>` to select another file; app repository env files are never loaded automatically.
+Publishing needs a GitHub media token and authenticated `gh` on PATH with support for `gh pr comment --attach`. GitHub access is optional for recording. Configuring publishing does not publish automatically.
+
+Advanced: setup saves keys in `~/.config/pro-tour/.env.local` and your model preference in `~/.config/pro-tour/config.json`, both with private permissions. Environment variables `TYPESAFE_API_KEY` and `GH_MEDIA_TOKEN` override saved keys and are not copied to disk by setup. `--secrets-file <trusted-path>` selects another credentials file; app repository env files are never loaded automatically.
 
 ```sh
 pro-tour doctor
@@ -37,6 +32,8 @@ pro-tour doctor
 Use `pro-tour doctor --publish` to check publishing credentials and GitHub CLI attachment support too.
 
 For contributing or running from a checkout, see [setup.md](setup.md).
+
+Once published, upgrade with `uv tool upgrade pro-tour-local`. Jev's runtime library is bundled with Pro Tour; other Python dependencies resolve to compatible versions during installation.
 
 ## Connect your browser
 
@@ -58,7 +55,7 @@ pro-tour record --url http://localhost:3000 --goal "Show the new status filter"
 
 The selected tab and window are shown before planning. If several tabs match, select one with `--tab-id <id>` using the IDs in the error message.
 
-The model defaults to `gpt-6-luna`. The branch comes from your current checkout; PR and base ref are inferred when available. Override the model, PR, or base with `--model`, `--pr`, or `--base origin/main`. Without an accessible PR, the base falls back to local `origin/HEAD`; supply `--base <ref>` if that is missing. The base must already exist locally. Pro Tour uses committed changes against the base; it does not fetch refs, install app dependencies, or start the app.
+The model uses your setup preference, falling back to `gpt-6-luna`. The branch comes from your current checkout; PR and base ref are inferred when available. Override the model, PR, or base with `--model`, `--pr`, or `--base origin/main`. Without an accessible PR, the base falls back to local `origin/HEAD`; supply `--base <ref>` if that is missing. The base must already exist locally. Pro Tour uses committed changes against the base; it does not fetch refs, install app dependencies, or start the app.
 
 Videos and adjacent plans, traces, and outcome reports go in the app repository’s ignored `.videos/` directory:
 

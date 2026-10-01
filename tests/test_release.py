@@ -115,7 +115,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_typesafe_retries_transport_and_server_errors_but_not_auth(self):
         import httpx
-        import jev_ultrafast.model as model
+        import pro_tour._vendor.jev_ultrafast.model as model
         original = model.post_json
         try:
             install_model_retries()
