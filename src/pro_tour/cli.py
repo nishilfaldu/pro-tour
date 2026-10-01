@@ -145,7 +145,7 @@ def record(args, secrets, *, browser_session=None):
 
 
 def parser():
-    cli = argparse.ArgumentParser(prog='pro-tour', description='Manual local-first feature walkthroughs')
+    cli = argparse.ArgumentParser(prog='pro-tour', description='Feature walkthroughs planned by Codex and driven by Jev')
     cli.add_argument('--version', action='version', version='%(prog)s ' + __version__)
     sub = cli.add_subparsers(dest='command', required=True)
     onboarding = sub.add_parser('setup', help='Configure keys and the default model interactively; check prerequisites')

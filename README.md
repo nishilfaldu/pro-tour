@@ -9,7 +9,7 @@ Requires macOS, `uv`, Git, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and C
 The first public PyPI release is being prepared; this install command becomes available once it is published:
 
 ```sh
-uv tool install --python 3.12 pro-tour-local
+uv tool install --python 3.12 pro-tour
 uv tool update-shell
 ```
 
@@ -33,7 +33,7 @@ Use `pro-tour doctor --publish` to check publishing credentials and GitHub CLI a
 
 For contributing or running from a checkout, see [setup.md](setup.md).
 
-Once published, upgrade with `uv tool upgrade pro-tour-local`. Jev's runtime library is bundled with Pro Tour; other Python dependencies resolve to compatible versions during installation.
+Once published, upgrade with `uv tool upgrade pro-tour`. Jev's runtime library is bundled with Pro Tour; other Python dependencies resolve to compatible versions during installation.
 
 ## Connect your browser
 

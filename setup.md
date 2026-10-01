@@ -29,7 +29,7 @@ You can now use `pro-tour` from an app repository in the terminal where you expo
 ## Checks and sample app
 
 ```sh
-uv run --no-sync python -B scripts/check-local-release.py
+uv run --no-sync python -B scripts/check-release.py
 npm --prefix sample-app ci
 npm --prefix sample-app test
 ```
@@ -58,4 +58,4 @@ Install the resulting wheel in a dedicated Python 3.12 environment with `uv pip 
 
 Dependencies are defined without project version pins in [pyproject.toml](pyproject.toml). Setup resolves the newest compatible versions, including any constraints declared by dependencies themselves. Run `uv sync --upgrade --python 3.12` to refresh an existing environment. UV generates a local ignored `uv.lock` for subsequent runs; it is not committed or used to constrain standalone installations. Recording never installs or updates dependencies.
 
-Jev's runtime sources and browser snapshot script are bundled unchanged under `local/pro_tour/_vendor/jev_ultrafast/`, with their upstream version and commit in `_provenance.py`. The MIT notice ships in the wheel. This avoids a Git dependency, which PyPI does not accept. Updating Jev means replacing these upstream files, updating provenance, and running the release check and live benchmark.
+Jev's runtime sources and browser snapshot script are bundled unchanged under `src/pro_tour/_vendor/jev_ultrafast/`, with their upstream version and commit in `_provenance.py`. The MIT notice ships in the wheel. This avoids a Git dependency, which PyPI does not accept. Updating Jev means replacing these upstream files, updating provenance, and running the release check and live benchmark.

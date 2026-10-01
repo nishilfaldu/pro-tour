@@ -16,7 +16,7 @@ from pro_tour.publishing import PrAssociationError, github_cli, publish, require
 from pro_tour.repository import branch_diff, local_url, reserve_video
 
 
-class LocalTests(unittest.TestCase):
+class CliTests(unittest.TestCase):
     def test_versioning_reserves_concurrently_and_preserves_ignore(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

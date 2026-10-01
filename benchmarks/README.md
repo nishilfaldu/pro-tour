@@ -1,11 +1,11 @@
-# Local pipeline benchmark
+# Pipeline benchmark
 
 Run from the trusted Pro Tour checkout after `uv sync --upgrade --python 3.12` and `pro-tour connect`:
 
 ```sh
 uv run --no-sync python -B benchmarks/run.py
 uv run --no-sync python -B benchmarks/run.py --cases delayed-search-empty-recovery cancel-unsaved-edit
-uv run --no-sync python -B scripts/check-local-release.py
+uv run --no-sync python -B scripts/check-release.py
 ```
 
 This is an opt-in suite with real Codex (`gpt-6-luna` by default), TypeSafe Jev, Browser Harness,

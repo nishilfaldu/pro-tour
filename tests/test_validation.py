@@ -11,7 +11,7 @@ from benchmarks import run as benchmark
 from pro_tour.common import TourError
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('release_check', ROOT / 'scripts/check-local-release.py')
+spec = importlib.util.spec_from_file_location('release_check', ROOT / 'scripts/check-release.py')
 release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(release)
 
@@ -72,7 +72,7 @@ class ValidationCleanupTests(unittest.TestCase):
             def check(args, output, source):
                 seen.extend([output, source])
                 self.assertEqual((source / 'pyproject.toml').read_bytes(), (ROOT / 'pyproject.toml').read_bytes())
-                self.assertTrue((source / 'local/pro_tour/cli.py').exists())
+                self.assertTrue((source / 'src/pro_tour/cli.py').exists())
                 self.assertNotEqual(source, ROOT)
                 (source / 'build').mkdir()
                 (output / 'wheel.whl').write_bytes(b'test output')

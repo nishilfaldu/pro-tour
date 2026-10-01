@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manual local release checks; never triggered by a PR and never starts an app."""
+"""Manual release checks; never triggered by a PR and never starts an app."""
 import sys
 sys.dont_write_bytecode = True
 
@@ -15,7 +15,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'local'))
+sys.path.insert(0, str(ROOT / 'src'))
 from pro_tour.common import clean_env
 
 
@@ -51,14 +51,14 @@ def main():
         source.mkdir()
         for name in ('pyproject.toml', 'README.md'):
             shutil.copy2(ROOT / name, source / name)
-        shutil.copytree(ROOT / 'local/pro_tour', source / 'local/pro_tour',
+        shutil.copytree(ROOT / 'src/pro_tour', source / 'src/pro_tour',
                         ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
         shutil.copytree(ROOT / 'licenses', source / 'licenses')
         return check(args, output, source)
 
 
 def check(args, output, source):
-    environment = clean_env(PYTHONPATH=str(ROOT / 'local') + os.pathsep + str(ROOT), PYTHONDONTWRITEBYTECODE='1')
+    environment = clean_env(PYTHONPATH=str(ROOT / 'src') + os.pathsep + str(ROOT), PYTHONDONTWRITEBYTECODE='1')
     commands = [[sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py'],
                 ['git', 'diff', '--check'],
                 [sys.executable, '-c', 'from pro_tour.health import installed_dependencies; print(installed_dependencies())'],

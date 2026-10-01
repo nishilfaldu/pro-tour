@@ -47,7 +47,7 @@ class ReleaseTests(unittest.TestCase):
             code = 'from pro_tour.common import tab_capture_lock; from pathlib import Path; import sys;\nwith tab_capture_lock("tab"):\n Path(sys.argv[1]).touch()'
             with tab_capture_lock('tab'):
                 child = subprocess.Popen([sys.executable, '-c', code, str(marker)],
-                    env=clean_env(BH_TMP_DIR=tmp, PYTHONPATH=str(Path(__file__).resolve().parents[1] / 'local')))
+                    env=clean_env(BH_TMP_DIR=tmp, PYTHONPATH=str(Path(__file__).resolve().parents[1] / 'src')))
                 try:
                     with self.assertRaises(subprocess.TimeoutExpired): child.wait(timeout=.2)
                     self.assertFalse(marker.exists())

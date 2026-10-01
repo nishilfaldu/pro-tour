@@ -3,9 +3,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pro-tour-local"
+name = "pro-tour"
 version = "0.3.0"
-description = "Local feature walkthroughs planned by Codex, driven by Jev, and recorded to MP4"
+description = "Feature walkthroughs planned by Codex, driven by Jev, and recorded to MP4"
 readme = "README.md"
 requires-python = ">=3.12"
 license-files = ["licenses/*.txt"]
@@ -24,7 +24,7 @@ dependencies = [
 pro-tour = "pro_tour.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["local"]
+where = ["src"]
 
 [tool.setuptools.package-data]
 "pro_tour._vendor.jev_ultrafast" = ["*.js"]
