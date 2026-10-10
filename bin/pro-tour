@@ -1,8 +1,0 @@
-#!/bin/sh
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-python="$root/.venv/bin/python"
-if [ ! -x "$python" ]; then
-  echo 'Set up trusted Pro Tour tooling first: run uv sync --upgrade --python 3.12 in the Pro Tour checkout' >&2
-  exit 1
-fi
-PYTHONPATH="$root/src" exec "$python" -m pro_tour.cli "$@"
