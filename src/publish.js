@@ -112,15 +112,18 @@ async function withLock(video, run) {
   }
 }
 
-async function findUpload(pr, marker, env) {
+async function comments(pr, env) {
   // Every page: an upload whose response was lost must not be repeated.
   const raw = await retryRead(() => exec('gh', ['api', '--paginate', '--slurp', `repos/${pr.repo}/issues/${pr.number}/comments?per_page=100`], { env, timeout: 30_000 }));
-  let matches;
   try {
-    matches = JSON.parse(raw).flat().filter(comment => comment.body?.includes(marker) && comment.body.includes('github.com/user-attachments/assets/'));
+    return JSON.parse(raw).flat();
   } catch {
     throw new TourError('Cannot read the PR comments to reconcile; the upload was not repeated');
   }
+}
+
+async function findUpload(pr, marker, env) {
+  const matches = (await comments(pr, env)).filter(comment => comment.body?.includes(marker) && comment.body.includes('github.com/user-attachments/assets/'));
   if (matches.length > 1) throw new TourError('More than one comment matches this recording; inspect the PR before retrying');
   return matches[0]?.html_url ?? null;
 }
@@ -135,6 +138,8 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
   const digest = createHash('sha256').update(await readFile(video)).digest('hex');
   const identity = createHash('sha256').update(`${basename(video)}:${digest}:${pr.url}`).digest('hex');
   const marker = `<!-- pro-tour:${identity} -->`;
+  // Names the tour, so a newer recording of it can hide the older comments.
+  const tourMarker = `<!-- pro-tour-tour:${createHash('sha256').update(`${basename(video).replace(/-v\d+\.mp4$/, '')}:${pr.url}`).digest('hex').slice(0, 16)} -->`;
   const journal = video.replace(/\.mp4$/, '.upload.json');
   const record = data => writeFile(journal, JSON.stringify({ pr_url: pr.url, sha256: digest, identity, ...data }, null, 2) + '\n');
 
@@ -154,7 +159,7 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
     let url;
     try {
       const body = join(work, 'comment.md');
-      await writeFile(body, `${markdown(report, { video: `![](${video})`, collapseSteps: true })}\n${marker}\n`);
+      await writeFile(body, `${markdown(report, { video: `![](${video})`, collapseSteps: true })}\n${marker}\n${tourMarker}\n`);
       url = (await exec('gh', ['pr', 'comment', String(pr.number), '--repo', pr.repo, '--body-file', body, '--attach', video], { env, timeout: 180_000 })).trim();
     } catch (error) {
       url = await findUpload(pr, marker, env).catch(() => null);
@@ -166,6 +171,23 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
       await rm(work, { recursive: true, force: true });
     }
     await record({ status: 'uploaded', comment_url: url });
-    return { status: 'uploaded', commentUrl: url, reused: false };
+    const hidden = await hideOlder(pr, tourMarker, url, env);
+    return { status: 'uploaded', commentUrl: url, reused: false, hidden };
   });
+}
+
+// Earlier recordings of the same tour are minimized as outdated, not deleted. Best effort: publishing
+// already succeeded, so a failure here only leaves the old comments visible.
+async function hideOlder(pr, tourMarker, newUrl, env) {
+  let hidden = 0;
+  try {
+    for (const comment of await comments(pr, env)) {
+      if (!comment.body?.includes(tourMarker) || comment.html_url === newUrl || !comment.node_id) continue;
+      await exec('gh', ['api', 'graphql', '-f', `query=mutation { minimizeComment(input: { subjectId: "${comment.node_id}", classifier: OUTDATED }) { minimizedComment { isMinimized } } }`], { env });
+      hidden++;
+    }
+  } catch (error) {
+    console.warn(`pro-tour: could not hide older tour comments: ${error.message}`);
+  }
+  return hidden;
 }

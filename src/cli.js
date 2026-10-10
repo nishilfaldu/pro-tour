@@ -36,7 +36,7 @@ async function publishVideo(video, { pr, retryUpload, cwd }) {
   const env = githubEnv();
   const target = await resolvePr(repo, { target: pr, branch: pr ? undefined : currentBranch(repo), env });
   const result = await publish(video, target, { env, retryUpload });
-  console.log(`${result.reused ? 'Already published' : 'Published'}: ${result.commentUrl}`);
+  console.log(`${result.reused ? 'Already published' : 'Published'}: ${result.commentUrl}${result.hidden ? ` (hid ${result.hidden} older recording${result.hidden > 1 ? 's' : ''} of this tour)` : ''}`);
 }
 
 function appUrl(value) {
