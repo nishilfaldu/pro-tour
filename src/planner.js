@@ -4,7 +4,7 @@
 import { spawn } from 'node:child_process';
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, normalize, relative, resolve } from 'node:path';
+import { basename, dirname, extname, join, normalize, relative, resolve } from 'node:path';
 import { isSafePath } from './repo.js';
 import { fileURLToPath } from 'node:url';
 
@@ -12,6 +12,12 @@ const API = join(dirname(fileURLToPath(import.meta.url)), 'tour-api.md');
 const SOURCE = ['.html', '.js', '.mjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte'];
 const SKIP = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.videos', '.tours', 'coverage']);
 const MAX_SOURCE_CHARS = 250_000;
+// A file importing more than this many others (a route table, a generated component registry) is sent
+// itself, but its imports are not followed: they would pull in most of the app.
+const HUB_IMPORTS = 15;
+// Component tags in templates (<c-button>, <CButton>): globally registered components have no import.
+const TAG = /<([A-Z][A-Za-z0-9]+|[a-z][a-z0-9]*(?:-[a-z0-9]+)+)[\s/>]/g;
+const kebab = name => name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 const IMPORT = /(?:from\s+|import\s*\(\s*|require\s*\(\s*|import\s+)['"](\.{1,2}\/[^'"]+)['"]/g;
 
 const fence = (name, body) => `--- ${name} ---\n${body.trimEnd()}\n--- end ${name} ---`;
@@ -23,7 +29,7 @@ async function sourceFiles(root, dir = root) {
     const rel = relative(root, path);
     if (!isSafePath(rel)) continue;
     if (entry.isDirectory() && !SKIP.has(entry.name)) files.push(...await sourceFiles(root, path));
-    else if (entry.isFile() && SOURCE.includes(extname(entry.name)) && !/\.(tour|test|spec)\.[jt]sx?$/.test(entry.name)) files.push(rel);
+    else if (entry.isFile() && SOURCE.includes(extname(entry.name)) && !/\.(tour|test|spec)\.[jt]sx?$|\.d\.ts$/.test(entry.name)) files.push(rel);
   }
   return files;
 }
@@ -51,12 +57,20 @@ export async function prContext({ diff, src, changed = [] }) {
   if (total > MAX_SOURCE_CHARS) {
     const known = new Set(files);
     const touched = changed.map(file => relative(src, resolve(src, file))).filter(file => known.has(file));
+    const importsOf = new Map(files.map(file => [file, imports(file, bodies.get(file), known)]));
+    const isHub = file => importsOf.get(file).length > HUB_IMPORTS;
     const importedBy = new Map(files.map(file => [file, []]));
-    for (const file of files) for (const target of imports(file, bodies.get(file), known)) importedBy.get(target).push(file);
+    for (const file of files) for (const target of importsOf.get(file)) importedBy.get(target).push(file);
+    const byName = new Map();
+    for (const file of files) {
+      const name = kebab(basename(file, extname(file)));
+      byName.set(name, [...(byName.get(name) ?? []), file]);
+    }
+    const componentsOf = file => [...bodies.get(file).matchAll(TAG)].flatMap(([, tag]) => byName.get(kebab(tag)) ?? []);
     const ordered = [...new Set([
       ...touched,
-      ...touched.flatMap(file => imports(file, bodies.get(file), known)),
-      ...touched.flatMap(file => importedBy.get(file)),
+      ...touched.filter(file => !isHub(file)).flatMap(file => [...importsOf.get(file), ...componentsOf(file)]),
+      ...touched.flatMap(file => importedBy.get(file)).filter(file => !isHub(file)),
     ])];
     chosen = [];
     let used = 0;
@@ -66,7 +80,7 @@ export async function prContext({ diff, src, changed = [] }) {
       used += bodies.get(file).length;
     }
     if (!chosen.length) throw new Error(`The app source under ${src} is ${total} chars and none of the PR's changed source files fit in ${MAX_SOURCE_CHARS}.`);
-    note = `App source after the PR: the ${chosen.length} files the PR changed and their direct import neighbors (the whole app is ${files.length} files).`;
+    note = `App source after the PR: the ${chosen.length} files the PR changed and their direct neighbors (imports, importers and components used in templates); the whole app is ${files.length} files.`;
   }
   return [fence('PR diff', diff), note, ...chosen.map(file => fence(file, bodies.get(file)))];
 }
