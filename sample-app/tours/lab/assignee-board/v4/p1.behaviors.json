@@ -1,8 +1,0 @@
-{
-  "filter-by-assignee": "Choose a person in the Assignee filter to show only tasks assigned to them.",
-  "search-assignees": "Search the Assignee options by typing a person’s name.",
-  "filter-unassigned": "Choose Unassigned to show tasks with no assignee.",
-  "show-assignee-counts": "Open the Assignee menu to see each option’s matching task count.",
-  "clear-filters": "Clear active status and assignee filters to restore all tasks.",
-  "empty-assignee-state": "Filter for a person with no tasks to see a personalized empty message and a Clear filters control."
-}

@@ -1,6 +1,0 @@
-{
-  "filter-by-assignee": "Choose a person or Unassigned from the new searchable Assignee dropdown to show only their tasks, with task counts displayed beside the choices.",
-  "combine-filters": "Apply an assignee filter together with a status filter to narrow the task list by both choices.",
-  "empty-filter-results": "Show a filter-specific empty message and a Clear filters control when the selected filters return no tasks.",
-  "clear-filters": "Clear active status and assignee filters to restore the full task list."
-}

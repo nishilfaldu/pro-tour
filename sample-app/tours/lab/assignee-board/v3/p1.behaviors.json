@@ -1,6 +1,0 @@
-{
-  "filter-by-assignee": "Choose a person or Unassigned in the Assignee dropdown to show only matching tasks, with task counts shown for each option.",
-  "search-assignees": "Search the Assignee options by typing a person’s name and choose a matching result.",
-  "filter-empty-state": "Selecting Ana Lima shows a personalized empty state because no seeded tasks are assigned to her.",
-  "clear-filters": "Use Clear filters in the toolbar or empty state to reset both status and assignee filters and restore all tasks."
-}

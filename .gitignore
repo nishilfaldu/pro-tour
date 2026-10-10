@@ -6,24 +6,6 @@
 .AppleDouble/
 .LSOverride
 
-# Python caches, environments, and build output
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-.coverage.*
-htmlcov/
-*.egg-info/
-build/
-dist/
-.venv/
-venv/
-
-# UV's local resolution state; installation uses pyproject.toml directly.
-/uv.lock
-
 # Node dependencies and browser-test output
 node_modules/
 playwright-report/

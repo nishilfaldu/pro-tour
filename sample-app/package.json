@@ -1,13 +1,8 @@
 {
-  "name": "pro-tour",
+  "name": "fieldnotes-sample-app",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "test": "node --test tests/*.test.js",
-    "tour": "node tours/run.js tours/status-filter.tour.js"
-  },
-  "devDependencies": {
-    "playwright": "^1.63.0"
+    "start": "node server.js"
   }
 }
