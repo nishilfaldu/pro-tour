@@ -145,7 +145,9 @@ export async function run(t) {
 }
 ```
 
-Checks are sampled before the step's actions and after each one. A step fails unless at least one check
+Actions are `t.click`, `t.fill` (types visibly), `t.select` (draws the open menu, which headless
+Chromium does not paint), `t.press` and `t.goto`; checks are `t.visible`, `t.hidden`, `t.text`,
+`t.value` and `t.check`. Checks are sampled before the step's actions and after each one. A step fails unless at least one check
 went from false to true, and a `hidden` check must have been visible at some point in the step, so a
 step cannot pass by asserting what was already on screen.
 
@@ -153,8 +155,6 @@ step cannot pass by asserting what was already on screen.
 
 - Tour code, including model-written tours, runs with the permissions of the Node process. Run tours
   where the app runs, typically CI.
-- Headless Chromium does not draw the open menu of a native `<select>`; the chosen option still changes
-  visibly.
 - Planning uses the Codex CLI. The model call is isolated in `src/planner.js` (`ask()`), the one place
   another backend would plug in.
 
