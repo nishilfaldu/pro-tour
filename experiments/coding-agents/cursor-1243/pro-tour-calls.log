@@ -1,0 +1,5 @@
+10:59:03 exit=0 pro-tour api
+11:00:02 exit=0 pro-tour --help
+11:04:32 exit=1 pro-tour run .tours/email-normalizer.tour.js --url http://127.0.0.1:5301
+11:05:24 exit=0 pro-tour run .tours/email-normalizer.tour.js --url http://127.0.0.1:5301
+11:05:54 exit=0 pro-tour publish

@@ -97,3 +97,8 @@ A saved tour has to pass every time it is replayed, with no model. On the final 
 - [`mermaid-live-editor/`](mermaid-live-editor/README.md): three merged PRs from
   [mermaid-js/mermaid-live-editor](https://github.com/mermaid-js/mermaid-live-editor) (SvelteKit), which
   led to the failure DOM leading with the last action's region and open popups.
+
+## 8. Coding agents with only the skill
+
+See [`coding-agents/`](coding-agents/README.md): Codex and Cursor, told only to open a pull request for
+three real PRs, each made, recorded, committed and published a tour without being asked (6/6).

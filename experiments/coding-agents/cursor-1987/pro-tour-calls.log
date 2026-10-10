@@ -1,0 +1,3 @@
+10:59:01 exit=0 pro-tour api
+11:04:09 exit=0 pro-tour run .tours/sample-diagram-examples.tour.js --url http://127.0.0.1:5312/
+11:04:36 exit=0 pro-tour publish
