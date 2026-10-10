@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { load, runAgent, totals } from './agent.js';
+import { InfrastructureError, load, runAgent, totals } from './agent.js';
 import { listBehaviors, prContext, writeTour } from './planner.js';
 import { baseFromEnvironment, branchDiff, currentBranch, defaultBase, repoRoot, sanitizedBranch, TourError, videosDir } from './repo.js';
 import { recordTour } from './runtime.js';
@@ -116,6 +116,10 @@ export async function main(argv = process.argv.slice(2)) {
   try {
     return await COMMANDS[command](rest);
   } catch (error) {
+    if (error instanceof InfrastructureError) {
+      console.error(`pro-tour: ${error.message} (browser or encoder problem, not a tour failure)`);
+      return 3;
+    }
     if (!(error instanceof TourError) && error?.code !== 'ERR_PARSE_ARGS_UNKNOWN_OPTION') throw error;
     console.error(`pro-tour: ${error.message}`);
     return 2;

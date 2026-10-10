@@ -3,7 +3,7 @@ import { strict as assert } from 'node:assert';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runAgent } from '../src/agent.js';
+import { InfrastructureError, runAgent } from '../src/agent.js';
 
 const behaviors = { 'filter-done': 'Filtering to Done shows only finished tasks' };
 const tour = (title, extra = behaviors) => `export const meta = { title: '${title}', behaviors: ${JSON.stringify(extra)} };\nexport async function run() {}\n`;
@@ -67,4 +67,20 @@ test('a tour that edits the behavior list or does not load counts as a failed ro
   assert.equal(result.status, 'passed');
   assert.match(plan.calls[2], /repair after: meta.behaviors must be exactly/);
   assert.match(plan.calls[3], /repair after: Tour module failed to load/);
+});
+
+test('a recorder crash is retried without a repair, and a persistent one stops the agent', async () => {
+  const tourPath = await scratch();
+  await writeFile(tourPath, tour('pass'));
+  let crashes = 1;
+  const flaky = async t => {
+    if (crashes-- > 0) throw new Error('browserType.launch: Timeout 180000ms exceeded.');
+    return record(t);
+  };
+  const plan = planner();
+  const result = await runAgent({ tourPath, planner: plan, record: flaky });
+  assert.equal(result.status, 'passed');
+  assert.deepEqual(plan.calls, []);
+  await assert.rejects(runAgent({ tourPath, planner: plan, record: async () => { throw new Error('ffmpeg failed'); } }), InfrastructureError);
+  assert.deepEqual(plan.calls, [], 'infrastructure failures never reach the model');
 });

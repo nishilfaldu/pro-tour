@@ -18,7 +18,20 @@ export async function load(path) {
 
 const failed = (error, message = error) => ({ status: 'failed', error, failure: { message } });
 
-export async function runAgent({ tourPath, rounds = 3, replan = false, planner, record, log = () => {} }) {
+// The browser or encoder failing is not the tour's fault: retry without spending a repair, then give up.
+export class InfrastructureError extends Error {}
+
+async function recordSafely(record, tour, name, attempts) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await record(tour, name);
+    } catch (error) {
+      if (attempt >= attempts) throw new InfrastructureError(`Recording failed ${attempts} times: ${error.message.split('\n')[0]}`, { cause: error });
+    }
+  }
+}
+
+export async function runAgent({ tourPath, rounds = 3, replan = false, planner, record, log = () => {}, recordAttempts = 2 }) {
   const name = basename(tourPath, '.tour.js');
   const work = await mkdtemp(join(tmpdir(), 'tour-agent-'));
   const history = [];
@@ -34,7 +47,7 @@ export async function runAgent({ tourPath, rounds = 3, replan = false, planner, 
       source = await readFile(tourPath, 'utf8');
       const tour = await load(tourPath);
       behaviors = tour.meta.behaviors;
-      report = await record(tour, name);
+      report = await recordSafely(record, tour, name, recordAttempts);
       entry({ kind: 'replay', status: report.status, video: report.video, error: report.error });
       if (report.status === 'passed') return { status: 'passed', tourPath, report, history };
     }
@@ -62,7 +75,7 @@ export async function runAgent({ tourPath, rounds = 3, replan = false, planner, 
       if (tour && !isDeepStrictEqual(tour.meta?.behaviors, behaviors)) {
         report = failed(`meta.behaviors must be exactly ${JSON.stringify(behaviors)}; do not add, drop or reword behaviors.`);
       } else if (tour) {
-        report = await record(tour, name);
+        report = await recordSafely(record, tour, name, recordAttempts);
         if (report.video) await copyFile(attempt, report.video.replace(/\.mp4$/, '.tour.js'));
       }
       entry({ kind: repairing ? 'repair' : 'write', status: report.status, video: report.video, error: report.error,

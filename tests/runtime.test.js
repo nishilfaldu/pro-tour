@@ -85,6 +85,12 @@ test('value reads a select by its visible label, and builders reject missing arg
   await t.page.context().close();
 });
 
+test('a step whose check list holds something other than a check fails clearly', async () => {
+  const { t, filter } = await board();
+  await assert.rejects(t.step('Filter to Done', () => t.select(filter, 'Done'), [undefined]), /Check 1 of step "Filter to Done" is not a check/);
+  await t.page.context().close();
+});
+
 test('a step without checks fails, and a missing element fails a text check quickly', async () => {
   const { t, page, filter } = await board();
   await assert.rejects(t.step('Filter to Done', () => t.select(filter, 'Done')), /has no checks/);

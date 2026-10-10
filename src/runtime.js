@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, open, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,6 +56,8 @@ export class Tour {
     await this.pause(this.pace.stepIntro);
     try {
       if (!checks.length) throw new TourCheckError(`Step "${title}" has no checks. Pass the checks that prove what its actions change.`);
+      const notCheck = checks.findIndex(check => typeof check?.test !== 'function');
+      if (notCheck >= 0) throw new TourCheckError(`Check ${notCheck + 1} of step "${title}" is not a check (got ${typeof checks[notCheck]}). Build every check with t.visible, t.hidden, t.text, t.value or t.check.`);
       const unknown = covers.filter(id => !(id in this.behaviors));
       if (unknown.length) throw new TourCheckError(`Step "${title}" covers "${unknown[0]}", which is not in meta.behaviors (${Object.keys(this.behaviors).join(', ') || 'none'}).`);
       this.sampling = checks.map(check => ({ check, sawFalse: false }));
@@ -227,10 +229,17 @@ function visibleDom() {
   return lines.join('\n').slice(0, 12000);
 }
 
-function nextVideoPath(outDir, name) {
+// Exclusive creation: concurrent runs of the same tour never write to one file.
+async function reserveVideo(outDir, name) {
   for (let version = 1; ; version++) {
     const path = join(outDir, `${name}-v${version}.mp4`);
-    if (!existsSync(path)) return path;
+    if (existsSync(path.replace(/\.mp4$/, '.json'))) continue;
+    try {
+      await (await open(path, 'wx', 0o600)).close();
+      return path;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
   }
 }
 
@@ -307,7 +316,7 @@ export async function recordTour(tour, { url, outDir, name, channel = 'chromium'
   }
 
   await mkdir(outDir, { recursive: true });
-  const video = nextVideoPath(outDir, name);
+  const video = await reserveVideo(outDir, name);
   const encode = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', trimSeconds.toFixed(2),
     '-i', await page.video().path(), '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
     '-pix_fmt', 'yuv420p', '-movflags', '+faststart', video], { encoding: 'utf8' });
