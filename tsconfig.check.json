@@ -3,7 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": ".",
-    "paths": { "pro-tour": ["./src/index.ts"] }
+    "paths": {
+      "pro-tour": ["./src/index.ts"]
+    },
+    "allowJs": true
   },
   "include": ["src", "tests", "fixtures/**/*.tour.ts", "sample-app/.tours/*.tour.ts"]
 }
