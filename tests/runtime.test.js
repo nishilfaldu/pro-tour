@@ -21,12 +21,12 @@ after(async () => {
   server.close();
 });
 
-async function board() {
+async function board(pace = {}) {
   const context = await browser.newContext({ bypassCSP: true });
   await context.addInitScript({ path: overlay });
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}`);
-  const t = new Tour(page, { pace: fast, behaviors: { 'filter-done': 'Filtering to Done shows only finished tasks', 'filter-progress': 'Filtering to In progress shows active work' } });
+  const t = new Tour(page, { pace: { ...fast, ...pace }, behaviors: { 'filter-done': 'Filtering to Done shows only finished tasks', 'filter-progress': 'Filtering to In progress shows active work' } });
   return { t, page, filter: page.getByRole('combobox', { name: 'Status', exact: true }), heading: name => page.getByRole('heading', { name }) };
 }
 
@@ -89,6 +89,23 @@ test('a step whose check list holds something other than a check fails clearly',
   const { t, filter } = await board();
   await assert.rejects(t.step('Filter to Done', () => t.select(filter, 'Done'), [undefined]), /Check 1 of step "Filter to Done" is not a check/);
   await t.page.context().close();
+});
+
+test('checks are evaluated together right after the actions, so short-lived feedback is caught', async () => {
+  const { t, page, filter } = await board({ chip: 400 });
+  // A banner that appears on filtering and disappears 600ms later, like a "Copied!" tooltip.
+  await page.evaluate(() => document.querySelector('#status-filter').addEventListener('change', () => {
+    const note = Object.assign(document.createElement('p'), { id: 'flash', textContent: 'Filtered' });
+    document.body.append(note);
+    setTimeout(() => note.remove(), 600);
+  }));
+  await t.step('Filter to Done', () => t.select(filter, 'Done'), [
+    t.text('1 task in view', page.locator('#visible-count'), '1'),
+    t.value('Filter reads Done', filter, 'Done'),
+    t.visible('Filtered banner', page.locator('#flash')),
+  ]);
+  assert.equal(t.steps[0].status, 'passed');
+  await page.context().close();
 });
 
 test('a step without checks fails, and a missing element fails a text check quickly', async () => {

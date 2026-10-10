@@ -66,7 +66,10 @@ export class Tour {
       await run();
       const sampled = this.sampling;
       this.sampling = null;
-      for (const { check, sawFalse } of sampled) await traced(`check ${check.label}`, () => this.verify(step, check, sawFalse));
+      // All checks are polled at once, right after the last action: transient feedback such as a toast or a
+      // "Copied!" tooltip must not expire while earlier chips animate. Chips are then shown in order.
+      const outcomes = await traced('checks', () => Promise.all(sampled.map(({ check }) => this.poll(check))));
+      for (const [i, { check, sawFalse }] of sampled.entries()) await this.report(step, check, sawFalse, outcomes[i]);
       const stale = step.checks.filter(check => check.kind === 'hidden' && !check.changed);
       if (stale.length) {
         await this.ui('check', 'Hidden check was never visible', 'fail');
@@ -111,7 +114,7 @@ export class Tour {
     }
   }
 
-  async verify(step, check, sawFalse) {
+  async poll(check) {
     const deadline = Date.now() + this.pace.checkTimeout;
     let passed = false;
     let cause;
@@ -124,6 +127,10 @@ export class Tour {
       if (passed || Date.now() >= deadline) break;
       await this.pause(100);
     }
+    return { passed, cause };
+  }
+
+  async report(step, check, sawFalse, { passed, cause }) {
     const changed = passed && sawFalse;
     step.checks.push({ label: check.label, kind: check.kind, passed, changed, ...(cause && !passed ? { detail: firstLine(cause) } : {}) });
     await this.ui('check', check.label, !passed ? 'fail' : changed ? 'pass' : 'same');
