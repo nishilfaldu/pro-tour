@@ -2,7 +2,11 @@
 // Tour text comes from model-written scripts, so HTML in it is escaped.
 import type { Report } from './types.ts';
 
-const text = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const text = (value: unknown) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
 export function markdown(report: Report, { video, collapseSteps = false }: { video?: string; collapseSteps?: boolean } = {}): string {
   const passed = report.steps.filter(step => step.status === 'passed').length;
@@ -27,7 +31,8 @@ export function markdown(report: Report, { video, collapseSteps = false }: { vid
   lines.push(collapseSteps ? '<details><summary><b>Steps and checks</b></summary>\n' : '**Steps**\n');
   for (const step of report.steps) {
     lines.push(`- ${step.status === 'passed' ? '✓' : '✗'} **${text(step.title)}** (${step.seconds}s)`);
-    for (const check of step.checks) lines.push(`  - ${check.passed ? '✓' : '✗'} ${text(check.label)}${check.passed && !check.changed ? ' _(already true before)_' : ''}`);
+    for (const check of step.checks)
+      lines.push(`  - ${check.passed ? '✓' : '✗'} ${text(check.label)}${check.passed && !check.changed ? ' _(already true before)_' : ''}`);
     if (step.error && !step.checks.some(check => !check.passed)) lines.push(`  - ✗ ${text(step.error)}`);
   }
   if (collapseSteps) lines.push('', '</details>');

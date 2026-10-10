@@ -36,24 +36,30 @@ export async function checkTours(files: string[], cwd = process.cwd()): Promise<
   const work = await mkdtemp(join(tmpdir(), 'pro-tour-check-'));
   try {
     const config = join(work, 'tsconfig.json');
-    await writeFile(config, JSON.stringify({
-      compilerOptions: {
-        strict: true,
-        noEmit: true,
-        target: 'ES2023',
-        module: 'NodeNext',
-        moduleResolution: 'NodeNext',
-        lib: ['ES2023', 'DOM', 'DOM.Iterable'],
-        allowImportingTsExtensions: true,
-        skipLibCheck: true,
-        ...typesOptions(),
-      },
-      files: checked,
-    }));
+    await writeFile(
+      config,
+      JSON.stringify({
+        compilerOptions: {
+          strict: true,
+          noEmit: true,
+          target: 'ES2023',
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          lib: ['ES2023', 'DOM', 'DOM.Iterable'],
+          allowImportingTsExtensions: true,
+          skipLibCheck: true,
+          ...typesOptions(),
+        },
+        files: checked,
+      }),
+    );
     const tsc = join(dirname(require.resolve('typescript/package.json')), 'bin', 'tsc');
     const result = spawnSync(process.execPath, [tsc, '-p', config, '--pretty', 'false'], { cwd, encoding: 'utf8' });
-    const output = `${result.stdout}${result.stderr}`.trim().split('\n')
-      .map(line => line.replace(/^(\/[^(]+)(\(\d+,\d+\))/, (_, path, at) => `${relative(cwd, path)}${at}`)).join('\n');
+    const output = `${result.stdout}${result.stderr}`
+      .trim()
+      .split('\n')
+      .map(line => line.replace(/^(\/[^(]+)(\(\d+,\d+\))/, (_, path, at) => `${relative(cwd, path)}${at}`))
+      .join('\n');
     return { ok: result.status === 0, output, checked };
   } finally {
     await rm(work, { recursive: true, force: true });

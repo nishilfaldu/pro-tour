@@ -1,8 +1,8 @@
-import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { access, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { test } from 'node:test';
 import { publish } from '../src/publish.ts';
 import { fakeGh, PR, recording } from './helpers.ts';
 
@@ -56,7 +56,10 @@ test('a new recording of the same tour hides the older comment as outdated', asy
   const result = await publish(newer, pr, { env });
   assert.equal(result.hidden, 1);
   const { comments } = await read();
-  assert.deepEqual(comments.map((comment: { minimized?: boolean }) => Boolean(comment.minimized)), [true, false]);
+  assert.deepEqual(
+    comments.map((comment: { minimized?: boolean }) => Boolean(comment.minimized)),
+    [true, false],
+  );
 });
 
 test('a published recording is deleted locally, a dry run posts and deletes nothing', async () => {

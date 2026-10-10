@@ -54,14 +54,30 @@ export async function fakeGh(mode: 'error' | 'lost' | null = null) {
 }
 
 export const REPORT = {
-  title: 'Filter by assignee', summary: 'Narrow the board.', status: 'passed', seconds: 1,
+  title: 'Filter by assignee',
+  summary: 'Narrow the board.',
+  status: 'passed',
+  seconds: 1,
   coverage: [{ id: 'filter', description: 'Picking a person shows their tasks', steps: [1] }],
   steps: [{ title: 'Pick Priya', status: 'passed', seconds: 1, checks: [{ label: '2 of 4 tasks', passed: true, changed: true }] }],
 };
 
 // A small real H.264 video with a report beside it, as pro-tour run leaves them.
 export async function recording(video: string, report: Record<string, unknown> = {}, seconds = 1): Promise<string> {
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', `testsrc=size=160x120:rate=5:duration=${seconds}`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', video]);
+  execFileSync('ffmpeg', [
+    '-v',
+    'error',
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    `testsrc=size=160x120:rate=5:duration=${seconds}`,
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    video,
+  ]);
   await writeFile(video.replace('.mp4', '.json'), JSON.stringify({ ...REPORT, ...report }));
   await writeFile(video.replace('.mp4', '.md'), '# report');
   return video;

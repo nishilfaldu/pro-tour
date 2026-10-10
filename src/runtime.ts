@@ -11,7 +11,17 @@ import type { Check, CheckKind, Coverage, Report, StepOptions, StepResult, TourM
 // The overlay is plain JavaScript injected into the page as is, so it ships beside this module.
 const OVERLAY = fileURLToPath(new URL('./overlay.js', import.meta.url));
 const SIZE = { width: 1280, height: 800 };
-const PACE = { move: 650, afterAction: 500, typeDelay: 45, stepIntro: 1000, stepOutro: 1200, checkTimeout: 5000, chip: 450, failHold: 1500, menu: 450 };
+const PACE = {
+  move: 650,
+  afterAction: 500,
+  typeDelay: 45,
+  stepIntro: 1000,
+  stepOutro: 1200,
+  checkTimeout: 5000,
+  chip: 450,
+  failHold: 1500,
+  menu: 450,
+};
 
 export type Pace = typeof PACE;
 type Box = { x: number; y: number; width: number; height: number };
@@ -40,7 +50,8 @@ async function traced<T>(name: string, run: () => Promise<T>): Promise<T> {
   }
 }
 
-const within = <T>(ms: number, promise: Promise<T>) => Promise.race([promise, new Promise<false>(resolve => setTimeout(resolve, ms, false))]);
+const within = <T>(ms: number, promise: Promise<T>) =>
+  Promise.race([promise, new Promise<false>(resolve => setTimeout(resolve, ms, false))]);
 
 interface Sample {
   check: Check;
@@ -92,9 +103,15 @@ export class Tour {
     try {
       if (!checks.length) throw new TourCheckError(`Step "${title}" has no checks. Pass the checks that prove what its actions change.`);
       const notCheck = checks.findIndex(check => typeof check?.test !== 'function');
-      if (notCheck >= 0) throw new TourCheckError(`Check ${notCheck + 1} of step "${title}" is not a check (got ${typeof checks[notCheck]}). Build every check with t.visible, t.hidden, t.text, t.value or t.check.`);
+      if (notCheck >= 0)
+        throw new TourCheckError(
+          `Check ${notCheck + 1} of step "${title}" is not a check (got ${typeof checks[notCheck]}). Build every check with t.visible, t.hidden, t.text, t.value or t.check.`,
+        );
       const unknown = covers.filter(id => !(id in this.behaviors));
-      if (unknown.length) throw new TourCheckError(`Step "${title}" covers "${unknown[0]}", which is not in meta.behaviors (${Object.keys(this.behaviors).join(', ') || 'none'}).`);
+      if (unknown.length)
+        throw new TourCheckError(
+          `Step "${title}" covers "${unknown[0]}", which is not in meta.behaviors (${Object.keys(this.behaviors).join(', ') || 'none'}).`,
+        );
       const sampled: Sample[] = checks.map(check => ({ check, sawFalse: false }));
       this.sampling = sampled;
       await this.sample();
@@ -107,11 +124,15 @@ export class Tour {
       const stale = step.checks.filter(check => check.kind === 'hidden' && !check.changed);
       if (stale.length) {
         await this.ui('check', 'Hidden check was never visible', 'fail');
-        throw new TourCheckError(`Check "${stale[0].label}" was hidden before and after every action in the step, so it shows nothing disappearing. Check something that is on screen at some point in the step and gone at the end.`);
+        throw new TourCheckError(
+          `Check "${stale[0].label}" was hidden before and after every action in the step, so it shows nothing disappearing. Check something that is on screen at some point in the step and gone at the end.`,
+        );
       }
       if (!step.checks.some(check => check.changed)) {
         await this.ui('check', 'Nothing changed in this step', 'fail');
-        throw new TourCheckError(`Step "${title}" changed nothing: every check already passed before its actions ran. Add a check for what the actions change.`);
+        throw new TourCheckError(
+          `Step "${title}" changed nothing: every check already passed before its actions ran. Add a check for what the actions change.`,
+        );
       }
       step.status = 'passed';
       await this.pause(this.pace.stepOutro);
@@ -129,7 +150,9 @@ export class Tour {
   /** @internal */
   coverage(): Coverage[] {
     return Object.entries(this.behaviors).map(([id, description]) => ({
-      id, description, steps: this.steps.filter(step => step.status === 'passed' && step.covers.includes(id)).map(step => step.index),
+      id,
+      description,
+      steps: this.steps.filter(step => step.status === 'passed' && step.covers.includes(id)).map(step => step.index),
     }));
   }
 
@@ -139,9 +162,18 @@ export class Tour {
     if (!missing.length) return;
     await this.ui('check', `Not shown: ${missing[0].description}`, 'fail');
     await this.pause(this.pace.failHold);
-    throw new TourCheckError(`Behavior "${missing[0].id}" (${missing[0].description}) is not shown by any passing step`
-      + `${missing.length > 1 ? `, nor are ${missing.slice(1).map(behavior => `"${behavior.id}"`).join(', ')}` : ''}.`
-      + ` Add a step that demonstrates it and pass { covers: ['${missing[0].id}'] } as the fourth argument to t.step.`);
+    throw new TourCheckError(
+      `Behavior "${missing[0].id}" (${missing[0].description}) is not shown by any passing step` +
+        `${
+          missing.length > 1
+            ? `, nor are ${missing
+                .slice(1)
+                .map(behavior => `"${behavior.id}"`)
+                .join(', ')}`
+            : ''
+        }.` +
+        ` Add a step that demonstrates it and pass { covers: ['${missing[0].id}'] } as the fourth argument to t.step.`,
+    );
   }
 
   private async sample(): Promise<void> {
@@ -166,7 +198,12 @@ export class Tour {
     return { passed, cause };
   }
 
-  private async report(step: StepResult, check: Check, sawFalse: boolean, { passed, cause }: { passed: boolean; cause?: unknown }): Promise<void> {
+  private async report(
+    step: StepResult,
+    check: Check,
+    sawFalse: boolean,
+    { passed, cause }: { passed: boolean; cause?: unknown },
+  ): Promise<void> {
     const changed = passed && sawFalse;
     step.checks.push({ label: check.label, kind: check.kind, passed, changed, ...(cause && !passed ? { detail: firstLine(cause) } : {}) });
     await this.ui('check', check.label, !passed ? 'fail' : changed ? 'pass' : 'same');
@@ -224,7 +261,10 @@ export class Tour {
    */
   async select(locator: Locator, label: string): Promise<void> {
     const box = await this.point(locator);
-    const { labels, from } = await locator.evaluate((el: HTMLSelectElement) => ({ labels: [...el.options].map(option => option.label), from: el.selectedIndex }));
+    const { labels, from } = await locator.evaluate((el: HTMLSelectElement) => ({
+      labels: [...el.options].map(option => option.label),
+      from: el.selectedIndex,
+    }));
     const to = labels.indexOf(label);
     if (to >= 0) {
       await this.ui('menu', box, labels, from);
@@ -271,21 +311,35 @@ export class Tour {
   /** Passes when the element's trimmed textContent equals `text`. */
   text(label: string, locator: Locator, text: string): Check {
     expectArgs('text', label, [isLocator(locator), 'a Playwright locator'], [typeof text === 'string', 'the expected text']);
-    return builtCheck('text', label, async () => (await locator.count()) > 0 && (await locator.textContent({ timeout: 1000 }))?.trim() === text);
+    return builtCheck(
+      'text',
+      label,
+      async () => (await locator.count()) > 0 && (await locator.textContent({ timeout: 1000 }))?.trim() === text,
+    );
   }
 
   /** Passes when an input's value, or the visible label of a `<select>`'s chosen option, equals `expected`. */
   value(label: string, locator: Locator, expected: string): Check {
     expectArgs('value', label, [isLocator(locator), 'a Playwright locator'], [typeof expected === 'string', 'the expected value']);
-    return builtCheck('value', label, async () => (await locator.count()) > 0 && await locator.evaluate(
-      (el: HTMLInputElement | HTMLSelectElement) => ('selectedOptions' in el ? [...el.selectedOptions].map(option => option.label).join(', ') : el.value),
-      null, { timeout: 1000 }) === expected);
+    return builtCheck(
+      'value',
+      label,
+      async () =>
+        (await locator.count()) > 0 &&
+        (await locator.evaluate(
+          (el: HTMLInputElement | HTMLSelectElement) =>
+            'selectedOptions' in el ? [...el.selectedOptions].map(option => option.label).join(', ') : el.value,
+          null,
+          { timeout: 1000 },
+        )) === expected,
+    );
   }
 }
 
 const builtCheck = (kind: CheckKind, label: string, test: () => Promise<boolean>): Check => ({ kind, label, test });
 
-const isLocator = (value: unknown): boolean => typeof (value as Locator)?.isVisible === 'function' && typeof (value as Locator)?.count === 'function';
+const isLocator = (value: unknown): boolean =>
+  typeof (value as Locator)?.isVisible === 'function' && typeof (value as Locator)?.count === 'function';
 
 // Tours are often model-written or plain JavaScript, so arguments are checked at run time too.
 function expectArgs(builder: string, label: unknown, ...args: [boolean, string][]): void {
@@ -316,7 +370,10 @@ function failureDom(node: Node | null): string {
         return;
       }
       if (!(node instanceof Element) || /^(SCRIPT|STYLE|SVG|TEMPLATE|svg)$/.test(node.tagName) || !node.checkVisibility()) return;
-      const attrs = [...node.attributes].filter(attr => keep.test(attr.name)).map(attr => ` ${attr.name}="${attr.value.slice(0, 120)}"`).join('');
+      const attrs = [...node.attributes]
+        .filter(attr => keep.test(attr.name))
+        .map(attr => ` ${attr.name}="${attr.value.slice(0, 120)}"`)
+        .join('');
       add(`${'  '.repeat(depth)}<${node.tagName.toLowerCase()}${attrs}>`);
       for (const child of node.childNodes) walk(child, depth + 1);
     };
@@ -327,11 +384,15 @@ function failureDom(node: Node | null): string {
   let region: Element | null = null;
   if (target?.isConnected) {
     region = target;
-    while (region.parentElement && region.parentElement !== document.body && excerpt(region, 2000).length < 1500) region = region.parentElement;
+    while (region.parentElement && region.parentElement !== document.body && excerpt(region, 2000).length < 1500)
+      region = region.parentElement;
     sections.push(`Around the element the tour last acted on:\n${excerpt(region, 4000)}`);
   }
   const tail = [...document.body.children].slice(-4).filter(el => el.checkVisibility() && !el.contains(region));
-  if (tail.length) sections.push(`Last elements in <body> (menus, popovers and dialogs usually mount here):\n${tail.map(el => excerpt(el, 2500)).join('\n')}`);
+  if (tail.length)
+    sections.push(
+      `Last elements in <body> (menus, popovers and dialogs usually mount here):\n${tail.map(el => excerpt(el, 2500)).join('\n')}`,
+    );
   const used = sections.join('\n\n').length;
   sections.push(`Whole page, truncated:\n${excerpt(document.body, Math.max(2000, 12000 - used))}`);
   return sections.join('\n\n');
@@ -358,9 +419,11 @@ const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&
 export async function recordings(outDir: string, name: string): Promise<string[]> {
   const pattern = new RegExp(`^${escapeRegExp(name)}-v(\\d+)\\.mp4$`);
   const files = await readdir(outDir).catch(() => [] as string[]);
-  return files.map(file => [file, pattern.exec(file)?.[1]] as const)
+  return files
+    .map(file => [file, pattern.exec(file)?.[1]] as const)
     .filter((entry): entry is readonly [string, string] => Boolean(entry[1]))
-    .sort((a, b) => Number(a[1]) - Number(b[1])).map(([file]) => join(outDir, file));
+    .sort((a, b) => Number(a[1]) - Number(b[1]))
+    .map(([file]) => join(outDir, file));
 }
 
 /** Delete a recording and the report files beside it. */
@@ -370,8 +433,18 @@ export async function removeRecording(video: string): Promise<void> {
 }
 
 function failureText(report: Report): string {
-  return [`# ${report.title}: failed`, '', `Error: ${report.failure?.message}`, '',
-    'Visible DOM at the failure:', '', '```', report.failure?.dom ?? '(not available)', '```', ''].join('\n');
+  return [
+    `# ${report.title}: failed`,
+    '',
+    `Error: ${report.failure?.message}`,
+    '',
+    'Visible DOM at the failure:',
+    '',
+    '```',
+    report.failure?.dom ?? '(not available)',
+    '```',
+    '',
+  ].join('\n');
 }
 
 export interface RecordOptions {
@@ -386,7 +459,10 @@ export interface RecordOptions {
   keep?: boolean;
 }
 
-export async function recordTour(tour: TourModule, { url, outDir, name, channel = 'chromium', sourceSha = null, keep = false }: RecordOptions): Promise<Report> {
+export async function recordTour(
+  tour: TourModule,
+  { url, outDir, name, channel = 'chromium', sourceSha = null, keep = false }: RecordOptions,
+): Promise<Report> {
   const work = await mkdtemp(join(tmpdir(), 'tour-'));
   const browser: Browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true });
   const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha: sourceSha, status: 'failed', steps: [] };
@@ -394,7 +470,13 @@ export async function recordTour(tour: TourModule, { url, outDir, name, channel 
   let context: BrowserContext | undefined;
   let trimSeconds = 0;
   try {
-    context = await browser.newContext({ baseURL: url, viewport: SIZE, deviceScaleFactor: 1, bypassCSP: true, recordVideo: { dir: work, size: SIZE } });
+    context = await browser.newContext({
+      baseURL: url,
+      viewport: SIZE,
+      deviceScaleFactor: 1,
+      bypassCSP: true,
+      recordVideo: { dir: work, size: SIZE },
+    });
     await context.addInitScript({ path: OVERLAY });
     page = await context.newPage();
     const opened = Date.now();
@@ -412,10 +494,17 @@ export async function recordTour(tour: TourModule, { url, outDir, name, channel 
     } catch (error) {
       report.error = firstLine(error);
       // Repair context: the full Playwright message (strict-mode errors list every match) and what the page showed.
-      const target = await t.lastTarget?.first().elementHandle({ timeout: 1000 }).catch(() => null) ?? null;
+      const target =
+        (await t.lastTarget
+          ?.first()
+          .elementHandle({ timeout: 1000 })
+          .catch(() => null)) ?? null;
       report.failure = {
         message: [message(error), (error as Error)?.cause ? message((error as Error).cause) : ''].filter(Boolean).join('\n').slice(0, 4000),
-        aria: await page.locator('body').ariaSnapshot({ timeout: 2000 }).catch(() => null),
+        aria: await page
+          .locator('body')
+          .ariaSnapshot({ timeout: 2000 })
+          .catch(() => null),
         dom: await page.evaluate(failureDom, target).catch(() => null),
       };
     }
@@ -424,8 +513,12 @@ export async function recordTour(tour: TourModule, { url, outDir, name, channel 
     const passed = t.steps.filter(step => step.status === 'passed').length;
     await t.ui('clearCaption');
     await t.ui('clearChecks');
-    await t.ui('card', report.status === 'passed' ? 'Tour passed' : 'Tour failed',
-      `${passed}/${t.steps.length} steps passed`, report.error || tour.meta.title);
+    await t.ui(
+      'card',
+      report.status === 'passed' ? 'Tour passed' : 'Tour failed',
+      `${passed}/${t.steps.length} steps passed`,
+      report.error || tour.meta.title,
+    );
     await t.pause(2200);
   } finally {
     await context?.close();
@@ -436,9 +529,32 @@ export async function recordTour(tour: TourModule, { url, outDir, name, channel 
   const video = await reserveVideo(outDir, name);
   const raw = await page?.video()?.path();
   if (!raw) throw new Error('Playwright did not record a video');
-  const encode = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', trimSeconds.toFixed(2),
-    '-i', raw, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
-    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', video], { encoding: 'utf8' });
+  const encode = spawnSync(
+    'ffmpeg',
+    [
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-y',
+      '-ss',
+      trimSeconds.toFixed(2),
+      '-i',
+      raw,
+      '-an',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '20',
+      '-pix_fmt',
+      'yuv420p',
+      '-movflags',
+      '+faststart',
+      video,
+    ],
+    { encoding: 'utf8' },
+  );
   await rm(work, { recursive: true, force: true });
   if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr}`);
   const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', video], { encoding: 'utf8' });

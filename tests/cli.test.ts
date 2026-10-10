@@ -1,17 +1,18 @@
-import { after, before, test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { access, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { after, before, test } from 'node:test';
 import { createAppServer } from '../sample-app/server.js';
 import { main } from '../src/cli.ts';
 import { fakeGh, recording } from './helpers.ts';
 
-const git = (cwd: string, ...args: string[]) => execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
+const git = (cwd: string, ...args: string[]) =>
+  execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
 const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
 
 // A repository whose main has `files`, checked out on a feature branch.
@@ -65,7 +66,7 @@ test('bad arguments are usage errors, not crashes', async () => {
   assert.match((await cli(dir, ['api'])).out, /# Tour API/);
 });
 
-test('init installs the skill for every agent once, with the project\'s package runner', async () => {
+test("init installs the skill for every agent once, with the project's package runner", async () => {
   const dir = await repo();
   await writeFile(join(dir, 'pnpm-lock.yaml'), '');
   await writeFile(join(dir, 'AGENTS.md'), '# Agents\n\nUse pnpm.');
@@ -90,20 +91,26 @@ test('run records a tour, keeps only its latest recording, and names a failure f
   const dir = await repo();
   await mkdir(join(dir, '.tours'));
   const tour = join(dir, '.tours', 'status-filter.tour.ts');
-  await writeFile(tour, `import type { Tour, TourMeta } from 'pro-tour';
+  await writeFile(
+    tour,
+    `import type { Tour, TourMeta } from 'pro-tour';
 export const meta = { title: 'Filter to Done', behaviors: { done: 'Done shows finished tasks' } } satisfies TourMeta;
 export async function run(t: Tour): Promise<void> {
   await t.step('Filter to Done', () => t.select(t.page.getByRole('combobox', { name: 'Status', exact: true }), 'Done'),
     [t.text('1 task in view', t.page.locator('#visible-count'), '1')], { covers: ['done'] });
 }
-`);
+`,
+  );
   await mkdir(join(dir, '.videos'));
   await recording(join(dir, '.videos', 'status-filter-v1.mp4'));
   const passed = await cli(dir, ['run', tour, '--url', appUrl, '--json']);
   assert.equal(passed.code, 0, passed.out);
   const [result] = JSON.parse(passed.out);
   assert.equal(result.status, 'passed');
-  assert.deepEqual((await readdir(join(dir, '.videos'))).filter(file => file.endsWith('.mp4')), [result.video.split('/').at(-1)]);
+  assert.deepEqual(
+    (await readdir(join(dir, '.videos'))).filter(file => file.endsWith('.mp4')),
+    [result.video.split('/').at(-1)],
+  );
 
   await writeFile(tour, (await readFile(tour, 'utf8')).replace("'1')", "'7')"));
   const failed = await cli(dir, ['run', tour, '--url', appUrl]);
@@ -118,12 +125,15 @@ test('check and run report type errors in a tour without recording anything', as
   const dir = await repo();
   await mkdir(join(dir, '.tours'));
   const tour = join(dir, '.tours', 'broken.tour.ts');
-  await writeFile(tour, `import type { Tour } from 'pro-tour';
+  await writeFile(
+    tour,
+    `import type { Tour } from 'pro-tour';
 export const meta = { title: 'Broken' };
 export async function run(t: Tour): Promise<void> {
   await t.step('Missing the expected text', () => t.click(t.page.getByRole('button')), [t.text('Count', t.page.locator('#n'))]);
 }
-`);
+`,
+  );
   const checked = await cli(dir, ['check']);
   assert.equal(checked.code, 1);
   assert.match(checked.out, /\.tours\/broken\.tour\.ts\(4,\d+\): error TS2554: Expected 3 arguments, but got 2/);

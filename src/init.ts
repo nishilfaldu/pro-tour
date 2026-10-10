@@ -16,12 +16,16 @@ After a change that users can see or do in the app, before opening or updating i
 \`pro-tour\` skill to record a feature tour and attach it to the pull request.
 `;
 
-const exists = (path: string) => access(path).then(() => true, () => false);
+const exists = (path: string) =>
+  access(path).then(
+    () => true,
+    () => false,
+  );
 
 export async function packageRunner(repo: string): Promise<string> {
   if (await exists(join(repo, 'pnpm-lock.yaml'))) return 'pnpm exec';
   if (await exists(join(repo, 'yarn.lock'))) return 'yarn';
-  if (await exists(join(repo, 'bun.lockb')) || await exists(join(repo, 'bun.lock'))) return 'bunx';
+  if ((await exists(join(repo, 'bun.lockb'))) || (await exists(join(repo, 'bun.lock')))) return 'bunx';
   return 'npx';
 }
 

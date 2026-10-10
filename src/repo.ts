@@ -42,9 +42,14 @@ export function changedTours(repo: string, base: string): { tours: string[]; unc
       return false;
     }
   });
-  if (!ref) throw new TourError(`The PR base ${base} is not available locally; run git fetch origin ${base}, or name the tours to publish.`);
-  const committed = git(['diff', '--name-only', '--diff-filter=d', `${ref}...HEAD`, '--', '.tours'], repo).split('\n').filter(isTourFile);
-  const uncommitted = git(['status', '--porcelain', '--', '.tours'], repo).split('\n').filter(line => isTourFile(line.trim()));
+  if (!ref)
+    throw new TourError(`The PR base ${base} is not available locally; run git fetch origin ${base}, or name the tours to publish.`);
+  const committed = git(['diff', '--name-only', '--diff-filter=d', `${ref}...HEAD`, '--', '.tours'], repo)
+    .split('\n')
+    .filter(isTourFile);
+  const uncommitted = git(['status', '--porcelain', '--', '.tours'], repo)
+    .split('\n')
+    .filter(line => isTourFile(line.trim()));
   return { tours: committed.map(file => join(repo, file)), uncommitted: uncommitted.map(line => line.slice(3).trim()) };
 }
 

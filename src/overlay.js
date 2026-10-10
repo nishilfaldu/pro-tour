@@ -39,7 +39,8 @@
     .card h1 { margin: 0; font: 700 42px/1.15 system-ui, -apple-system, sans-serif; }
     .card p { margin: 0; font: 400 20px/1.45 system-ui, -apple-system, sans-serif; color: #c8cede; }
   `;
-  const ARROW = '<svg viewBox="0 0 24 24" width="30" height="30"><path d="M4 2v18l5-4.5 3.5 6.5 3-1.5-3.5-6.5H19z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  const ARROW =
+    '<svg viewBox="0 0 24 24" width="30" height="30"><path d="M4 2v18l5-4.5 3.5 6.5 3-1.5-3.5-6.5H19z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
   const TIP = { x: 5, y: 2.5 };
   const stored = JSON.parse(sessionStorage.getItem('__tour_cursor') || 'null');
   const position = stored || { x: innerWidth * 0.5, y: innerHeight * 0.62 };
@@ -55,7 +56,8 @@
     if (host?.isConnected) return raise();
     host = document.createElement('div');
     host.setAttribute('popover', 'manual');
-    host.style.cssText = 'display:block;position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none;';
+    host.style.cssText =
+      'display:block;position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none;';
     const shadow = host.attachShadow({ mode: 'open' });
     shadow.innerHTML = `<style>${STYLE}</style><div class="ring"></div><div class="menu"></div><div class="cursor">${ARROW}</div>
       <div class="caption"><span class="badge"></span><span class="text"></span></div><div class="checks"></div>
@@ -91,40 +93,70 @@
       ripple.style.left = `${x}px`;
       ripple.style.top = `${y}px`;
       ui.cursor.before(ripple);
-      ripple.animate([{ transform: 'scale(.3)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 0 }], { duration: 650, easing: 'ease-out' })
+      ripple
+        .animate(
+          [
+            { transform: 'scale(.3)', opacity: 1 },
+            { transform: 'scale(1.5)', opacity: 0 },
+          ],
+          { duration: 650, easing: 'ease-out' },
+        )
         .finished.then(() => ripple.remove());
-      ui.cursor.firstElementChild.animate([{ scale: 1 }, { scale: .82 }, { scale: 1 }], { duration: 220 });
+      ui.cursor.firstElementChild.animate([{ scale: 1 }, { scale: 0.82 }, { scale: 1 }], { duration: 220 });
     },
     ring(box) {
       mount();
       const pad = 6;
-      Object.assign(ui.ring.style, { left: `${box.x - pad}px`, top: `${box.y - pad}px`,
-        width: `${box.width + pad * 2}px`, height: `${box.height + pad * 2}px`, opacity: 1 });
+      Object.assign(ui.ring.style, {
+        left: `${box.x - pad}px`,
+        top: `${box.y - pad}px`,
+        width: `${box.width + pad * 2}px`,
+        height: `${box.height + pad * 2}px`,
+        opacity: 1,
+      });
     },
-    clearRing() { mount(); ui.ring.style.opacity = 0; },
+    clearRing() {
+      mount();
+      ui.ring.style.opacity = 0;
+    },
     // Headless Chromium does not draw a native <select>'s open menu, so the overlay draws one.
     // Returns the box of the option at index `to`, for the cursor to move to.
     menu(box, labels, from) {
       mount();
-      ui.menu.replaceChildren(...labels.map((label, i) => Object.assign(document.createElement('div'), { textContent: label, className: i === from ? 'on' : '' })));
-      Object.assign(ui.menu.style, { display: 'block', left: `${box.x}px`, minWidth: `${box.width}px`, top: `${box.y + box.height + 4}px` });
+      ui.menu.replaceChildren(
+        ...labels.map((label, i) =>
+          Object.assign(document.createElement('div'), { textContent: label, className: i === from ? 'on' : '' }),
+        ),
+      );
+      Object.assign(ui.menu.style, {
+        display: 'block',
+        left: `${box.x}px`,
+        minWidth: `${box.width}px`,
+        top: `${box.y + box.height + 4}px`,
+      });
       const height = ui.menu.getBoundingClientRect().height;
       if (box.y + box.height + 4 + height > innerHeight) ui.menu.style.top = `${Math.max(4, box.y - height - 4)}px`;
     },
     menuItem(index) {
       mount();
-      [...ui.menu.children].forEach((item, i) => item.classList.toggle('on', i === index));
+      for (const [i, item] of [...ui.menu.children].entries()) item.classList.toggle('on', i === index);
       const { x, y, width, height } = ui.menu.children[index].getBoundingClientRect();
       return { x, y, width, height };
     },
-    hideMenu() { mount(); ui.menu.style.display = 'none'; },
+    hideMenu() {
+      mount();
+      ui.menu.style.display = 'none';
+    },
     caption(badge, text) {
       mount();
       ui.caption.querySelector('.badge').textContent = badge;
       ui.caption.querySelector('.text').textContent = text;
       ui.caption.classList.add('on');
     },
-    clearCaption() { mount(); ui.caption.classList.remove('on'); },
+    clearCaption() {
+      mount();
+      ui.caption.classList.remove('on');
+    },
     // state: 'pass' (became true in this step), 'same' (was already true), or 'fail'.
     check(text, state) {
       mount();
@@ -133,10 +165,19 @@
       item.innerHTML = `<b>${state === 'fail' ? '✗' : '✓'}</b>`;
       item.append(text);
       ui.checks.append(item);
-      item.animate([{ opacity: 0, transform: 'translateX(20px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'ease-out' });
+      item.animate(
+        [
+          { opacity: 0, transform: 'translateX(20px)' },
+          { opacity: 1, transform: 'none' },
+        ],
+        { duration: 280, easing: 'ease-out' },
+      );
       while (ui.checks.children.length > 4) ui.checks.firstElementChild.remove();
     },
-    clearChecks() { mount(); ui.checks.replaceChildren(); },
+    clearChecks() {
+      mount();
+      ui.checks.replaceChildren();
+    },
     card(eyebrow, title, text) {
       mount();
       ui.card.querySelector('.eyebrow').textContent = eyebrow;
@@ -144,6 +185,9 @@
       ui.card.querySelector('p').textContent = text || '';
       ui.card.classList.add('on');
     },
-    hideCard() { mount(); ui.card.classList.remove('on'); },
+    hideCard() {
+      mount();
+      ui.card.classList.remove('on');
+    },
   };
 })();

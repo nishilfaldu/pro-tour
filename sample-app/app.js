@@ -24,39 +24,41 @@ function render() {
   document.querySelector('#visible-count').textContent = visible.length;
   document.querySelector('#total-count').textContent = tasks.length;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
-  list.replaceChildren(...visible.map(task => {
-    const row = document.createElement('article');
-    row.className = 'task';
-    row.dataset.taskId = task.id;
-    const content = document.createElement('div');
-    const title = document.createElement('h2');
-    title.textContent = task.name;
-    const details = document.createElement('p');
-    details.textContent = task.details;
-    content.append(title, details);
-    const controls = document.createElement('div');
-    controls.className = 'task-controls';
-    const status = document.createElement('select');
-    status.setAttribute('aria-label', `Status for ${task.name}`);
-    for (const [value, label] of Object.entries(labels)) {
-      const option = new Option(label, value);
-      status.add(option);
-    }
-    status.value = task.status;
-    status.addEventListener('change', () => {
-      task.status = status.value;
-      save();
-      render();
-    });
-    const edit = document.createElement('button');
-    edit.type = 'button';
-    edit.textContent = 'Edit';
-    edit.setAttribute('aria-label', `Edit ${task.name}`);
-    edit.addEventListener('click', () => openTask(task));
-    controls.append(status, edit);
-    row.append(content, controls);
-    return row;
-  }));
+  list.replaceChildren(
+    ...visible.map(task => {
+      const row = document.createElement('article');
+      row.className = 'task';
+      row.dataset.taskId = task.id;
+      const content = document.createElement('div');
+      const title = document.createElement('h2');
+      title.textContent = task.name;
+      const details = document.createElement('p');
+      details.textContent = task.details;
+      content.append(title, details);
+      const controls = document.createElement('div');
+      controls.className = 'task-controls';
+      const status = document.createElement('select');
+      status.setAttribute('aria-label', `Status for ${task.name}`);
+      for (const [value, label] of Object.entries(labels)) {
+        const option = new Option(label, value);
+        status.add(option);
+      }
+      status.value = task.status;
+      status.addEventListener('change', () => {
+        task.status = status.value;
+        save();
+        render();
+      });
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.setAttribute('aria-label', `Edit ${task.name}`);
+      edit.addEventListener('click', () => openTask(task));
+      controls.append(status, edit);
+      row.append(content, controls);
+      return row;
+    }),
+  );
 }
 
 function openTask(task) {
@@ -89,7 +91,11 @@ form.addEventListener('submit', event => {
   const name = String(data.get('name')).trim();
   if (!name) return;
   const value = { name, details: String(data.get('details')).trim(), status: String(data.get('status')) };
-  if (editingId) Object.assign(tasks.find(task => task.id === editingId), value);
+  if (editingId)
+    Object.assign(
+      tasks.find(task => task.id === editingId),
+      value,
+    );
   else tasks.unshift({ id: crypto.randomUUID(), ...value });
   save();
   dialog.close();

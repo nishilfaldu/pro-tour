@@ -1,7 +1,7 @@
-import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const files = new Map([

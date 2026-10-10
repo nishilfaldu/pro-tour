@@ -1,6 +1,7 @@
 // Static server for lab fixtures: node tours/lab/serve.js <dir> [port]
-import { createServer } from 'node:http';
+
 import { readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { extname, join, resolve } from 'node:path';
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
