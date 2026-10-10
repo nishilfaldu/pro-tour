@@ -253,7 +253,7 @@ export async function recordTour(tour, { url, outDir, name, channel = 'chromium'
   let context;
   let trimSeconds = 0;
   try {
-    context = await browser.newContext({ viewport: SIZE, deviceScaleFactor: 1, bypassCSP: true, recordVideo: { dir: work, size: SIZE } });
+    context = await browser.newContext({ baseURL: url, viewport: SIZE, deviceScaleFactor: 1, bypassCSP: true, recordVideo: { dir: work, size: SIZE } });
     await context.addInitScript({ path: OVERLAY });
     page = await context.newPage();
     const opened = Date.now();

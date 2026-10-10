@@ -24,6 +24,9 @@ export async function run(t) {
 }
 ```
 
+The tour starts on the app's root URL. To reach another page, click through the app's navigation
+as a user would, or call `await page.goto('/some/path')` (paths resolve against the app URL).
+
 `t.page` is a Playwright `Page`. Use any Playwright locator (`getByRole`, `getByLabel`,
 `getByText`, `getByPlaceholder`, `locator(css)`, `.filter()`, `.nth()`, chaining). Playwright
 locators are strict: an action on a locator that matches more than one element fails.
