@@ -52,3 +52,13 @@ Each directory holds the tour the agent committed, the comment it published (`co
 - The two agents chose different but accurate checklists for the same PR (for #1918, Codex included
   renaming Timeline snapshots, Cursor included a blank name being discarded). That checklist is what
   the reviewer judges.
+
+## After the TypeScript migration
+
+One more run, with pro-tour installed from its packed tarball (`pnpm add -D ./pro-tour-0.1.0.tgz`, then
+`pnpm exec pro-tour init`) in a fresh repository of the [assignee-board fixture](../../fixtures/), and the
+same kind of prompt. Codex ran `pro-tour api`, wrote `.tours/assignee-filter.tour.ts`, ran
+`pro-tour check` (no type errors), recorded it three times, previewed the comment with
+`publish --dry-run`, and published: six behaviors, each shown by a passing step, in 3.7 minutes. The
+tour and comment are in [`codex-ts-board/`](codex-ts-board).
+
