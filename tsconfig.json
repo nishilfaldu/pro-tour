@@ -10,7 +10,6 @@
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
-    "allowJs": true,
     "declaration": true,
     "skipLibCheck": true,
     "rootDir": "src",
