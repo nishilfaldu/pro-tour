@@ -1,8 +1,9 @@
 # Tour API
 
-A tour is an ES module that records a short, captioned video of one feature for PR reviewers.
-The runner opens the app at its root URL with fresh browser storage, so every run starts
-from the app's seed data. The viewport is 1280×800.
+A tour is an ES module in `.tours/<feature>.tour.js` that records a short, captioned video of one
+feature for PR reviewers. The runner opens the app at its root URL in a fresh browser (no cookies or
+local storage) with a 1280×800 viewport. Data on the app's server persists between runs, so a tour must
+not depend on what an earlier run created.
 
 ```js
 export const meta = {
@@ -77,3 +78,18 @@ Use these rather than calling `page` directly inside a step, so the runner sees 
 - Demonstrate the change in the PR, not the rest of the app.
 - Show each new behavior happening, including new states such as empty states.
 - Each step's checks are the evidence for that step: assert what its actions changed.
+
+## Locators that hold up
+
+- Prefer roles and labels (`getByRole`, `getByLabel`, `getByPlaceholder`). Generated ids and CSS classes
+  change between builds.
+- Accessible names often carry more than the visible label (an icon's text, a count): match a
+  substring or a regular expression, or scope with `.filter({ hasText })`.
+- When a label repeats on the page, scope to the region: `page.getByRole('dialog').getByLabel('Status')`,
+  `page.getByRole('listitem').filter({ hasText: 'Draft' }).getByRole('button')`.
+- Menus, popovers and dialogs from component libraries often mount at the end of `<body>` and may not
+  have the role you expect. When a locator fails, the failure file shows the visible DOM around the
+  last element the tour acted on and the last elements in `<body>`; build the locator from that.
+- A state that disappears on its own (a toast, a "Copied!" tooltip) can be checked in the step whose
+  action triggers it; checks are evaluated together right after the step's last action.
+- If a tour creates data, give it a unique name (for example with `Date.now()`) so reruns do not collide.

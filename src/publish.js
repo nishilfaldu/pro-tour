@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { git, TourError } from './repo.js';
 import { markdown } from './report.js';
+import { removeRecording } from './runtime.js';
 
 function exec(command, args, { env, cwd, timeout = 60_000 } = {}) {
   return new Promise((done, fail) => {
@@ -68,10 +69,10 @@ export async function resolvePr(repo, { target, branch, env }) {
     if (!entries.length) throw new TourError(`No open PR for branch ${branch}; pass --pr`);
     target = entries[0].url;
   }
-  const data = JSON.parse(await retryRead(() => exec('gh', ['pr', 'view', target, '--json', 'number,url'], { cwd: repo, env })));
+  const data = JSON.parse(await retryRead(() => exec('gh', ['pr', 'view', target, '--json', 'number,url,baseRefName'], { cwd: repo, env })));
   const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/([1-9]\d*)$/.exec(data.url ?? '');
   if (!match || typeof data.number !== 'number') throw new TourError('GitHub returned invalid PR metadata; no PR was guessed');
-  return { number: data.number, url: data.url, repo: match[1] };
+  return { number: data.number, url: data.url, repo: match[1], base: data.baseRefName };
 }
 
 export async function probeVideo(video) {
@@ -128,12 +129,19 @@ async function findUpload(pr, marker, env) {
   return matches[0]?.html_url ?? null;
 }
 
-export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = false } = {}) {
+// The comment body for a recording: video first, then the behavior checklist, then collapsible steps.
+export function commentBody(report, video) {
+  return markdown(report, { video: `![](${video})`, collapseSteps: true });
+}
+
+// After a confirmed upload the local recording is deleted (the PR hosts it) unless keep is set.
+export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = false, keep = false, dryRun = false } = {}) {
   const video = resolve(videoPath);
   await probeVideo(video);
   const report = JSON.parse(await readFile(video.replace(/\.mp4$/, '.json'), 'utf8').catch(() => {
     throw new TourError(`No report beside ${basename(video)}; publish a video recorded by pro-tour`);
   }));
+  if (dryRun) return { status: 'dry-run', body: commentBody(report, video) };
   await requireMediaSupport(env);
   const digest = createHash('sha256').update(await readFile(video)).digest('hex');
   const identity = createHash('sha256').update(`${basename(video)}:${digest}:${pr.url}`).digest('hex');
@@ -147,7 +155,8 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
     // Reconcile first, including a retry from another checkout or CI run.
     const existing = await findUpload(pr, marker, env);
     if (existing) {
-      await record({ status: 'uploaded', comment_url: existing, reused: true });
+      if (keep) await record({ status: 'uploaded', comment_url: existing, reused: true });
+      else await removeRecording(video);
       return { status: 'uploaded', commentUrl: existing, reused: true };
     }
     const previous = JSON.parse(await readFile(journal, 'utf8').catch(() => 'null'));
@@ -159,7 +168,7 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
     let url;
     try {
       const body = join(work, 'comment.md');
-      await writeFile(body, `${markdown(report, { video: `![](${video})`, collapseSteps: true })}\n${marker}\n${tourMarker}\n`);
+      await writeFile(body, `${commentBody(report, video)}\n${marker}\n${tourMarker}\n`);
       url = (await exec('gh', ['pr', 'comment', String(pr.number), '--repo', pr.repo, '--body-file', body, '--attach', video], { env, timeout: 180_000 })).trim();
     } catch (error) {
       url = await findUpload(pr, marker, env).catch(() => null);
@@ -172,6 +181,7 @@ export async function publish(videoPath, pr, { env = githubEnv(), retryUpload = 
     }
     await record({ status: 'uploaded', comment_url: url });
     const hidden = await hideOlder(pr, tourMarker, url, env);
+    if (!keep) await removeRecording(video);
     return { status: 'uploaded', commentUrl: url, reused: false, hidden };
   });
 }

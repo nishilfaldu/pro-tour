@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, open, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, open, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -299,11 +299,35 @@ async function reserveVideo(outDir, name) {
   }
 }
 
+const SIDECARS = ['.json', '.md', '.failure.md', '.upload.json'];
+const escape = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Recordings of one tour in outDir, oldest first: <name>-v<N>.mp4.
+export async function recordings(outDir, name) {
+  const pattern = new RegExp(`^${escape(name)}-v(\\d+)\\.mp4$`);
+  const files = await readdir(outDir).catch(() => []);
+  return files.map(file => [file, pattern.exec(file)?.[1]]).filter(([, version]) => version)
+    .sort((a, b) => Number(a[1]) - Number(b[1])).map(([file]) => join(outDir, file));
+}
+
+// Delete a recording and the report files beside it.
+export async function removeRecording(video) {
+  const base = video.replace(/\.mp4$/, '');
+  await Promise.all([video, ...SIDECARS.map(suffix => base + suffix)].map(file => rm(file, { force: true })));
+}
+
+function failureText(report) {
+  return [`# ${report.title}: failed`, '', `Error: ${report.failure.message}`, '',
+    'Visible DOM at the failure:', '', '```', report.failure.dom ?? '(not available)', '```', ''].join('\n');
+}
+
 // channel: 'chromium' (Playwright's own build, the default) or an installed browser such as 'chrome'.
-export async function recordTour(tour, { url, outDir, name, channel = 'chromium' }) {
+// sourceSha fingerprints the tour script, so publish can tell a video recorded from an older script.
+// Unless keep is set, the tour's older recordings are deleted once this one is written.
+export async function recordTour(tour, { url, outDir, name, channel = 'chromium', sourceSha = null, keep = false }) {
   const work = await mkdtemp(join(tmpdir(), 'tour-'));
   const browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true });
-  const report = { title: tour.meta.title, summary: tour.meta.summary, url, status: 'failed', steps: [] };
+  const report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha: sourceSha, status: 'failed', steps: [] };
   let page;
   let context;
   let trimSeconds = 0;
@@ -325,7 +349,7 @@ export async function recordTour(tour, { url, outDir, name, channel = 'chromium'
       report.status = 'passed';
     } catch (error) {
       report.error = error.message.split('\n')[0];
-      // Repair context for a planner: the full Playwright message (strict-mode errors list every match) and what the page exposed.
+      // Repair context: the full Playwright message (strict-mode errors list every match) and what the page showed.
       report.failure = {
         message: [error.message, error.cause?.message].filter(Boolean).join('\n').slice(0, 4000),
         aria: await page.locator('body').ariaSnapshot({ timeout: 2000 }).catch(() => null),
@@ -355,7 +379,12 @@ export async function recordTour(tour, { url, outDir, name, channel = 'chromium'
   const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', video], { encoding: 'utf8' });
   report.seconds = Math.round(Number(probe.stdout) * 10) / 10;
   report.video = video;
+  if (report.failure) {
+    report.failureFile = video.replace(/\.mp4$/, '.failure.md');
+    await writeFile(report.failureFile, failureText(report));
+  }
   await writeFile(video.replace(/\.mp4$/, '.json'), JSON.stringify(report, null, 2) + '\n');
   await writeFile(video.replace(/\.mp4$/, '.md'), markdown(report));
+  if (!keep) for (const older of await recordings(outDir, name)) if (older !== video) await removeRecording(older);
   return report;
 }

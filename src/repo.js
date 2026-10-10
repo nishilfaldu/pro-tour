@@ -23,56 +23,24 @@ export function currentBranch(repo, env = process.env) {
   try {
     return git(['symbolic-ref', '--quiet', '--short', 'HEAD'], repo).trim();
   } catch {
-    throw new TourError('HEAD is detached; check out a branch or pass --tour <path>.');
+    throw new TourError('HEAD is detached; check out the pull request branch, or pass --pr and tour names.');
   }
 }
 
-export function sanitizedBranch(branch) {
-  return branch.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^[.-]+|[.-]+$/g, '').slice(0, 120) || 'branch';
-}
-
-const UNSAFE_PARTS = new Set(['.videos', '.git', 'node_modules', '.npmrc', '.netrc', 'auth.json', '.ssh', '.aws', '.kube', 'id_rsa', 'id_ed25519']);
-
-// Never put credentials, lockfiles or recordings into a model prompt.
-export function isSafePath(path) {
-  return !path.split('/').some(part => part.startsWith('.env') || UNSAFE_PARTS.has(part)
-    || /(credential|secret|token|\.pem$|\.key$|lock\.)/i.test(part));
-}
-
-export function baseFromEnvironment(repo, env = process.env) {
-  if (!env.GITHUB_BASE_REF) return null;
-  const base = `origin/${env.GITHUB_BASE_REF}`;
-  verifyCommit(repo, base);
-  return base;
-}
-
-export function defaultBase(repo) {
-  try {
-    return git(['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD'], repo).trim().replace(/^refs\/remotes\//, '');
-  } catch {
-    throw new TourError('Cannot infer the base: no origin/HEAD. Pass --base <ref>.');
-  }
-}
-
-function verifyCommit(repo, ref) {
-  if (ref.startsWith('-')) throw new TourError('Invalid base ref');
-  try {
-    git(['rev-parse', '--verify', `${ref}^{commit}`], repo);
-  } catch {
-    throw new TourError(`Base ${ref} is not available locally. Fetch it (for CI, use actions/checkout with fetch-depth: 0) or pass --base.`);
-  }
-}
-
-const MAX_DIFF_CHARS = 100_000;
-
-export function branchDiff(repo, base) {
-  verifyCommit(repo, base);
-  const files = git(['diff', '--name-only', '-z', `${base}...HEAD`, '--'], repo).split('\0').filter(Boolean);
-  const safe = files.filter(isSafePath);
-  const diff = safe.length ? git(['diff', '--no-ext-diff', '--no-textconv', '--unified=3', `${base}...HEAD`, '--', ...safe], repo) : '';
-  if (!diff.trim()) throw new TourError(`No committed changes between ${base} and HEAD to tour.`);
-  if (diff.length > MAX_DIFF_CHARS) throw new TourError(`Diff exceeds ${MAX_DIFF_CHARS / 1000} KB; use a closer base ref.`);
-  return { diff, files: safe };
+// Tours a pull request adds or changes: committed .tours/*.tour.js files that differ from its base.
+export function changedTours(repo, base) {
+  const ref = [`origin/${base}`, base].find(candidate => {
+    try {
+      git(['rev-parse', '--verify', '--quiet', `${candidate}^{commit}`], repo);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  if (!ref) throw new TourError(`The PR base ${base} is not available locally; run git fetch origin ${base}, or name the tours to publish.`);
+  const committed = git(['diff', '--name-only', '--diff-filter=d', `${ref}...HEAD`, '--', '.tours'], repo).split('\n').filter(file => file.endsWith('.tour.js'));
+  const uncommitted = git(['status', '--porcelain', '--', '.tours'], repo).split('\n').filter(line => line.trim().endsWith('.tour.js'));
+  return { tours: committed.map(file => join(repo, file)), uncommitted: uncommitted.map(line => line.slice(3).trim()) };
 }
 
 // Recordings go in an ignored .videos/ directory at the repository root.

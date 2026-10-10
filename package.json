@@ -1,7 +1,7 @@
 {
   "name": "pro-tour",
   "version": "0.1.0",
-  "description": "Record captioned feature tours of a pull request with Playwright, planned from the diff",
+  "description": "Record captioned feature tours of a pull request with Playwright, for coding agents and their reviewers",
   "scripts": {
     "test": "node --test 'tests/*.test.js' 'sample-app/tests/*.test.js'"
   },
