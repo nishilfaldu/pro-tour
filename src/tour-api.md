@@ -25,7 +25,7 @@ export async function run(t) {
 ```
 
 The tour starts on the app's root URL. To reach another page, click through the app's navigation
-as a user would, or call `await page.goto('/some/path')` (paths resolve against the app URL).
+as a user would, or call `await t.goto('/some/path')` (paths resolve against the app URL).
 
 `t.page` is a Playwright `Page`. Use any Playwright locator (`getByRole`, `getByLabel`,
 `getByText`, `getByPlaceholder`, `locator(css)`, `.filter()`, `.nth()`, chaining). Playwright
@@ -59,6 +59,10 @@ comment shows each behavior with the step that proves it.
 - `t.click(locator)`
 - `t.fill(locator, text)`: types the text visibly into an input.
 - `t.select(locator, label)`: picks the option with this visible label in a native `<select>`.
+- `t.press(key)`: presses a key such as `'Enter'` or `'Escape'` in the focused element.
+- `t.goto(path)`: navigates to a path of the app.
+
+Use these rather than calling `page` directly inside a step, so the runner sees each action.
 
 ## Checks (each shows a chip; polled for up to 5 seconds after the actions)
 

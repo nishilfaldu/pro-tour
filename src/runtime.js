@@ -166,6 +166,18 @@ export class Tour {
     await this.settle();
   }
 
+  // Navigate to a path of the app (resolved against the app URL).
+  async goto(path) {
+    await this.page.goto(path);
+    await this.settle();
+  }
+
+  // Press a key, such as 'Enter' or 'Escape', in the focused element.
+  async press(key) {
+    await this.page.keyboard.press(key);
+    await this.settle();
+  }
+
   async select(locator, label) {
     await this.point(locator);
     await locator.selectOption({ label });

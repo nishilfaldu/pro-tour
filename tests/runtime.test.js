@@ -22,10 +22,10 @@ after(async () => {
 });
 
 async function board(pace = {}) {
-  const context = await browser.newContext({ bypassCSP: true });
+  const context = await browser.newContext({ bypassCSP: true, baseURL: `http://127.0.0.1:${server.address().port}` });
   await context.addInitScript({ path: overlay });
   const page = await context.newPage();
-  await page.goto(`http://127.0.0.1:${server.address().port}`);
+  await page.goto('/');
   const t = new Tour(page, { pace: { ...fast, ...pace }, behaviors: { 'filter-done': 'Filtering to Done shows only finished tasks', 'filter-progress': 'Filtering to In progress shows active work' } });
   return { t, page, filter: page.getByRole('combobox', { name: 'Status', exact: true }), heading: name => page.getByRole('heading', { name }) };
 }
@@ -105,6 +105,17 @@ test('checks are evaluated together right after the actions, so short-lived feed
     t.visible('Filtered banner', page.locator('#flash')),
   ]);
   assert.equal(t.steps[0].status, 'passed');
+  await page.context().close();
+});
+
+test('goto and press are actions the runner samples after', async () => {
+  const { t, page } = await board();
+  await t.step('Open and dismiss the new task dialog with the keyboard', async () => {
+    await t.goto('/');
+    await t.click(page.getByRole('button', { name: 'New task' }));
+    await t.press('Escape');
+  }, [t.hidden('Dialog is dismissed', page.getByRole('dialog'))]);
+  assert.equal(t.steps[0].checks[0].changed, true);
   await page.context().close();
 });
 
