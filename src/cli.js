@@ -117,7 +117,10 @@ async function tour(argv) {
   await mkdir(dirname(logPath), { recursive: true });
   await writeFile(logPath, JSON.stringify(summary, null, 2) + '\n');
   if (result.report?.steps) printReport(result.report);
-  console.log(`${result.status === 'passed' ? `Tour saved: ${tourPath}` : 'No passing tour; the saved tour was left unchanged'}`
+  const replayed = result.history.length === 1 && result.history[0].kind === 'replay';
+  const outcome = result.status !== 'passed' ? 'No passing tour; the saved tour was left unchanged'
+    : replayed ? `Saved tour still passes: ${tourPath}` : `Tour saved: ${tourPath}`;
+  console.log(`${outcome}`
     + ` · ${summary.modelCalls} model calls, ${summary.repairs} repairs, ${summary.seconds}s · log ${logPath}`);
   if (values.publish && result.report?.video) await publishVideo(result.report.video, { pr: values.pr, retryUpload: values['retry-upload'], cwd: repo });
   return result.status === 'passed' ? 0 : 1;

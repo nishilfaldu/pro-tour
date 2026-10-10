@@ -1,83 +1,172 @@
 # Pro Tour
 
-Record a feature walkthrough from an already-running local app. Codex plans the tour from your branch’s committed diff; TypeSafe’s Jev model drives the browser. Pro Tour saves one versioned MP4 locally, with optional publishing to a PR.
+Pro Tour records a short, captioned video of what a pull request does, so reviewers can see the change
+working without running the app. It reads the PR's diff, lists the user-visible behaviors the change
+adds, and writes a Playwright script (a *tour*) that demonstrates each one with a visible cursor,
+step captions and on-screen checks. The video and a checklist go on the PR as one comment.
 
-## Installation
+The checks are the evidence; the video is supporting material. A tour passes only if every step's
+checks pass, every step changed something on screen, and every listed behavior was shown. A failed tour
+is published as failed.
 
-Requires macOS, `uv`, Git, `ffmpeg`/`ffprobe`, an authenticated Codex CLI, and Chrome. Installation uses an isolated Python 3.12 environment.
+Tours are committed with the code (`.tours/<branch>.tour.js`). Later runs replay the saved script with
+no model at all, and the model is only called again to repair a tour that stops passing.
 
-The first public PyPI release is being prepared; this install command becomes available once it is published:
+## Requirements
 
-```sh
-uv tool install --python 3.12 pro-tour
-uv tool update-shell
-```
+- Node.js 20 or newer and pnpm
+- ffmpeg and ffprobe (`brew install ffmpeg`, or `sudo apt-get install ffmpeg`)
+- [Codex CLI](https://www.npmjs.com/package/@openai/codex), logged in, to plan and repair tours
+  (replaying a saved tour needs no model)
+- [GitHub CLI](https://cli.github.com) with `gh pr comment --attach` support, to publish
 
-Restart your terminal if `pro-tour` is not on PATH, then run:
+## Install
 
-```sh
-pro-tour setup
-```
-
-Setup asks for your default Codex model (`gpt-6-luna`), your TypeSafe API key, and whether you want to configure GitHub publishing. Key input is hidden. It saves configuration privately and checks prerequisites; run it again to change preferences or replace keys. Press Enter to keep an existing key.
-
-Publishing needs a GitHub media token and authenticated `gh` on PATH with support for `gh pr comment --attach`. GitHub access is optional for recording. Configuring publishing does not publish automatically.
-
-Advanced: setup saves keys in `~/.config/pro-tour/.env.local` and your model preference in `~/.config/pro-tour/config.json`, both with private permissions. Environment variables `TYPESAFE_API_KEY` and `GH_MEDIA_TOKEN` override saved keys and are not copied to disk by setup. `--secrets-file <trusted-path>` selects another credentials file; app repository env files are never loaded automatically.
-
-```sh
-pro-tour doctor
-```
-
-Use `pro-tour doctor --publish` to check publishing credentials and GitHub CLI attachment support too.
-
-For contributing or running from a checkout, see [setup.md](setup.md).
-
-Once published, upgrade with `uv tool upgrade pro-tour`. Jev's runtime library is bundled with Pro Tour; other Python dependencies resolve to compatible versions during installation.
-
-## Connect your browser
-
-Open Chrome, visit `chrome://inspect/#remote-debugging`, and enable remote debugging. If your app requires login, sign in first. Run in a separate terminal:
+In your app repository:
 
 ```sh
-pro-tour connect
+pnpm add -D github:nishilfaldu/pro-tour
+pnpm exec playwright install --with-deps chromium
+pnpm exec pro-tour doctor --publish
 ```
 
-Approve Chrome’s prompt and leave the connector running. Tours reuse your open app tab, preserving its current page and state. If the app is not open, Pro Tour opens its URL in that Chrome window. The app tab stays open afterward. Ctrl-C stops the connector; your Chrome stays open. Optional `--cdp-url` selects an existing Chrome debugging endpoint when discovery is ambiguous.
+`doctor` checks each prerequisite and prints the command that fixes anything missing.
 
-## Record and publish
+## Record a tour
 
-Run from the app’s Git repository with its app already running:
+Start your app, commit your change, then run from the repository:
 
 ```sh
-pro-tour record --url http://localhost:3000 --goal "Show the new status filter"
+pnpm exec pro-tour tour --url http://localhost:5173
 ```
 
-The selected tab and window are shown before planning. If several tabs match, select one with `--tab-id <id>` using the IDs in the error message.
+On the first run this:
 
-The model uses your setup preference, falling back to `gpt-6-luna`. The branch comes from your current checkout; PR and base ref are inferred when available. Override the model, PR, or base with `--model`, `--pr`, or `--base origin/main`. Without an accessible PR, the base falls back to local `origin/HEAD`; supply `--base <ref>` if that is missing. The base must already exist locally. Pro Tour uses committed changes against the base; it does not fetch refs, install app dependencies, or start the app.
+1. lists the behaviors the branch's diff adds (against `origin/HEAD`, or `--base <ref>`),
+2. writes `.tours/<branch>.tour.js` that covers each behavior,
+3. records it into `.videos/<branch>-vN.mp4` with a report beside it (`.json` and `.md`),
+4. repairs it from the failure (the error plus the page's visible DOM) up to three times.
 
-Videos and adjacent plans, traces, and outcome reports go in the app repository’s ignored `.videos/` directory:
+The tour file is written only when an attempt passes; every attempt's script is kept beside its video.
+Commit the tour. Running the same command again replays it with no model calls.
 
-- `<sanitized-branch>-pr<number>-v1.mp4`
-- `<sanitized-branch>-no-pr-v1.mp4` without a verified PR association
-
-Later recordings increment the version and never overwrite. Reports distinguish `success`, `failure`, and `unverified`; Jev choosing `DONE` alone does not establish success.
-
-To publish immediately, add `--publish` to `record`. To publish a saved video:
+Publish to the branch's open PR, or pick one with `--pr`:
 
 ```sh
-pro-tour publish --video .videos/feat-status-filter-pr42-v1.mp4 --pr 42
+pnpm exec pro-tour tour --url http://localhost:5173 --publish
+pnpm exec pro-tour publish .videos/my-branch-v3.mp4 --pr 42
 ```
 
-`--pr` accepts a number or URL and can be omitted when the adjacent report identifies the PR. Each published version gets a concise comment with an inline video. Upload failures preserve the local recording. Play the saved MP4 and the PR’s inline player to confirm playback.
+Publishing is retry-safe: it looks for an earlier comment carrying the same recording's marker before
+uploading, and refuses to upload again after an upload whose outcome is unknown until you pass
+`--retry-upload`.
 
-Use `pro-tour <command> --help` for all options.
+### Commands
 
-## Data and limits
+| Command | What it does |
+|---|---|
+| `pro-tour tour --url <url>` | Replay the branch's tour, or plan, record and repair one |
+| `pro-tour run <file.tour.js> --url <url>` | Record a saved tour, no model |
+| `pro-tour publish <video.mp4>` | Comment on the PR with the video and checklist |
+| `pro-tour doctor [--publish]` | Check prerequisites |
 
-Use synthetic/demo data. If the app requires login, sign in before recording. Codex receives the goal, filtered diff, and page/field context; TypeSafe receives page observations and actions, including entered synthetic text. Videos, plans, traces, and reports are saved locally; publishing uploads the video only. Pro Tour has no central collection service. Secrets are passed only to the processes that need them, never to the browser or app.
+Useful options for `tour`: `--base <ref>`, `--diff <file>`, `--src <dir>` (the app source the planner
+reads; defaults to the repository), `--model` (default `gpt-6-sol`, or `PRO_TOUR_MODEL`), `--effort`
+(default `high`, or `PRO_TOUR_EFFORT`), `--rounds 3`, `--replan` (ignore the saved tour),
+`--channel chrome` (record with an installed Chrome instead of Playwright's Chromium).
 
-App URLs must be localhost HTTP(S), without credentials, query strings, or fragments. Checks cover visible text and controls. Frames, shadow DOM, canvas, uploads, pop-up tabs, and arbitrary keyboard widgets are known limitations. Concurrent tours are unvalidated; Linux is experimental and Windows recording is unsupported.
+Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 browser or encoder failure.
 
-The separate GitHub Actions version is on [`codex/github-actions`](https://github.com/nishilfaldu/pro-tour/tree/codex/github-actions). Jev’s [MIT license](licenses/jev-ultrafast-MIT.txt) is included.
+## In CI
+
+The repository is also a GitHub Action. Start the app in an earlier step, then:
+
+```yaml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  tour:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the planner diffs against the PR base
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dev --port 5173 &
+      - run: pnpm dlx wait-on http://localhost:5173
+      - uses: nishilfaldu/pro-tour@main
+        with:
+          url: http://localhost:5173
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_MEDIA_TOKEN: ${{ secrets.GH_MEDIA_TOKEN }}   # optional, see below
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # only needed to plan or repair
+```
+
+The action replays the committed tour. If it is missing or broken and `OPENAI_API_KEY` is set, it plans
+or repairs one, and the job summary tells you to commit the new tour from the `pro-tour` artifact.
+Video uploads to PR comments go through `gh pr comment --attach`; if your workflow token cannot upload
+attachments, set `GH_MEDIA_TOKEN` to a user token that can comment on the repository.
+[`examples/workflows/ci.yml`](examples/workflows/ci.yml) is this repository's own CI, which dogfoods the
+action on the sample app.
+
+## Coding agents
+
+[`docs/agent-rule.md`](docs/agent-rule.md) is a section to paste into your repository's `AGENTS.md` or
+`CLAUDE.md`, so agents commit a tour with every user-visible change.
+
+## Writing tours by hand
+
+A tour is an ES module; the full API is in [`src/tour-api.md`](src/tour-api.md).
+
+```js
+export const meta = {
+  title: 'Filter tasks by status',
+  summary: 'Pick a status to narrow the board.',
+  behaviors: { 'filter-done': 'The Done filter shows only finished tasks' },
+};
+
+export async function run(t) {
+  const { page } = t;
+  await t.step('Filter the board to Done', async () => {
+    await t.select(page.getByRole('combobox', { name: 'Status', exact: true }), 'Done');
+  }, [
+    t.text('2 tasks in view', page.locator('#visible-count'), '2'),
+    t.hidden('Draft release notes is hidden', page.getByRole('heading', { name: 'Draft release notes' })),
+  ], { covers: ['filter-done'] });
+}
+```
+
+Checks are sampled before the step's actions and after each one. A step fails unless at least one check
+went from false to true, and a `hidden` check must have been visible at some point in the step, so a
+step cannot pass by asserting what was already on screen.
+
+## Limitations
+
+- Tour code, including model-written tours, runs with the permissions of the Node process. Run tours
+  where the app runs, typically CI.
+- Headless Chromium does not draw the open menu of a native `<select>`; the chosen option still changes
+  visibly.
+- Planning uses the Codex CLI. The model call is isolated in `src/planner.js` (`ask()`), the one place
+  another backend would plug in.
+
+## Development
+
+```sh
+pnpm install
+pnpm exec playwright install --with-deps chromium
+pnpm test
+node sample-app/server.js &   # the sample app, http://127.0.0.1:4173
+./bin/pro-tour.js run sample-app/.tours/status-filter.tour.js --url http://127.0.0.1:4173
+```
+
+`fixtures/` holds harder test apps (a custom dropdown, duplicate labels, an inaccessible variant), and
+[`experiments/`](experiments/README.md) records how the planner, the step rules and the default model were
+chosen.
