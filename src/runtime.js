@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { markdown } from './report.js';
 
 const OVERLAY = join(dirname(fileURLToPath(import.meta.url)), 'overlay.js');
 const SIZE = { width: 1280, height: 800 };
@@ -241,32 +242,6 @@ async function reserveVideo(outDir, name) {
       if (error.code !== 'EEXIST') throw error;
     }
   }
-}
-
-function markdown(report) {
-  const passed = report.steps.filter(step => step.status === 'passed').length;
-  const lines = [
-    `### Feature tour: ${report.title}`,
-    '',
-    report.summary,
-    '',
-    `**${report.status === 'passed' ? 'Passed' : 'Failed'}**: ${passed}/${report.steps.length} steps · ${report.seconds}s video`,
-    '',
-  ];
-  if (report.coverage.length) {
-    lines.push('**What this PR does**', '');
-    for (const behavior of report.coverage) {
-      const where = behavior.steps.length ? `step ${behavior.steps.join(', ')}` : 'not shown';
-      lines.push(`- ${behavior.steps.length ? '✓' : '✗'} ${behavior.description} (${where})`);
-    }
-    lines.push('', '**Steps**', '');
-  }
-  for (const step of report.steps) {
-    lines.push(`- ${step.status === 'passed' ? '✓' : '✗'} **${step.title}** (${step.seconds}s)`);
-    for (const check of step.checks) lines.push(`  - ${check.passed ? '✓' : '✗'} ${check.label}${check.passed && !check.changed ? ' _(already true before)_' : ''}`);
-    if (step.error && !step.checks.some(check => !check.passed)) lines.push(`  - ✗ ${step.error}`);
-  }
-  return lines.join('\n') + '\n';
 }
 
 // channel: 'chromium' (Playwright's own build, the default) or an installed browser such as 'chrome'.

@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import { InfrastructureError, load, runAgent, totals } from './agent.js';
 import { listBehaviors, prContext, writeTour } from './planner.js';
 import { baseFromEnvironment, branchDiff, currentBranch, defaultBase, repoRoot, sanitizedBranch, TourError, videosDir } from './repo.js';
+import { githubEnv, publish, resolvePr } from './publish.js';
 import { recordTour } from './runtime.js';
 
 const USAGE = `Usage:
@@ -12,14 +13,28 @@ const USAGE = `Usage:
       Replay the branch's saved tour, or plan, record and repair one with the model.
   pro-tour run <file.tour.js> --url <app url> [--out <dir>] [--channel chromium|chrome]
       Record a saved tour with no model.
+  pro-tour publish <video.mp4> [--pr <number|url>] [--retry-upload]
+      Comment on the PR with the video and its behavior checklist. tour and run accept --publish too.
+
+Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 browser or encoder failure.
 
 Defaults: --tour .tours/<branch>.tour.js, --src the repository root, --out .videos/,
 --base $GITHUB_BASE_REF or origin/HEAD, --model $PRO_TOUR_MODEL or gpt-6-sol, --effort $PRO_TOUR_EFFORT or high.`;
 
 const COMMON = {
   url: { type: 'string' }, out: { type: 'string' }, channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' },
+  publish: { type: 'boolean', default: false }, pr: { type: 'string' }, 'retry-upload': { type: 'boolean', default: false },
   help: { type: 'boolean', short: 'h' },
 };
+
+// Failed tours are published too: the comment says so, and the video shows where it stopped.
+async function publishVideo(video, { pr, retryUpload, cwd }) {
+  const repo = repoRoot(cwd);
+  const env = githubEnv();
+  const target = await resolvePr(repo, { target: pr, branch: pr ? undefined : currentBranch(repo), env });
+  const result = await publish(video, target, { env, retryUpload });
+  console.log(`${result.reused ? 'Already published' : 'Published'}: ${result.commentUrl}`);
+}
 
 function appUrl(value) {
   let url;
@@ -47,6 +62,7 @@ async function run(argv) {
   const outDir = values.out ? resolve(values.out) : await videosDir(repoRoot(dirname(file)));
   const report = await recordTour(await load(file), { url: appUrl(values.url), outDir, name: basename(file, '.tour.js'), channel: values.channel });
   printReport(report);
+  if (values.publish) await publishVideo(report.video, { pr: values.pr, retryUpload: values['retry-upload'], cwd: dirname(file) });
   return report.status === 'passed' ? 0 : 1;
 }
 
@@ -100,7 +116,18 @@ async function tour(argv) {
   if (result.report?.steps) printReport(result.report);
   console.log(`${result.status === 'passed' ? `Tour saved: ${tourPath}` : 'No passing tour; the saved tour was left unchanged'}`
     + ` · ${summary.modelCalls} model calls, ${summary.repairs} repairs, ${summary.seconds}s · log ${logPath}`);
+  if (values.publish && result.report?.video) await publishVideo(result.report.video, { pr: values.pr, retryUpload: values['retry-upload'], cwd: repo });
   return result.status === 'passed' ? 0 : 1;
+}
+
+async function publishCommand(argv) {
+  const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: {
+    pr: { type: 'string' }, 'retry-upload': { type: 'boolean', default: false }, help: { type: 'boolean', short: 'h' },
+  } });
+  if (values.help || positionals.length !== 1) return usage(values.help);
+  const video = resolve(positionals[0]);
+  await publishVideo(video, { pr: values.pr, retryUpload: values['retry-upload'], cwd: dirname(video) });
+  return 0;
 }
 
 function usage(asked) {
@@ -108,7 +135,7 @@ function usage(asked) {
   return asked ? 0 : 2;
 }
 
-const COMMANDS = { tour, run };
+const COMMANDS = { tour, run, publish: publishCommand };
 
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
