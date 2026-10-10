@@ -1,3 +1,5 @@
+import type { Tour, TourMeta } from 'pro-tour';
+
 export const meta = {
   title: 'Filter the board by assignee',
   summary: 'Narrow the board to one person, see the empty state for someone with no work, then assign them a task and find it through the filter.',
@@ -8,13 +10,13 @@ export const meta = {
     'clear-filters': 'Clear filters puts every task back on the board',
     'search-people': 'Typing in the filter narrows the list of people',
   },
-};
+} satisfies TourMeta;
 
-export async function run(t) {
+export async function run(t: Tour): Promise<void> {
   const { page } = t;
   const trigger = page.getByRole('button', { name: /^Assignee / });
   const summary = page.getByText(/^\d+ of \d+ tasks$/);
-  const heading = name => page.getByRole('heading', { name, exact: true });
+  const heading = (name: string) => page.getByRole('heading', { name, exact: true });
 
   await t.step('Open the new Assignee filter', async () => {
     await t.click(trigger);

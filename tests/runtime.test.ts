@@ -1,18 +1,20 @@
 import { after, before, test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { type Browser, chromium } from 'playwright';
 import { createAppServer } from '../sample-app/server.js';
-import { Tour } from '../src/runtime.js';
+import { type Pace, Tour } from '../src/runtime.ts';
 
 const overlay = fileURLToPath(new URL('../src/overlay.js', import.meta.url));
 const fast = { move: 0, afterAction: 0, typeDelay: 0, stepIntro: 0, stepOutro: 0, checkTimeout: 600, chip: 0, failHold: 0, menu: 0 };
-let server;
-let browser;
+let server: Server;
+let browser: Browser;
 
 before(async () => {
   server = createAppServer();
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   browser = await chromium.launch({ headless: true });
 });
 
@@ -21,13 +23,13 @@ after(async () => {
   server.close();
 });
 
-async function board(pace = {}) {
-  const context = await browser.newContext({ bypassCSP: true, baseURL: `http://127.0.0.1:${server.address().port}` });
+async function board(pace: Partial<Pace> = {}) {
+  const context = await browser.newContext({ bypassCSP: true, baseURL: `http://127.0.0.1:${(server.address() as AddressInfo).port}` });
   await context.addInitScript({ path: overlay });
   const page = await context.newPage();
   await page.goto('/');
   const t = new Tour(page, { pace: { ...fast, ...pace }, behaviors: { 'filter-done': 'Filtering to Done shows only finished tasks', 'filter-progress': 'Filtering to In progress shows active work' } });
-  return { t, page, filter: page.getByRole('combobox', { name: 'Status', exact: true }), heading: name => page.getByRole('heading', { name }) };
+  return { t, page, filter: page.getByRole('combobox', { name: 'Status', exact: true }), heading: (name: string) => page.getByRole('heading', { name }) };
 }
 
 test('a step passes when a check changes, and records which checks were already true', async () => {
@@ -80,13 +82,16 @@ test('something shown and dismissed within one step counts as a change', async (
 test('value reads a select by its visible label, and builders reject missing arguments', async () => {
   const { t, filter } = await board();
   await t.step('Filter to Done', () => t.select(filter, 'Done'), [t.value('Filter reads Done', filter, 'Done')]);
+  // @ts-expect-error: the missing expected text is caught by the type checker and at run time.
   assert.throws(() => t.text('Board shows two tasks', filter), /t.text\("Board shows two tasks", ...\) needs the expected text as argument 3/);
+  // @ts-expect-error: a string is not a locator.
   assert.throws(() => t.visible('Done task', 'Approve color palette'), /needs a Playwright locator as argument 2/);
   await t.page.context().close();
 });
 
 test('a step whose check list holds something other than a check fails clearly', async () => {
   const { t, filter } = await board();
+  // @ts-expect-error: undefined is not a check.
   await assert.rejects(t.step('Filter to Done', () => t.select(filter, 'Done'), [undefined]), /Check 1 of step "Filter to Done" is not a check/);
   await t.page.context().close();
 });
@@ -94,7 +99,7 @@ test('a step whose check list holds something other than a check fails clearly',
 test('checks are evaluated together right after the actions, so short-lived feedback is caught', async () => {
   const { t, page, filter } = await board({ chip: 400 });
   // A banner that appears on filtering and disappears 600ms later, like a "Copied!" tooltip.
-  await page.evaluate(() => document.querySelector('#status-filter').addEventListener('change', () => {
+  await page.evaluate(() => document.querySelector('#status-filter')?.addEventListener('change', () => {
     const note = Object.assign(document.createElement('p'), { id: 'flash', textContent: 'Filtered' });
     document.body.append(note);
     setTimeout(() => note.remove(), 600);

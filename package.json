@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "Record captioned feature tours of a pull request with Playwright, for coding agents and their reviewers",
   "scripts": {
-    "test": "node --test 'tests/*.test.js' 'sample-app/tests/*.test.js'"
+    "test": "pnpm typecheck && node --test 'tests/*.test.ts' 'sample-app/tests/*.test.js'",
+    "build": "node scripts/build.js",
+    "prepare": "pnpm build",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.check.json"
   },
   "license": "MIT",
   "devEngines": {
@@ -18,13 +21,26 @@
     "pro-tour": "bin/pro-tour.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.18"
   },
   "files": [
     "bin",
-    "src"
+    "dist",
+    "docs",
+    "skill"
   ],
   "dependencies": {
-    "playwright": "^1.64.0"
-  }
+    "playwright": "^1.64.0",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts"
 }

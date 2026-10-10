@@ -1,8 +1,10 @@
 // Markdown for a tour report: written beside each video, and used as the PR comment body.
 // Tour text comes from model-written scripts, so HTML in it is escaped.
-const text = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+import type { Report } from './types.ts';
 
-export function markdown(report, { video, collapseSteps = false } = {}) {
+const text = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export function markdown(report: Report, { video, collapseSteps = false }: { video?: string; collapseSteps?: boolean } = {}): string {
   const passed = report.steps.filter(step => step.status === 'passed').length;
   const lines = [
     `### Feature tour: ${text(report.title)}`,
@@ -29,5 +31,5 @@ export function markdown(report, { video, collapseSteps = false } = {}) {
     if (step.error && !step.checks.some(check => !check.passed)) lines.push(`  - ✗ ${text(step.error)}`);
   }
   if (collapseSteps) lines.push('', '</details>');
-  return lines.join('\n') + '\n';
+  return `${lines.join('\n')}\n`;
 }

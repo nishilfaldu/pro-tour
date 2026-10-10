@@ -22,3 +22,6 @@ test-results/
 # Local validation output, recordings, and adjacent plans/traces/reports
 .artifacts/
 .videos/
+
+# Build output
+dist/

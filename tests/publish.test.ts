@@ -3,12 +3,12 @@ import { strict as assert } from 'node:assert';
 import { access, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { publish } from '../src/publish.js';
-import { fakeGh, PR, recording } from './helpers.js';
+import { publish } from '../src/publish.ts';
+import { fakeGh, PR, recording } from './helpers.ts';
 
 const pr = PR;
 
-async function setup(mode = null, name = 'feature-v1.mp4') {
+async function setup(mode: 'error' | 'lost' | null = null, name = 'feature-v1.mp4') {
   const { env, read } = await fakeGh(mode);
   const dir = await mkdtemp(join(tmpdir(), 'publish-test-'));
   const video = await recording(join(dir, name));
@@ -56,13 +56,13 @@ test('a new recording of the same tour hides the older comment as outdated', asy
   const result = await publish(newer, pr, { env });
   assert.equal(result.hidden, 1);
   const { comments } = await read();
-  assert.deepEqual(comments.map(comment => Boolean(comment.minimized)), [true, false]);
+  assert.deepEqual(comments.map((comment: { minimized?: boolean }) => Boolean(comment.minimized)), [true, false]);
 });
 
 test('a published recording is deleted locally, a dry run posts and deletes nothing', async () => {
   const { video, env, read } = await setup();
   const dry = await publish(video, pr, { env, dryRun: true });
-  assert.match(dry.body, /### Feature tour: Filter by assignee/);
+  assert.match(dry.body ?? '', /### Feature tour: Filter by assignee/);
   assert.equal((await read()).posts ?? 0, 0);
   await access(video);
   await publish(video, pr, { env });

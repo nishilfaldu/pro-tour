@@ -1,15 +1,21 @@
 // Read-only setup checks with the command that fixes each problem. No app startup, nothing published.
 import { execFile } from 'node:child_process';
 import { chromium } from 'playwright';
-import { githubEnv } from './publish.js';
+import { githubEnv } from './publish.ts';
 
-const run = (command, args, env) => new Promise(done => {
+const run = (command: string, args: string[], env?: NodeJS.ProcessEnv) => new Promise<{ ok: boolean; out: string }>(done => {
   execFile(command, args, { env, timeout: 30_000, encoding: 'utf8' }, (error, stdout, stderr) => done({ ok: !error, out: `${stdout}${stderr}` }));
 });
 
-export async function doctor({ channel = 'chromium' } = {}) {
-  const checks = [];
-  const add = (name, ok, fix) => checks.push({ name, ok, fix });
+export interface DoctorCheck {
+  name: string;
+  ok: boolean;
+  fix?: string;
+}
+
+export async function doctor({ channel = 'chromium' }: { channel?: string } = {}): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  const add = (name: string, ok: boolean, fix?: string) => checks.push({ name, ok, fix });
 
   const [major] = process.versions.node.split('.').map(Number);
   add(`Node.js ${process.versions.node}`, major >= 20, 'Install Node.js 20 or newer.');

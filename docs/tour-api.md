@@ -1,20 +1,22 @@
 # Tour API
 
-A tour is an ES module in `.tours/<feature>.tour.js` that records a short, captioned video of one
+A tour is a TypeScript module in `.tours/<feature>.tour.ts` that records a short, captioned video of one
 feature for PR reviewers. The runner opens the app at its root URL in a fresh browser (no cookies or
 local storage) with a 1280×800 viewport. Data on the app's server persists between runs, so a tour must
 not depend on what an earlier run created.
 
-```js
+```ts
+import type { Tour, TourMeta } from 'pro-tour';
+
 export const meta = {
   title: 'Short feature title',
   summary: 'One sentence a reviewer reads on the title card.',
   behaviors: {
     'some-behavior': 'What the PR makes possible, as a reviewer reads it in a checklist.',
   },
-};
+} satisfies TourMeta;
 
-export async function run(t) {
+export async function run(t: Tour): Promise<void> {
   const { page } = t; // Playwright Page
 
   await t.step('Caption shown at the bottom of the video', async () => {
@@ -27,6 +29,10 @@ export async function run(t) {
 
 The tour starts on the app's root URL. To reach another page, click through the app's navigation
 as a user would, or call `await t.goto('/some/path')` (paths resolve against the app URL).
+
+`pro-tour check` type-checks tours in about a second, and `pro-tour run` does so before recording, so
+a misused API is reported before any video is made. The `pro-tour` types resolve even if the app
+repository does not install pro-tour or use TypeScript. Plain `.tour.js` tours also run, unchecked.
 
 `t.page` is a Playwright `Page`. Use any Playwright locator (`getByRole`, `getByLabel`,
 `getByText`, `getByPlaceholder`, `locator(css)`, `.filter()`, `.nth()`, chaining). Playwright

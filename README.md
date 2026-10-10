@@ -4,7 +4,7 @@ Pro Tour lets your coding agent attach a short, captioned video of what a change
 request, so you can review the change by watching it instead of running the app.
 
 After a user-visible change, the agent (Claude Code, Codex, Cursor, or any agent that can run shell
-commands) writes a *tour*: a small Playwright script that lists the behaviors the change adds and
+commands) writes a *tour*: a small, typed Playwright script that lists the behaviors the change adds and
 demonstrates each one. Pro Tour records it with a visible cursor, step captions and on-screen checks,
 and posts one comment on the PR: the video, then a "What this PR does" checklist with the step that
 shows each behavior. You read the checklist, then watch the video.
@@ -27,6 +27,7 @@ pnpm exec pro-tour doctor
 Cursor, `.claude/skills/` for Claude Code) and adds a short "Feature tours" section to `AGENTS.md` and
 `CLAUDE.md`, so agents use it reliably. Commit those files. `doctor` checks the rest:
 
+- Node.js 22.18 or newer (tours are TypeScript, run without a build step)
 - [ffmpeg](https://ffmpeg.org) and ffprobe (`brew install ffmpeg`, or `sudo apt-get install ffmpeg`)
 - the [GitHub CLI](https://cli.github.com), logged in (`gh auth login`), with `gh pr comment --attach`
 
@@ -35,8 +36,9 @@ No model API key is needed: the agent you already use does the writing.
 ## The workflow
 
 1. You ask your agent for a change, as usual.
-2. When the change works, the agent creates or updates `.tours/<feature>.tour.js`, one tour per
-   feature, named for the feature (`assignee-filter`, not the branch name).
+2. When the change works, the agent creates or updates `.tours/<feature>.tour.ts`, one tour per
+   feature, named for the feature (`assignee-filter`, not the branch name), and type-checks it with
+   `pro-tour check` (about a second, no recording).
 3. It records the tour with `pro-tour run`. If the tour fails, it reads the failure file (the full
    error and the visible DOM where it stopped) and fixes the tour, or fixes the change if the failure
    is a real bug.
@@ -51,7 +53,8 @@ deleted from `.videos/` once they are on the PR.
 
 | Command | What it does |
 |---|---|
-| `pro-tour run <file.tour.js>... --url <url>` | Record tours into `.videos/`; `--json` for agents; on failure, names the failure file |
+| `pro-tour check [<file.tour.ts>...]` | Type-check tours without recording (default: all of `.tours/`) |
+| `pro-tour run <file.tour.ts>... --url <url>` | Type-check, then record tours into `.videos/`; `--json` for agents; on failure, names the failure file |
 | `pro-tour publish [<tour>...]` | Post the latest recording of each tour the PR adds or changes, or of the named tours; `--dry-run` prints the comment instead |
 | `pro-tour init` | Install or refresh the skill for coding agents |
 | `pro-tour api` | Print the tour API |
@@ -67,16 +70,18 @@ until you check the PR and pass `--retry-upload`. `--keep` keeps the local recor
 
 ## A tour
 
-The full API is in [`src/tour-api.md`](src/tour-api.md) (`pro-tour api` prints it).
+The full API is in [`docs/tour-api.md`](docs/tour-api.md) (`pro-tour api` prints it).
 
-```js
+```ts
+import type { Tour, TourMeta } from 'pro-tour';
+
 export const meta = {
   title: 'Filter tasks by status',
   summary: 'Pick a status to narrow the board.',
   behaviors: { 'filter-done': 'The Done filter shows only finished tasks' },
-};
+} satisfies TourMeta;
 
-export async function run(t) {
+export async function run(t: Tour): Promise<void> {
   const { page } = t;
   await t.step('Filter the board to Done', async () => {
     await t.select(page.getByRole('combobox', { name: 'Status', exact: true }), 'Done');
@@ -93,6 +98,9 @@ Chromium does not paint), `t.press` and `t.goto`; checks are `t.visible`, `t.hid
 unless at least one check went from false to true, and a `hidden` check must have been visible at some
 point in the step, so a step cannot pass by asserting what was already on screen.
 
+The `pro-tour` types resolve for `pro-tour check` even in a repository that does not use TypeScript.
+Plain `.tour.js` tours also run, without type checking.
+
 ## Limitations
 
 - The video shows the app as it runs on the machine that recorded it, with that machine's data. It
@@ -103,12 +111,16 @@ point in the step, so a step cannot pass by asserting what was already on screen
 ## Development
 
 ```sh
-pnpm install
+pnpm install          # also builds dist/
 pnpm exec playwright install --with-deps chromium
-pnpm test
+pnpm test             # type-checks src, tests and tours, then runs the tests
 node sample-app/server.js &   # the sample app, http://127.0.0.1:4173
-./bin/pro-tour.js run sample-app/.tours/status-filter.tour.js --url http://127.0.0.1:4173
+./bin/pro-tour.js run sample-app/.tours/status-filter.tour.ts --url http://127.0.0.1:4173
 ```
+
+The source is TypeScript in `src/`, run directly by Node in a checkout and compiled to `dist/` by
+`pnpm build` for the published package. `src/overlay.js` is plain JavaScript because it is injected
+into the page as is.
 
 `fixtures/` holds harder test apps (a custom dropdown, duplicate labels, an inaccessible variant), and
 [`experiments/`](experiments/README.md) records how the tour rules were chosen and how tours held up on

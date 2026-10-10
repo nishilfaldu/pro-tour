@@ -1,3 +1,5 @@
+import type { Tour, TourMeta } from 'pro-tour';
+
 export const meta = {
   title: 'Mark a task Done and filter by status',
   summary: 'Create a task, mark it Done from the board, and confirm the Done filter includes it while hiding other statuses.',
@@ -7,12 +9,12 @@ export const meta = {
     'filter-done': 'The Done filter shows only finished tasks',
     'filter-todo': 'The To do filter shows only open tasks',
   },
-};
+} satisfies TourMeta;
 
-export async function run(t) {
+export async function run(t: Tour): Promise<void> {
   const { page } = t;
   const filter = page.getByRole('combobox', { name: 'Status', exact: true });
-  const heading = name => page.getByRole('heading', { name });
+  const heading = (name: string) => page.getByRole('heading', { name });
   const status = page.getByRole('combobox', { name: 'Status for Prepare product tour' });
 
   await t.step('Create a new task', async () => {

@@ -5,8 +5,8 @@ description: Record a captioned video tour of a user-visible change and attach i
 
 # Feature tours
 
-A feature tour is a short Playwright script, committed in `.tours/`, that demonstrates what a change
-does. `pro-tour run` records it as a video with a visible cursor, step captions and on-screen checks.
+A feature tour is a short Playwright script in TypeScript, committed in `.tours/`, that demonstrates
+what a change does. `pro-tour run` records it as a video with a visible cursor, step captions and on-screen checks.
 `pro-tour publish` posts the video to the pull request together with a checklist of the behaviors the
 change adds. The reviewer reads the checklist, then watches the video to see each behavior working.
 
@@ -22,7 +22,7 @@ not to.
 
 1. **Run the app** if it is not running, the way the project starts it (see `package.json` scripts or
    the README), and note its URL.
-2. **Choose the tour file**: `.tours/<feature>.tour.js`, named for the feature as a user sees it, in
+2. **Choose the tour file**: `.tours/<feature>.tour.ts`, named for the feature as a user sees it, in
    kebab-case (`assignee-filter`, not `add-dropdown-v2` or the branch name). If a tour for this feature
    already exists, update it rather than adding a second one. If the change removes a feature, delete
    its tour.
@@ -31,8 +31,9 @@ not to.
    states, errors and resets. Leave out what the app already did before the change. This list is what the
    reviewer checks the change against, so make it complete and accurate.
 4. **Write the steps.** Run `{{run}} pro-tour api` for the tour API. Each behavior must be covered by a
-   step whose checks prove it.
-5. **Record it**: `{{run}} pro-tour run .tours/<feature>.tour.js --url <app url>`. It starts a headless
+   step whose checks prove it. Run `{{run}} pro-tour check .tours/<feature>.tour.ts` and fix any type
+   errors; it takes about a second and catches a misused API before a recording.
+5. **Record it**: `{{run}} pro-tour run .tours/<feature>.tour.ts --url <app url>`. It starts a headless
    browser and opens the app's URL. If your sandbox blocks either (exit code 3, "The browser could not
    start"), ask the user to let you run `pro-tour` outside the sandbox; it is not a problem with the tour.
 6. **If it fails**, read the failure file the command names: the full error and the visible DOM where it
@@ -56,7 +57,8 @@ not to.
 | Command | What it does |
 |---|---|
 | `{{run}} pro-tour api` | Print the tour API |
-| `{{run}} pro-tour run <file.tour.js> --url <url>` | Record a tour; prints the video, the result and, on failure, the failure file |
+| `{{run}} pro-tour check [<file.tour.ts>...]` | Type-check tours without recording |
+| `{{run}} pro-tour run <file.tour.ts> --url <url>` | Type-check and record a tour; prints the video, the result and, on failure, the failure file |
 | `{{run}} pro-tour publish [<tour>...]` | Post the latest recording of each tour this PR changed (or the named tours); `--dry-run` prints the comment instead |
 | `{{run}} pro-tour doctor` | Check the browser, ffmpeg and GitHub CLI |
 

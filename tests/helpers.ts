@@ -41,7 +41,7 @@ if (args[0] === 'pr' && args[1] === 'comment') {
 process.exit(1);
 `;
 
-export async function fakeGh(mode = null) {
+export async function fakeGh(mode: 'error' | 'lost' | null = null) {
   const dir = await mkdtemp(join(tmpdir(), 'fake-gh-'));
   await writeFile(join(dir, 'gh'), FAKE_GH);
   await chmod(join(dir, 'gh'), 0o755);
@@ -60,7 +60,7 @@ export const REPORT = {
 };
 
 // A small real H.264 video with a report beside it, as pro-tour run leaves them.
-export async function recording(video, report = {}, seconds = 1) {
+export async function recording(video: string, report: Record<string, unknown> = {}, seconds = 1): Promise<string> {
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', `testsrc=size=160x120:rate=5:duration=${seconds}`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', video]);
   await writeFile(video.replace('.mp4', '.json'), JSON.stringify({ ...REPORT, ...report }));
   await writeFile(video.replace('.mp4', '.md'), '# report');

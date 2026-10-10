@@ -5,15 +5,17 @@ import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/pr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { createAppServer } from '../sample-app/server.js';
-import { main } from '../src/cli.js';
-import { fakeGh, recording } from './helpers.js';
+import { main } from '../src/cli.ts';
+import { fakeGh, recording } from './helpers.ts';
 
-const git = (cwd, ...args) => execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
-const sha = text => createHash('sha256').update(text).digest('hex');
+const git = (cwd: string, ...args: string[]) => execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
+const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
 
 // A repository whose main has `files`, checked out on a feature branch.
-async function repo(files = {}) {
+async function repo(files: Record<string, string> = {}): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'cli-test-'));
   git(dir, 'init', '-q', '-b', 'main');
   await writeFile(join(dir, 'README.md'), 'app\n');
@@ -29,10 +31,10 @@ async function repo(files = {}) {
 }
 
 // Run the CLI in `cwd` with `env`, capturing what it prints.
-async function cli(cwd, args, env = process.env) {
-  const out = [];
+async function cli(cwd: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<{ code: number; out: string }> {
+  const out: string[] = [];
   const saved = { log: console.log, error: console.error, warn: console.warn, env: process.env, cwd: process.cwd() };
-  console.log = console.error = console.warn = (...parts) => out.push(parts.join(' '));
+  console.log = console.error = console.warn = (...parts: unknown[]) => void out.push(parts.join(' '));
   process.env = env;
   process.chdir(cwd);
   try {
@@ -44,12 +46,12 @@ async function cli(cwd, args, env = process.env) {
   }
 }
 
-let server;
-let appUrl;
+let server: Server;
+let appUrl: string;
 before(async () => {
   server = createAppServer();
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  appUrl = `http://127.0.0.1:${server.address().port}`;
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  appUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
 after(() => server.close());
 
@@ -72,7 +74,8 @@ test('init installs the skill for every agent once, with the project\'s package 
   for (const copy of ['.agents/skills/pro-tour/SKILL.md', '.claude/skills/pro-tour/SKILL.md']) {
     const skill = await readFile(join(dir, copy), 'utf8');
     assert.match(skill, /^---\nname: pro-tour\ndescription: /);
-    assert.match(skill, /pnpm exec pro-tour run \.tours\/<feature>\.tour\.js --url <app url>/);
+    assert.match(skill, /pnpm exec pro-tour run \.tours\/<feature>\.tour\.ts --url <app url>/);
+    assert.match(skill, /pnpm exec pro-tour check \.tours\/<feature>\.tour\.ts/);
     assert.doesNotMatch(skill, /\{\{run\}\}/);
   }
   assert.match(await readFile(join(dir, 'AGENTS.md'), 'utf8'), /^# Agents\n\nUse pnpm.\n\n## Feature tours\n/);
@@ -80,15 +83,16 @@ test('init installs the skill for every agent once, with the project\'s package 
   assert.match(await readFile(join(dir, '.gitignore'), 'utf8'), /^\.videos\/$/m);
   const second = await cli(dir, ['init']);
   assert.match(second.out, /already up to date/);
-  assert.equal((await readFile(join(dir, 'AGENTS.md'), 'utf8')).match(/## Feature tours/g).length, 1);
+  assert.equal((await readFile(join(dir, 'AGENTS.md'), 'utf8')).match(/## Feature tours/g)?.length, 1);
 });
 
 test('run records a tour, keeps only its latest recording, and names a failure file on failure', async () => {
   const dir = await repo();
   await mkdir(join(dir, '.tours'));
-  const tour = join(dir, '.tours', 'status-filter.tour.js');
-  await writeFile(tour, `export const meta = { title: 'Filter to Done', behaviors: { done: 'Done shows finished tasks' } };
-export async function run(t) {
+  const tour = join(dir, '.tours', 'status-filter.tour.ts');
+  await writeFile(tour, `import type { Tour, TourMeta } from 'pro-tour';
+export const meta = { title: 'Filter to Done', behaviors: { done: 'Done shows finished tasks' } } satisfies TourMeta;
+export async function run(t: Tour): Promise<void> {
   await t.step('Filter to Done', () => t.select(t.page.getByRole('combobox', { name: 'Status', exact: true }), 'Done'),
     [t.text('1 task in view', t.page.locator('#visible-count'), '1')], { covers: ['done'] });
 }
@@ -104,10 +108,29 @@ export async function run(t) {
   await writeFile(tour, (await readFile(tour, 'utf8')).replace("'1')", "'7')"));
   const failed = await cli(dir, ['run', tour, '--url', appUrl]);
   assert.equal(failed.code, 1);
-  const file = /Failure details: (\S+)/.exec(failed.out)[1];
+  const file = /Failure details: (\S+)/.exec(failed.out)?.[1] ?? '';
   const details = await readFile(join(dir, file), 'utf8');
   assert.match(details, /Error: Check failed: 1 task in view/);
   assert.match(details, /Around the element the tour last acted on/);
+});
+
+test('check and run report type errors in a tour without recording anything', async () => {
+  const dir = await repo();
+  await mkdir(join(dir, '.tours'));
+  const tour = join(dir, '.tours', 'broken.tour.ts');
+  await writeFile(tour, `import type { Tour } from 'pro-tour';
+export const meta = { title: 'Broken' };
+export async function run(t: Tour): Promise<void> {
+  await t.step('Missing the expected text', () => t.click(t.page.getByRole('button')), [t.text('Count', t.page.locator('#n'))]);
+}
+`);
+  const checked = await cli(dir, ['check']);
+  assert.equal(checked.code, 1);
+  assert.match(checked.out, /\.tours\/broken\.tour\.ts\(4,\d+\): error TS2554: Expected 3 arguments, but got 2/);
+  const ran = await cli(dir, ['run', tour, '--url', appUrl]);
+  assert.equal(ran.code, 1);
+  assert.match(ran.out, /Type errors, nothing recorded/);
+  await assert.rejects(readdir(join(dir, '.videos')), { code: 'ENOENT' });
 });
 
 test('publish posts the tours the PR changed, and refuses failed or stale recordings', async () => {
