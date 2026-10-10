@@ -139,6 +139,7 @@ export class Tour {
   }
 
   async point(locator) {
+    this.lastTarget = locator;
     await traced(`  waitFor ${locator}`, () => locator.waitFor({ state: 'visible' }));
     await traced(`  scrollIntoView ${locator}`, () => locator.scrollIntoViewIfNeeded());
     const box = await locator.boundingBox();
@@ -243,25 +244,45 @@ function expectArgs(builder, label, ...args) {
   });
 }
 
-// Visible elements only, with the attributes a locator can use. Runs in the page.
-function visibleDom() {
-  const keep = /^(id|class|role|name|type|placeholder|for|href|title|value|alt|aria-.*|data-test.*)$/;
-  const lines = [];
-  const walk = (node, depth) => {
-    for (const child of node.childNodes) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const text = child.textContent.trim();
-        if (text) lines.push(`${'  '.repeat(depth)}"${text}"`);
-      } else if (child.nodeType === Node.ELEMENT_NODE && !/^(SCRIPT|STYLE|SVG|TEMPLATE|svg)$/.test(child.tagName)
-        && child.checkVisibility()) {
-        const attrs = [...child.attributes].filter(attr => keep.test(attr.name)).map(attr => ` ${attr.name}="${attr.value}"`).join('');
-        lines.push(`${'  '.repeat(depth)}<${child.tagName.toLowerCase()}${attrs}>`);
-        walk(child, depth + 1);
+// Repair context at a failure: visible elements with the attributes a locator can use. Runs in the page.
+// Big pages would bury the relevant part, so the excerpt leads with the region around the element the
+// tour last acted on and the last elements in <body>, where menus, popovers and dialogs usually mount.
+function failureDom(target) {
+  const keep = /^(id|class|role|name|type|placeholder|for|href|title|value|alt|aria-.*|data-test.*|data-state)$/;
+  const excerpt = (root, limit) => {
+    const lines = [];
+    let size = 0;
+    const add = line => {
+      lines.push(line);
+      size += line.length + 1;
+    };
+    const walk = (node, depth) => {
+      if (size > limit) return;
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent.trim();
+        if (text) add(`${'  '.repeat(depth)}"${text.length > 200 ? `${text.slice(0, 200)}…` : text}"`);
+        return;
       }
-    }
+      if (node.nodeType !== Node.ELEMENT_NODE || /^(SCRIPT|STYLE|SVG|TEMPLATE|svg)$/.test(node.tagName) || !node.checkVisibility()) return;
+      const attrs = [...node.attributes].filter(attr => keep.test(attr.name)).map(attr => ` ${attr.name}="${attr.value.slice(0, 120)}"`).join('');
+      add(`${'  '.repeat(depth)}<${node.tagName.toLowerCase()}${attrs}>`);
+      for (const child of node.childNodes) walk(child, depth + 1);
+    };
+    walk(root, 0);
+    return lines.join('\n').slice(0, limit);
   };
-  walk(document.body, 0);
-  return lines.join('\n').slice(0, 12000);
+  const sections = [];
+  let region = null;
+  if (target?.isConnected) {
+    region = target;
+    while (region.parentElement && region.parentElement !== document.body && excerpt(region, 2000).length < 1500) region = region.parentElement;
+    sections.push(`Around the element the tour last acted on:\n${excerpt(region, 4000)}`);
+  }
+  const tail = [...document.body.children].slice(-4).filter(el => el.checkVisibility() && !el.contains(region));
+  if (tail.length) sections.push(`Last elements in <body> (menus, popovers and dialogs usually mount here):\n${tail.map(el => excerpt(el, 2500)).join('\n')}`);
+  const used = sections.join('\n\n').length;
+  sections.push(`Whole page, truncated:\n${excerpt(document.body, Math.max(2000, 12000 - used))}`);
+  return sections.join('\n\n');
 }
 
 // Exclusive creation: concurrent runs of the same tour never write to one file.
@@ -308,7 +329,7 @@ export async function recordTour(tour, { url, outDir, name, channel = 'chromium'
       report.failure = {
         message: [error.message, error.cause?.message].filter(Boolean).join('\n').slice(0, 4000),
         aria: await page.locator('body').ariaSnapshot({ timeout: 2000 }).catch(() => null),
-        dom: await page.evaluate(visibleDom).catch(() => null),
+        dom: await page.evaluate(failureDom, await t.lastTarget?.first().elementHandle({ timeout: 1000 }).catch(() => null) ?? null).catch(() => null),
       };
     }
     report.steps = t.steps;
