@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "tour": "node tours/run.js tours/status-filter.tour.js"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

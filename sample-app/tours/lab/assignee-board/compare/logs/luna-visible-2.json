@@ -1,0 +1,49 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-visible-2.tour.js",
+  "model": "gpt-6-luna",
+  "effort": null,
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
+  "seconds": 91,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 47.5,
+  "tokens": {
+    "input": 46115,
+    "cached": 24064,
+    "output": 2013,
+    "reasoning": 591
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignees": "Typing a person’s name in the Assignee dropdown search narrows the available assignee options.",
+        "filter-by-assignee": "Selecting an assignee filters the board to that person’s tasks and shows task counts beside the assignee options.",
+        "filter-unassigned": "Selecting Unassigned filters the board to tasks with no assignee.",
+        "assignee-empty-state": "Selecting Ana Lima, who has no seeded tasks, shows a personalized empty state with a Clear filters action.",
+        "clear-filters": "Clear filters resets both status and assignee filters and restores all tasks to the board."
+      },
+      "seconds": 10.5,
+      "usage": {
+        "input": 21799,
+        "cached": 13056,
+        "output": 294,
+        "reasoning": 136
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
+      "notes": "Uses the dropdown’s visible search, option labels, task headings, and summary text. Assumes the status filter is the board toolbar’s native select and the empty-state Clear filters button is scoped inside `.empty`.",
+      "seconds": 37,
+      "usage": {
+        "input": 24316,
+        "cached": 11008,
+        "output": 1719,
+        "reasoning": 455
+      }
+    }
+  ]
+}

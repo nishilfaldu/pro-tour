@@ -1,0 +1,50 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-visible-1.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-1/sol-visible-1-v1.mp4",
+  "seconds": 136,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 68,
+  "tokens": {
+    "input": 44797,
+    "cached": 13824,
+    "output": 3037,
+    "reasoning": 1343
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee dropdown shows Anyone, each person, and Unassigned with their task counts.",
+        "search-assignees": "Typing a name in Find a person narrows the dropdown options.",
+        "filter-by-person": "Selecting Priya shows only her tasks, including when a status filter is also active.",
+        "filter-unassigned": "Selecting Unassigned shows the unassigned task.",
+        "assignee-empty-state": "Selecting Ana shows an empty state saying nothing is assigned to her yet, with a Clear filters control.",
+        "clear-filters": "Clear filters restores All statuses and Anyone, shows all tasks, and hides the toolbar reset control."
+      },
+      "seconds": 19,
+      "usage": {
+        "input": 21976,
+        "cached": 0,
+        "output": 670,
+        "reasoning": 499
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-1/sol-visible-1-v1.mp4",
+      "notes": "The toolbar selectors distinguish the filter controls from task card controls. Dropdown options are located by their visible labels, and counts are checked separately.",
+      "seconds": 49,
+      "usage": {
+        "input": 22821,
+        "cached": 13824,
+        "output": 2367,
+        "reasoning": 844
+      }
+    }
+  ]
+}

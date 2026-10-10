@@ -1,0 +1,6 @@
+{
+  "filter-by-assignee": "Choose a person or Unassigned in the Assignee filter to show only matching tasks, with task counts beside the choices.",
+  "search-assignee-options": "Search the open Assignee menu by typing a person’s name and see the choices narrow to matching options.",
+  "filter-empty-state": "Show a tailored empty state when the selected person has no assigned tasks or the current filters match no tasks.",
+  "clear-filters": "Use Clear filters in the toolbar or empty state to reset status and assignee filters and restore all tasks."
+}

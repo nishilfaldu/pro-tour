@@ -1,0 +1,7 @@
+{
+  "assignee-filter": "Open the Assignee picker and choose a person or Unassigned to show only their matching tasks.",
+  "search-assignees": "Search the assignee picker by name to narrow its available choices.",
+  "assignee-task-counts": "See each assignee choice’s task count in the picker.",
+  "empty-assignee-state": "Choose Ana Lima to see the new empty state explaining that nothing is assigned to her, with a Clear filters action.",
+  "clear-filters": "Use Clear filters to reset status and assignee selections to All statuses and Anyone."
+}

@@ -1,0 +1,64 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-visible-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
+  "seconds": 186,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 99.1,
+  "tokens": {
+    "input": 69662,
+    "cached": 27648,
+    "output": 4847,
+    "reasoning": 1823
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options-counts": "Opening the Assignee filter shows Anyone, each person, and Unassigned with their task counts.",
+        "search-assignees": "Typing in Find a person narrows the assignee options.",
+        "filter-by-person": "Selecting a person shows only their tasks and updates the task summary, while respecting the selected status.",
+        "filter-unassigned": "Selecting Unassigned shows tasks with no assignee.",
+        "empty-assignee-state": "Selecting Ana Lima from the seed data shows “Nothing assigned to Ana Lima yet” and a Clear filters control.",
+        "clear-filters": "Clear filters restores All statuses and Anyone, showing the full task board again."
+      },
+      "seconds": 17.2,
+      "usage": {
+        "input": 21976,
+        "cached": 13824,
+        "output": 461,
+        "reasoning": 288
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v1.mp4",
+      "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 4 elements:",
+      "notes": "The assignee button and option locators target the new dropdown; card checks are scoped to the board. Counts and task names assume the fresh seed data supplied in the prompt.",
+      "seconds": 54.7,
+      "usage": {
+        "input": 22825,
+        "cached": 0,
+        "output": 2757,
+        "reasoning": 1331
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
+      "notes": "The status locator is scoped to the toolbar, so it cannot match task card controls or the dialog. Assignee options and task cards use their visible text from the supplied seed data.",
+      "seconds": 27.2,
+      "usage": {
+        "input": 24861,
+        "cached": 13824,
+        "output": 1629,
+        "reasoning": 204
+      }
+    }
+  ]
+}

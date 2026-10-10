@@ -1,0 +1,50 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
+  "seconds": 125,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 77.8,
+  "tokens": {
+    "input": 48148,
+    "cached": 0,
+    "output": 3801,
+    "reasoning": 2280
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee filter shows Anyone, each person, and Unassigned with task counts.",
+        "search-assignees": "Typing a name in the Assignee search narrows the available choices.",
+        "filter-by-person": "Selecting Priya shows only her tasks and respects any active status filter.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks without an assignee.",
+        "assignee-empty-state": "Selecting Ana shows a personalized empty state with a Clear filters control.",
+        "clear-filters": "Clear filters restores all tasks and resets both filter controls to their defaults."
+      },
+      "seconds": 25.6,
+      "usage": {
+        "input": 23659,
+        "cached": 0,
+        "output": 1057,
+        "reasoning": 899
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
+      "notes": "The toolbar controls use their unique CSS classes; task headings and dropdown options use visible text. Counts and task names assume the provided fresh seed data.",
+      "seconds": 52.2,
+      "usage": {
+        "input": 24489,
+        "cached": 0,
+        "output": 2744,
+        "reasoning": 1381
+      }
+    }
+  ]
+}

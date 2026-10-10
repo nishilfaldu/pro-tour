@@ -1,0 +1,92 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-high-visible-1.tour.js",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "failed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-1/luna-high-visible-1-v4.mp4",
+  "seconds": 267,
+  "modelCalls": 5,
+  "repairs": 3,
+  "modelSeconds": 112.5,
+  "tokens": {
+    "input": 117631,
+    "cached": 0,
+    "output": 11579,
+    "reasoning": 5444
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignees": "Open the assignee picker and search for a person by name to narrow its options.",
+        "filter-by-assignee": "Choose a person or Unassigned to show only matching tasks and update the visible-task summary.",
+        "assignee-task-counts": "See each assignee option’s task count in the picker.",
+        "assignee-empty-state": "Choose Ana Lima to see the new “Nothing assigned to Ana yet” empty state and its Clear filters control.",
+        "clear-filters": "After applying filters, use Clear filters to restore all statuses and Anyone and show the full task list."
+      },
+      "seconds": 11.1,
+      "usage": {
+        "input": 21799,
+        "cached": 0,
+        "output": 506,
+        "reasoning": 349
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-1/luna-high-visible-1-v1.mp4",
+      "error": "Check failed: The picker search contains Marco",
+      "notes": "The tour uses the picker’s visible label and option text, plus the board’s task headings and summary. It assumes the provided fresh seed data: Marco has one task, Unassigned has one, and Ana has none.",
+      "seconds": 36.3,
+      "usage": {
+        "input": 22632,
+        "cached": 0,
+        "output": 3705,
+        "reasoning": 2220
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-1/luna-high-visible-1-v2.mp4",
+      "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 3 elements:",
+      "notes": "The search step ends with the narrowed results still open, so it checks the search value and a removed option before the next step selects Marco. The Ana step applies a status filter first, then changes the assignee; the final clear action restores both filters.",
+      "seconds": 23.5,
+      "usage": {
+        "input": 24386,
+        "cached": 0,
+        "output": 2635,
+        "reasoning": 1160
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-1/luna-high-visible-1-v3.mp4",
+      "error": "Check failed: Ana has no assigned tasks",
+      "notes": "Scoped the Status select to the toolbar so card and dialog status controls cannot cause a strict locator match. The tour uses seeded tasks to verify picker counts, filtered results, Ana’s empty state, and restoring all four tasks.",
+      "seconds": 18.3,
+      "usage": {
+        "input": 24517,
+        "cached": 0,
+        "output": 1976,
+        "reasoning": 507
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-1/luna-high-visible-1-v4.mp4",
+      "error": "Check failed: Ana has no assigned tasks",
+      "notes": "Separated the status filter from choosing Ana so the empty-state text change is checked within its own step. The tour uses the picker’s accessible button and option labels, plus the supplied task names and summary.",
+      "seconds": 23.3,
+      "usage": {
+        "input": 24297,
+        "cached": 0,
+        "output": 2757,
+        "reasoning": 1208
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "assignee-filter": "Select a person or Unassigned in the Assignee dropdown to show only tasks assigned to that choice.",
+  "search-assignees": "Search the Assignee dropdown by name to narrow the available choices.",
+  "assignee-task-counts": "See each assignee choice’s current task count in the dropdown.",
+  "assignee-empty-state": "Choose Ana Lima to see the empty message that says nothing is assigned to her yet, with a Clear filters button.",
+  "clear-filters": "After filtering by status or assignee, use Clear filters to restore All statuses and Anyone."
+}

@@ -1,0 +1,50 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-visible-5.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
+  "seconds": 104,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 52.7,
+  "tokens": {
+    "input": 44808,
+    "cached": 11776,
+    "output": 2996,
+    "reasoning": 1397
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-choices": "Opening the Assignee filter shows Anyone, each person, and Unassigned, with task counts beside each choice.",
+        "search-assignees": "Typing a name in Find a person narrows the assignee choices.",
+        "combine-filters": "Selecting Priya while Status is To do shows only tasks matching both filters and updates the task count.",
+        "filter-unassigned": "Selecting Unassigned shows the seed task with no assignee.",
+        "empty-assignee": "Selecting Ana shows “Nothing assigned to Ana Lima yet” and an inline Clear filters control.",
+        "clear-filters": "Clear filters resets both Status and Assignee to their defaults and restores all four seed tasks."
+      },
+      "seconds": 17.4,
+      "usage": {
+        "input": 21978,
+        "cached": 0,
+        "output": 694,
+        "reasoning": 516
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
+      "notes": "The script scopes assignee choices to their visible option labels and uses the toolbar status select to avoid the task dialog’s separate Status field. It assumes the supplied seed data and fresh browser storage.",
+      "seconds": 35.3,
+      "usage": {
+        "input": 22830,
+        "cached": 11776,
+        "output": 2302,
+        "reasoning": 881
+      }
+    }
+  ]
+}

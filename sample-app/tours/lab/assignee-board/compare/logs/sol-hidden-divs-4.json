@@ -1,0 +1,64 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-4.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-4/sol-hidden-divs-4-v2.mp4",
+  "seconds": 184,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 89.2,
+  "tokens": {
+    "input": 62631,
+    "cached": 11776,
+    "output": 4658,
+    "reasoning": 1729
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignees": "Searching the Assignee dropdown narrows its choices to matching people.",
+        "filter-by-person": "Selecting a person shows only tasks assigned to them.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks without an assignee.",
+        "combine-filters": "Choosing a status and an assignee shows only tasks matching both.",
+        "assignee-empty-state": "Selecting Ana Lima shows the message “Nothing assigned to Ana Lima yet” and a Clear filters control.",
+        "clear-filters": "Clear filters resets both filters and restores the full task list."
+      },
+      "seconds": 16.3,
+      "usage": {
+        "input": 19058,
+        "cached": 11776,
+        "output": 521,
+        "reasoning": 368
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-4/sol-hidden-divs-4-v1.mp4",
+      "error": "Check failed: Priya remains a choice",
+      "notes": "The tour scopes assignee choices to the toolbar and task assertions to board cards. It assumes the dropdown renders its choice labels as visible text and provides the stated search placeholder.",
+      "seconds": 47.4,
+      "usage": {
+        "input": 19885,
+        "cached": 0,
+        "output": 2540,
+        "reasoning": 1130
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-4/sol-hidden-divs-4-v2.mp4",
+      "notes": "The dropdown popup is appended outside the toolbar, so its choices are located through `.dd-popup.open`. The Assignee button and selected value remain inside the toolbar.",
+      "seconds": 25.5,
+      "usage": {
+        "input": 23688,
+        "cached": 0,
+        "output": 1597,
+        "reasoning": 231
+      }
+    }
+  ]
+}

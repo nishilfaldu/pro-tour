@@ -1,0 +1,63 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-high-visible-4.tour.js",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-4/luna-high-visible-4-v2.mp4",
+  "seconds": 209,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 109.8,
+  "tokens": {
+    "input": 68517,
+    "cached": 13056,
+    "output": 5270,
+    "reasoning": 2716
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-filter": "Choose a person or Unassigned in the Assignee filter to show only their tasks and update the visible-task count.",
+        "search-assignees": "Search the assignee options by name to narrow the choices.",
+        "assignee-task-counts": "See each assignee option’s task count in the dropdown.",
+        "assignee-empty-state": "Choose Ana Lima to see the empty state explaining that nothing is assigned to her.",
+        "clear-filters": "Use Clear filters to reset the status and assignee filters and restore the full task list."
+      },
+      "seconds": 11.7,
+      "usage": {
+        "input": 21801,
+        "cached": 0,
+        "output": 539,
+        "reasoning": 391
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-4/luna-high-visible-4-v1.mp4",
+      "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 2 elements:",
+      "notes": "Uses the dropdown’s rendered option rows to verify every task count, and filters by visible option text for selections. The final step applies a status filter while Ana is selected, then clears both filters to verify the full list returns.",
+      "seconds": 63.4,
+      "usage": {
+        "input": 22623,
+        "cached": 0,
+        "output": 3117,
+        "reasoning": 1921
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-4/luna-high-visible-4-v2.mp4",
+      "notes": "The failure came from `getByLabel('Status')` matching both the toolbar filter and the status select inside the task dialog. The corrected tour scopes the status locator to `.toolbar select.filter`; it assumes the seeded four tasks shown in the provided source.",
+      "seconds": 34.7,
+      "usage": {
+        "input": 24093,
+        "cached": 13056,
+        "output": 1614,
+        "reasoning": 404
+      }
+    }
+  ]
+}

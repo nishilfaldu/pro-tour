@@ -1,0 +1,50 @@
+{
+  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-4.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-4/sol-high-visible-4-v1.mp4",
+  "seconds": 159,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 89.8,
+  "tokens": {
+    "input": 44792,
+    "cached": 13824,
+    "output": 4969,
+    "reasoning": 3318
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee filter shows Anyone, each person, and Unassigned with task counts.",
+        "search-assignees": "Typing in Find a person narrows the Assignee options.",
+        "combine-filters": "Selecting Priya while the Done status filter is active shows only her Done task.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks without an assignee.",
+        "empty-assignee": "Selecting Ana shows “Nothing assigned to Ana yet” with a Clear filters control.",
+        "clear-filters": "Clicking Clear filters restores All statuses and Anyone and shows the full task list."
+      },
+      "seconds": 24.2,
+      "usage": {
+        "input": 21978,
+        "cached": 0,
+        "output": 953,
+        "reasoning": 791
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-4/sol-high-visible-4-v1.mp4",
+      "notes": "The locators scope options to the Assignee listbox and use the seed data’s task counts. The status filter is scoped to the toolbar so card status controls cannot match it.",
+      "seconds": 65.6,
+      "usage": {
+        "input": 22814,
+        "cached": 13824,
+        "output": 4016,
+        "reasoning": 2527
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "filter-by-assignee": "Choose an assignee, including Unassigned, to show only their tasks and update the visible task count.",
+  "search-assignees": "Search the assignee list by name to narrow the choices.",
+  "show-assignee-task-counts": "See each assignee option’s current task count while choosing a filter.",
+  "assignee-empty-state": "Selecting Ana Lima shows a tailored empty state when no tasks are assigned to her.",
+  "clear-filters": "Clear filters resets both status and assignee selections and restores the full task list."
+}
