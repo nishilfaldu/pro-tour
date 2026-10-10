@@ -1,0 +1,64 @@
+{
+  "tour": "experiments/mermaid-live-editor/tours/pr-1918.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/mle/pr-1918/pr-1918-v2.mp4",
+  "seconds": 269,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 119.5,
+  "tokens": {
+    "input": 228844,
+    "cached": 27648,
+    "output": 6144,
+    "reasoning": 3849
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "inline-rename-control": "A saved history entry has a Rename button that opens an inline name field.",
+        "save-renamed-entry": "Pressing Enter saves a new name for the selected entry and trims surrounding spaces.",
+        "cancel-rename": "Pressing Escape closes the name field and keeps the original name.",
+        "reject-blank-name": "Submitting a name containing only spaces keeps the original name.",
+        "rename-timeline-snapshot": "A Timeline snapshot can also be renamed.",
+        "truncate-long-names": "Long history names are truncated in the list, with the full name available on hover."
+      },
+      "seconds": 24.1,
+      "usage": {
+        "input": 75560,
+        "cached": 0,
+        "output": 777,
+        "reasoning": 619
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": ".videos/mle/pr-1918/pr-1918-v1.mp4",
+      "error": "Check failed: Label is shortened and hover exposes its full title (locator.evaluate: ReferenceError: longName is not defined)",
+      "notes": "The History button and row controls use their accessible names; the name span uses its title attribute to verify the full hover text. Advancing the page clock creates a Timeline snapshot without a minute of idle video.",
+      "seconds": 78.8,
+      "usage": {
+        "input": 74817,
+        "cached": 13824,
+        "output": 4039,
+        "reasoning": 2969
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": ".videos/mle/pr-1918/pr-1918-v2.mp4",
+      "notes": "History entry locators stay scoped to the first row in each tab. The truncation check passes the expected name into Playwright’s browser context, fixing the reported ReferenceError.",
+      "seconds": 16.6,
+      "usage": {
+        "input": 78467,
+        "cached": 13824,
+        "output": 1328,
+        "reasoning": 261
+      }
+    }
+  ]
+}

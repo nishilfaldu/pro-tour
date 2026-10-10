@@ -1,0 +1,46 @@
+{
+  "tour": "experiments/mermaid-live-editor/tours/pr-2045.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/mle/pr-2045/pr-2045-v1.mp4",
+  "seconds": 119,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 78.1,
+  "tokens": {
+    "input": 55300,
+    "cached": 11776,
+    "output": 4073,
+    "reasoning": 3369
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "playground-section-removed": "Opening Share shows no Mermaid Chart Playground section or description.",
+        "playground-link-removed": "Share no longer offers a Mermaid Chart Playground URL to copy."
+      },
+      "seconds": 18,
+      "usage": {
+        "input": 26382,
+        "cached": 0,
+        "output": 505,
+        "reasoning": 442
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/mle/pr-2045/pr-2045-v1.mp4",
+      "notes": "The editor route and Share button follow the supplied test. The first step scopes the absence check to the open dialog; the second selects its sole URL input and checks that no Playground URL is present in any Share field.",
+      "seconds": 60.1,
+      "usage": {
+        "input": 28918,
+        "cached": 11776,
+        "output": 3568,
+        "reasoning": 2927
+      }
+    }
+  ]
+}

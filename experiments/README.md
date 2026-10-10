@@ -86,7 +86,11 @@ A saved tour has to pass every time it is replayed, with no model. On the final 
 - the nine passing it-tools tours, replayed twice each: 18/18 (after one transient-feedback flake was
   fixed, see [`it-tools/`](it-tools/README.md)).
 
-## 7. A real app
+## 7. Real apps
 
-See [`it-tools/`](it-tools/README.md): three merged PRs from
-[CorentinTh/it-tools](https://github.com/CorentinTh/it-tools), toured with the default settings.
+- [`it-tools/`](it-tools/README.md): three merged PRs from
+  [CorentinTh/it-tools](https://github.com/CorentinTh/it-tools) (Vue), which led to the focused
+  context for large apps.
+- [`mermaid-live-editor/`](mermaid-live-editor/README.md): three merged PRs from
+  [mermaid-js/mermaid-live-editor](https://github.com/mermaid-js/mermaid-live-editor) (SvelteKit), which
+  led to the failure DOM leading with the last action's region and open popups.

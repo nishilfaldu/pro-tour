@@ -1,0 +1,47 @@
+{
+  "tour": "experiments/mermaid-live-editor/tours/pr-1987-dom-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/mle/pr-1987-dom-2/pr-1987-dom-2-v1.mp4",
+  "seconds": 180,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 143.4,
+  "tokens": {
+    "input": 148760,
+    "cached": 13824,
+    "output": 7389,
+    "reasoning": 6352
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "show-example-choices": "Opening the arrow beside a diagram type with multiple samples shows its titled examples, with the default first.",
+        "load-alternate-example": "Choosing a nondefault example loads its code into the editor and renders its diagram.",
+        "restore-default-example": "Choosing the default example from the menu restores its code and rendered diagram."
+      },
+      "seconds": 10.2,
+      "usage": {
+        "input": 74778,
+        "cached": 0,
+        "output": 235,
+        "reasoning": 138
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/mle/pr-1987-dom-2/pr-1987-dom-2-v1.mp4",
+      "notes": "The labeled arrow selects the first diagram type that offers multiple examples. The tour compares the editor and rendered SVG before and after each choice, and confirms that the first menu entry restores the same result as the diagram type button.",
+      "seconds": 133.2,
+      "usage": {
+        "input": 73982,
+        "cached": 13824,
+        "output": 7154,
+        "reasoning": 6214
+      }
+    }
+  ]
+}
