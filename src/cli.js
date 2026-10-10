@@ -150,7 +150,7 @@ async function initCommand(argv) {
   const repo = repoRoot(process.cwd());
   const { runner, changes } = await init(repo, { runner: values.runner });
   for (const change of changes) console.log(change);
-  console.log(changes.length ? `The pro-tour skill is installed; agents will run it as \`${runner} pro-tour\`.` : 'The pro-tour skill is already up to date.');
+  console.log(changes.length ? `The pro-tour skill is installed; agents will run it as \`${runner ? `${runner} ` : ''}pro-tour\`.` : 'The pro-tour skill is already up to date.');
   return 0;
 }
 

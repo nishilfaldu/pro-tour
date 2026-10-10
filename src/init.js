@@ -28,7 +28,8 @@ export async function packageRunner(repo) {
 // Idempotent: rewrites the skill copies (so upgrades refresh them) and adds the pointer only once.
 export async function init(repo, { runner } = {}) {
   runner ??= await packageRunner(repo);
-  const skill = (await readFile(TEMPLATE, 'utf8')).replaceAll('{{run}}', runner);
+  // An empty runner means pro-tour is on PATH (a global install).
+  const skill = (await readFile(TEMPLATE, 'utf8')).replaceAll('{{run}} ', runner ? `${runner} ` : '');
   const changes = [];
   for (const dir of SKILL_DIRS) {
     const file = join(repo, dir, 'SKILL.md');
