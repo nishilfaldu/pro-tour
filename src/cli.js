@@ -91,7 +91,10 @@ async function run(argv) {
       try {
         report = await recordTour(tour, options);
       } catch (cause) {
-        if (attempt >= 2) throw new RecordingError(`Recording ${tourName(file)} failed twice: ${cause.message.split('\n')[0]}`);
+        if (attempt < 2) continue;
+        const browser = /browserType\.launch/.test(cause.message);
+        throw new RecordingError(`Recording ${tourName(file)} failed twice: ${cause.message.split('\n')[0]}`
+          + (browser ? '\nThe browser could not start. Inside a coding agent\'s sandbox (such as Codex on macOS), a browser cannot run: run pro-tour outside the sandbox.' : ''));
       }
     }
     results.push({ tour: file, status: report.status, video: report.video, report: report.video.replace(/\.mp4$/, '.md'),
@@ -181,7 +184,7 @@ export async function main(argv = process.argv.slice(2)) {
     return await COMMANDS[command](rest);
   } catch (error) {
     if (error instanceof RecordingError) {
-      console.error(`pro-tour: ${error.message}\n(not a tour failure: check that the app is reachable at --url and that pro-tour doctor passes)`);
+      console.error(`pro-tour: ${error.message}\n(This is not a tour failure. Check that the app is reachable at --url and that pro-tour doctor passes.)`);
       return 3;
     }
     if (!(error instanceof TourError) && !String(error?.code).startsWith('ERR_PARSE_ARGS')) throw error;

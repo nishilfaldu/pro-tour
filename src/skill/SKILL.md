@@ -32,7 +32,9 @@ not to.
    reviewer checks the change against, so make it complete and accurate.
 4. **Write the steps.** Run `{{run}} pro-tour api` for the tour API. Each behavior must be covered by a
    step whose checks prove it.
-5. **Record it**: `{{run}} pro-tour run .tours/<feature>.tour.js --url <app url>`.
+5. **Record it**: `{{run}} pro-tour run .tours/<feature>.tour.js --url <app url>`. It starts a headless
+   browser and opens the app's URL. If your sandbox blocks either (exit code 3, "The browser could not
+   start"), ask the user to let you run `pro-tour` outside the sandbox; it is not a problem with the tour.
 6. **If it fails**, read the failure file the command names: the full error and the visible DOM where it
    stopped. Fix the tour and run it again. If the failure is a real bug in your change, fix the change
    instead. After about three failed attempts, stop and tell the user what is failing.

@@ -15,7 +15,12 @@ export async function doctor({ channel = 'chromium' } = {}) {
   add(`Node.js ${process.versions.node}`, major >= 20, 'Install Node.js 20 or newer.');
 
   const browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true }).catch(error => error);
-  if (browser instanceof Error) add(`Browser (${channel})`, false, channel === 'chromium' ? 'pnpm exec playwright install --with-deps chromium' : `Install ${channel}, or use --channel chromium.`);
+  if (browser instanceof Error) {
+    const missing = /Executable doesn't exist|install/i.test(browser.message);
+    add(`Browser (${channel})`, false, missing
+      ? (channel === 'chromium' ? 'pnpm exec playwright install --with-deps chromium' : `Install ${channel}, or use --channel chromium.`)
+      : `It is installed but could not start: ${browser.message.split('\n')[0]}. Inside a coding agent's sandbox (such as Codex on macOS) a browser cannot run; run pro-tour outside the sandbox.`);
+  }
   else {
     add(`Browser (${channel})`, true);
     await browser.close();
