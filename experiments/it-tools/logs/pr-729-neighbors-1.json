@@ -1,0 +1,50 @@
+{
+  "tour": "experiments/it-tools/tours/pr-729-neighbors-1.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-729-neighbors-1/pr-729-neighbors-1-v1.mp4",
+  "seconds": 133,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 91.5,
+  "tokens": {
+    "input": 46631,
+    "cached": 27648,
+    "output": 4342,
+    "reasoning": 3274
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "find-tool": "The Numeronym generator appears in the Text tools and opens at /numeronym-generator.",
+        "empty-state": "Before a word is entered, the result field is empty and shows an example placeholder.",
+        "generate-numeronym": "Entering “internationalization” immediately displays “i18n”.",
+        "short-word": "Entering a word of three letters or fewer displays the word unchanged.",
+        "clear-word": "Clearing the word restores the empty result and its placeholder.",
+        "copy-result": "The copy button copies the generated numeronym to the clipboard and briefly shows “Copied!”."
+      },
+      "seconds": 14,
+      "usage": {
+        "input": 22865,
+        "cached": 13824,
+        "output": 349,
+        "reasoning": 191
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-729-neighbors-1/pr-729-neighbors-1-v1.mp4",
+      "notes": "The tool link uses its registered route, and the input locators use the data-test-id values supplied by the new component. The copy button is the sole button beside the result input; the tour checks both clipboard contents and the brief tooltip.",
+      "seconds": 77.5,
+      "usage": {
+        "input": 23766,
+        "cached": 13824,
+        "output": 3993,
+        "reasoning": 3083
+      }
+    }
+  ]
+}

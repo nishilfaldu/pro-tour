@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-5.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-5.tour.js",
   "model": "gpt-6-sol",
   "effort": "high",
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
+  "video": "sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
   "seconds": 184,
   "modelCalls": 2,
   "repairs": 0,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
       "notes": "Locators use the toolbar controls and listbox options to avoid matching task-card controls. Counts and task names assume the fresh seed data supplied in the PR.",
       "seconds": 87,
       "usage": {

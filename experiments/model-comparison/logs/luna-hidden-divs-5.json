@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-5.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-5.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "failed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
+  "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
   "seconds": 247,
   "modelCalls": 5,
   "repairs": 3,
@@ -35,7 +35,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "Assumes the Assignee dropdown exposes its trigger as a button named “Assignee” and renders option labels as clickable text; task counts are visible in the open list. The counts predicate checks the list text while it remains open, and exact task headings identify seeded cards.",
       "seconds": 20.1,
@@ -49,7 +49,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v2.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The assignee control is a custom dropdown whose button has no accessible name, so the script locates `.dd-button` and scopes option text to `.dd`. Counts are checked while the dropdown is open; the option list is opened inside that check because this UI only renders the options on demand.",
       "seconds": 15,
@@ -63,7 +63,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v3.mp4",
       "error": "Check failed: The assignee filter shows Priya",
       "notes": "The dropdown options render in the separate `.dd-popup.open` portal, so the option locator targets that popup and its `.dd-option-label`. Counts are checked while the menu is open; the custom check opens it as needed.",
       "seconds": 13.6,
@@ -77,7 +77,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
       "error": "Check failed: Assignee options display their seeded task counts (locator.innerText: Timeout 30000ms exceeded.)",
       "notes": "Used the stable `.dd-value` span for the selected assignee because the button itself contains nested text. The empty message is targeted as `.empty p` since the empty state also contains a Clear filters button.",
       "seconds": 26.8,

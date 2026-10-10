@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-high-hidden-divs-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-high-hidden-divs-2.tour.js",
   "model": "gpt-6-luna",
   "effort": "high",
   "status": "failed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
+  "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
   "seconds": 379,
   "modelCalls": 5,
   "repairs": 3,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The script assumes the Assignee control is a button named for its current selection and the dropdown exposes its search field by the supplied placeholder. It uses the toolbar-scoped Clear filters button to avoid the duplicate button in the empty state.",
       "seconds": 82.7,
@@ -50,7 +50,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v2.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The menu’s visible `.dd-option-label` and `.dd-count` elements target dropdown options without matching hidden native `<option>` elements. The tour assumes opening the Assignee dropdown resets its search field, as the previous run showed the dropdown search UI.",
       "seconds": 50.5,
@@ -64,7 +64,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v3.mp4",
       "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 3 elements:",
       "notes": "The search step uses the menu opened in the preceding step; clicking Assignee again would close it before the search field can be filled. Option and count locators follow the dropdown classes reflected in the failed run and prior script.",
       "seconds": 21.6,
@@ -78,7 +78,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
       "error": "Check failed: Assignee returns to Anyone",
       "notes": "The failure came from the accessible Status label matching the toolbar filter and card controls; the tour now targets `.toolbar select.filter` specifically. The toolbar-scoped Clear filters locator avoids matching the empty-state button.",
       "seconds": 18.1,

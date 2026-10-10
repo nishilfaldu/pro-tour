@@ -1,0 +1,78 @@
+{
+  "tour": "experiments/it-tools/tours/pr-456.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-456/pr-456-v3.mp4",
+  "seconds": 217,
+  "modelCalls": 4,
+  "repairs": 2,
+  "modelSeconds": 106.2,
+  "tokens": {
+    "input": 352775,
+    "cached": 54272,
+    "output": 5238,
+    "reasoning": 2391
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "math-tool-listing": "The Percentage calculator appears in the Math tools list.",
+        "percentage-of-value": "Entering 123% of 456 displays 560.88.",
+        "value-as-percentage": "Entering 123 as a share of 456 displays 26.973684210526315%.",
+        "percentage-change": "Entering a change from 123 to 456 displays a 270.7317073170732% increase.",
+        "incomplete-input": "A calculation’s result stays empty until both inputs are filled.",
+        "zero-denominator": "Entering zero as the base value leaves a percentage result empty instead of displaying an invalid number."
+      },
+      "seconds": 13.9,
+      "usage": {
+        "input": 87270,
+        "cached": 14848,
+        "output": 496,
+        "reasoning": 328
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": ".videos/it-tools/pr-456/pr-456-v1.mp4",
+      "error": "Check failed: Calculator opened (locator.isVisible: Error: strict mode violation: getByRole('heading', { name: 'Percentage calculator' }) resolved to 2 elements:)",
+      "notes": "The Math menu link is scoped to its category. Calculator fields use the data-test-id attributes shown in the PR, with checks on their nested inputs.",
+      "seconds": 34.9,
+      "usage": {
+        "input": 86479,
+        "cached": 13824,
+        "output": 1815,
+        "reasoning": 947
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": ".videos/it-tools/pr-456/pr-456-v2.mp4",
+      "error": "Step \"Find Percentage calculator in the Math tools list\" changed nothing: every check already passed before its actions ran. Add a check for what the actions change.",
+      "notes": "Scoped the heading and fields to #app so the tour overlay cannot create strict locator matches. The Math link remains scoped to its category.",
+      "seconds": 17.1,
+      "usage": {
+        "input": 89589,
+        "cached": 13824,
+        "output": 983,
+        "reasoning": 115
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-456/pr-456-v3.mp4",
+      "notes": "The Math category is toggled first so the listing check changes from hidden to visible when the calculator is opened. Calculator fields use the test IDs shown in the PR’s end-to-end test.",
+      "seconds": 40.3,
+      "usage": {
+        "input": 89437,
+        "cached": 11776,
+        "output": 1944,
+        "reasoning": 1001
+      }
+    }
+  ]
+}

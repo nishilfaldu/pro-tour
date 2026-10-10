@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-visible-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-visible-2.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
+  "video": "sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
   "seconds": 91,
   "modelCalls": 2,
   "repairs": 0,
@@ -35,7 +35,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-2/luna-visible-2-v1.mp4",
       "notes": "Uses the dropdown’s visible search, option labels, task headings, and summary text. Assumes the status filter is the board toolbar’s native select and the empty-state Clear filters button is scoped inside `.empty`.",
       "seconds": 37,
       "usage": {

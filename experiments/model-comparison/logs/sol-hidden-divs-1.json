@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-1.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-1.tour.js",
   "model": "gpt-6-sol",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v3.mp4",
+  "video": "sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v3.mp4",
   "seconds": 245,
   "modelCalls": 4,
   "repairs": 2,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v1.mp4",
       "error": "Check failed: All choices have their seed task counts",
       "notes": "Locators scope dropdown choices to the toolbar so task cards with the same person names cannot match. The tour assumes the dropdown renders each choice’s label and count as visible text.",
       "seconds": 57,
@@ -50,7 +50,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v2.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v2.mp4",
       "error": "Check failed: Marco remains a choice",
       "notes": "The dropdown popup is rendered outside the toolbar, so option and count checks use the open popup. Toolbar locators are used for the filter controls and summary.",
       "seconds": 30.4,
@@ -64,7 +64,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v3.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-1/sol-hidden-divs-1-v3.mp4",
       "notes": "The failed locator scoped the option label to the popup inside a relative `has` filter, so it could not match the visible Marco option. Filtering each option by its own text fixes that match.",
       "seconds": 35.1,
       "usage": {

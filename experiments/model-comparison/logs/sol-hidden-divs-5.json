@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-5.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-5.tour.js",
   "model": "gpt-6-sol",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
+  "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
   "seconds": 217,
   "modelCalls": 3,
   "repairs": 1,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The tour scopes assignee text to the toolbar to distinguish dropdown choices from task cards, and scopes the empty-state Clear filters button to its container. It assumes the custom dropdown displays its selected label and exposes its search input through the supplied placeholder.",
       "seconds": 55.1,
@@ -50,7 +50,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
       "notes": "The dropdown popup is mounted outside the toolbar, so person options are located through `.dd-popup.open`; the toolbar’s `.dd-button` identifies the assignee control. The tour assumes the documented fresh seed data.",
       "seconds": 30.3,
       "usage": {

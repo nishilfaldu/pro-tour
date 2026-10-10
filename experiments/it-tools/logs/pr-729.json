@@ -1,0 +1,64 @@
+{
+  "tour": "experiments/it-tools/tours/pr-729.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-729/pr-729-v2.mp4",
+  "seconds": 205,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 114.6,
+  "tokens": {
+    "input": 263834,
+    "cached": 41472,
+    "output": 5426,
+    "reasoning": 3541
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "find-numeronym-generator": "The Numeronym generator appears in the Text tools and opens its own page.",
+        "empty-output": "On opening the generator, the empty output shows an example placeholder.",
+        "generate-numeronym": "Entering “internationalization” immediately produces “i18n”.",
+        "preserve-short-words": "Entering a word of three letters or fewer displays the word unchanged.",
+        "clear-input": "Clearing the word resets the output to its empty placeholder.",
+        "copy-result": "The generated numeronym can be copied with the output field’s copy button."
+      },
+      "seconds": 13.1,
+      "usage": {
+        "input": 86392,
+        "cached": 13824,
+        "output": 380,
+        "reasoning": 225
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": ".videos/it-tools/pr-729/pr-729-v1.mp4",
+      "error": "Check failed: Copy confirmed",
+      "notes": "The sidebar link is scoped to the tool menu, and the input locators use the components’ data-test-id attributes. The copy step checks the button’s visible “Copied!” feedback.",
+      "seconds": 53,
+      "usage": {
+        "input": 87290,
+        "cached": 13824,
+        "output": 2605,
+        "reasoning": 1764
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-729/pr-729-v2.mp4",
+      "notes": "The output button is scoped to the numeronym field’s wrapper. Clipboard contents verify the copy action without relying on a hover tooltip that may disappear before the check runs.",
+      "seconds": 48.5,
+      "usage": {
+        "input": 90152,
+        "cached": 13824,
+        "output": 2441,
+        "reasoning": 1552
+      }
+    }
+  ]
+}

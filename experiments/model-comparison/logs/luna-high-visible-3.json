@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-high-visible-3.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-high-visible-3.tour.js",
   "model": "gpt-6-luna",
   "effort": "high",
   "status": "failed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v4.mp4",
+  "video": "sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v4.mp4",
   "seconds": 337,
   "modelCalls": 5,
   "repairs": 3,
@@ -34,7 +34,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The tour uses the seed task names and accessible labels from the supplied app source; it observes option counts while the dropdown is open before selecting an option.",
       "seconds": 37.3,
@@ -48,7 +48,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v2.mp4",
       "error": "Check failed: Unassigned option shows its task count",
       "notes": "The first step leaves the filtered dropdown open so the next step can select Priya directly; clicking the toggle again would close it. Task count checks capture the option text before selection closes the dropdown.",
       "seconds": 52.7,
@@ -62,7 +62,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v3.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The task-count checks latch while the dropdown options are visible, before each selection closes the popup. The Clear filters step starts with Ana selected, applies To do and Marco, then verifies both selections reset.",
       "seconds": 21,
@@ -76,7 +76,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v4.mp4",
+      "video": "sample-app/.videos/compare/luna-high-visible-3/luna-high-visible-3-v4.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The failing role-based option lookup is replaced with the dropdown’s visible `.dd-option` and `.dd-option-label` elements. Counts are observed while the options are open, and combined filters are recorded before Clear filters resets them.",
       "seconds": 33.9,

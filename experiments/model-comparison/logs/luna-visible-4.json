@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-visible-4.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-visible-4.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "failed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-4/luna-visible-4-v4.mp4",
+  "video": "sample-app/.videos/compare/luna-visible-4/luna-visible-4-v4.mp4",
   "seconds": 296,
   "modelCalls": 5,
   "repairs": 3,
@@ -35,7 +35,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-4/luna-visible-4-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-4/luna-visible-4-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "Assignee choices are located by their listbox option names, and counts are included in the option labels. Clear filters has both a toolbar button and an empty-state button, so the tour clicks the first match in each relevant state.",
       "seconds": 10.6,
@@ -49,7 +49,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-4/luna-visible-4-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-4/luna-visible-4-v2.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "I scoped options to the `.dd-option-label` text because listbox options are exposed as `li[role=option]`, which Playwright’s `getByRole('option')` did not resolve in the failure. Status uses the first Status-labeled select so the toolbar filter is targeted instead of a task card’s status control.",
       "seconds": 32.4,
@@ -63,7 +63,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-4/luna-visible-4-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-4/luna-visible-4-v3.mp4",
       "error": "Check failed: Priya option shows its task count",
       "notes": "The previous failure came from trying to select a list option after its popup had already closed. This version clears the search and chooses Priya within the still-open dropdown; it scopes status to the toolbar so task-card status selectors cannot create a strict-locator collision.",
       "seconds": 12.6,
@@ -77,7 +77,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-4/luna-visible-4-v4.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-4/luna-visible-4-v4.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The task-count check runs after reopening the Assignee menu because its options disappear when a selection closes the menu. The clear action targets the toolbar button to avoid the duplicate button in the empty state.",
       "seconds": 16.8,

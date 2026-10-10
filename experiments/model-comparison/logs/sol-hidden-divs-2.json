@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-2.tour.js",
   "model": "gpt-6-sol",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
+  "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
   "seconds": 257,
   "modelCalls": 4,
   "repairs": 2,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v1.mp4",
       "error": "Check failed: Anyone: 4 tasks",
       "notes": "Locators scope task titles to the board and filter choices to the toolbar to avoid duplicate names. The tour assumes the dropdown options render inside the toolbar, as the supplied app structure suggests.",
       "seconds": 48.2,
@@ -50,7 +50,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v2.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v2.mp4",
       "error": "Check failed: Anyone has 4 tasks",
       "notes": "The dropdown popup is attached outside the toolbar, so its options and search input are located through `.dd-popup`. Each option is scoped to its own row to distinguish repeated task counts.",
       "seconds": 37.6,
@@ -64,7 +64,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
       "notes": "The option locator matches each choice by its label within the option, avoiding the previous locator’s repeated popup scope. Task counts use exact text checks on each option’s count element.",
       "seconds": 36.8,
       "usage": {

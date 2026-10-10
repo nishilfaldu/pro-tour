@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-3.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-3.tour.js",
   "model": "gpt-6-sol",
   "effort": "high",
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-3/sol-high-visible-3-v1.mp4",
+  "video": "sample-app/.videos/compare/sol-high-visible-3/sol-high-visible-3-v1.mp4",
   "seconds": 143,
   "modelCalls": 2,
   "repairs": 0,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-3/sol-high-visible-3-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-high-visible-3/sol-high-visible-3-v1.mp4",
       "notes": "The tour uses the toolbar’s assignee button and status select to avoid matching task-card controls. Counts and task names come from the supplied seed data.",
       "seconds": 48.2,
       "usage": {

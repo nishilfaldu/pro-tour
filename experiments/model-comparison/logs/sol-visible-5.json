@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-visible-5.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-visible-5.tour.js",
   "model": "gpt-6-sol",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
+  "video": "sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
   "seconds": 104,
   "modelCalls": 2,
   "repairs": 0,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-visible-5/sol-visible-5-v1.mp4",
       "notes": "The script scopes assignee choices to their visible option labels and uses the toolbar status select to avoid the task dialog’s separate Status field. It assumes the supplied seed data and fresh browser storage.",
       "seconds": 35.3,
       "usage": {

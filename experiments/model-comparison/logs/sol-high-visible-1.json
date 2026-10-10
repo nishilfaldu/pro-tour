@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-1.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-1.tour.js",
   "model": "gpt-6-sol",
   "effort": "high",
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
+  "video": "sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
   "seconds": 139,
   "modelCalls": 2,
   "repairs": 0,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
       "notes": "The tour uses the supplied seed data and scopes task locators to board cards. The status control is scoped to the toolbar because task cards also contain status selects.",
       "seconds": 52.9,
       "usage": {

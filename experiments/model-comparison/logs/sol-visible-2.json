@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-visible-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-visible-2.tour.js",
   "model": "gpt-6-sol",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
+  "video": "sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
   "seconds": 186,
   "modelCalls": 3,
   "repairs": 1,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-visible-2/sol-visible-2-v1.mp4",
       "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 4 elements:",
       "notes": "The assignee button and option locators target the new dropdown; card checks are scoped to the board. Counts and task names assume the fresh seed data supplied in the prompt.",
       "seconds": 54.7,
@@ -50,7 +50,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
+      "video": "sample-app/.videos/compare/sol-visible-2/sol-visible-2-v2.mp4",
       "notes": "The status locator is scoped to the toolbar, so it cannot match task card controls or the dialog. Assignee options and task cards use their visible text from the supplied seed data.",
       "seconds": 27.2,
       "usage": {

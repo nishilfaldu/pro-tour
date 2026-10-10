@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-2.tour.js",
   "model": "gpt-6-sol",
   "effort": "high",
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
+  "video": "sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
   "seconds": 125,
   "modelCalls": 2,
   "repairs": 0,
@@ -36,7 +36,7 @@
     {
       "kind": "write",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
+      "video": "sample-app/.videos/compare/sol-high-visible-2/sol-high-visible-2-v1.mp4",
       "notes": "The toolbar controls use their unique CSS classes; task headings and dropdown options use visible text. Counts and task names assume the provided fresh seed data.",
       "seconds": 52.2,
       "usage": {

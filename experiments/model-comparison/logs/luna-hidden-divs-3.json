@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-3.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-3.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v3.mp4",
+  "video": "sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v3.mp4",
   "seconds": 156,
   "modelCalls": 4,
   "repairs": 2,
@@ -35,7 +35,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The picker and its options are located by their visible labels and search placeholder; task results are checked through the summary and task headings. The script assumes the dropdown trigger is an accessible button named “Assignee,” and its options are exposed as visible text.",
       "seconds": 14.7,
@@ -49,7 +49,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v2.mp4",
       "error": "Check failed: Anyone option shows four tasks (locator.isVisible: Error: strict mode violation: getByText('Anyone', { exact: true }) resolved to 2 elements:)",
       "notes": "The failure came from the picker being a custom dropdown button without an accessible name; `.dd-button` targets that control directly. Picker option locators are scoped to `.dd` so labels and task-card owner text do not create ambiguous matches.",
       "seconds": 10.7,
@@ -63,7 +63,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-3/luna-hidden-divs-3-v3.mp4",
       "notes": "Scoped the picker assertions to each option row so repeated labels and task counts resolve uniquely. The seed data has four tasks: Priya has two, Marco and Unassigned have one each, and Ana has none.",
       "seconds": 13.6,
       "usage": {

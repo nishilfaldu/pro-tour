@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-2.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-2.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v4.mp4",
+  "video": "sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v4.mp4",
   "seconds": 215,
   "modelCalls": 5,
   "repairs": 3,
@@ -34,7 +34,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "Uses the dropdown’s labeled button, search placeholder, and accessible option names with the seeded task counts. Assumes the custom Dropdown renders each choice as a role=option and the board summary uses the .summary class.",
       "seconds": 24.4,
@@ -48,7 +48,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v2.mp4",
       "error": "Check failed: Priya has 2 tasks",
       "notes": "Used the visible `.dd-button` because the dropdown’s accessible name is provided by a sibling label rather than the button itself. Assumes the dropdown options expose the shown names and task-count hints as option accessible names.",
       "seconds": 9.7,
@@ -62,7 +62,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v3.mp4",
       "error": "Check failed: Assignee selection shows Priya Shah",
       "notes": "The dropdown renders options as `.dd-option` elements rather than ARIA options, so the script locates them by visible assignee name and task count. It verifies both a named person and Unassigned before combining Priya with the status filter.",
       "seconds": 15.7,
@@ -76,7 +76,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v4.mp4",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-2/luna-hidden-divs-2-v4.mp4",
       "notes": "The failure came from checking the entire dropdown button, whose text also includes the chevron; the corrected check targets its `.dd-value` label. Other locators use the app's dropdown options, visible task titles, status select, and empty state.",
       "seconds": 11.2,
       "usage": {

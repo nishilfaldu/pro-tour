@@ -1,9 +1,9 @@
 {
-  "tour": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/tours/lab/assignee-board/compare/tours/luna-visible-1.tour.js",
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-visible-1.tour.js",
   "model": "gpt-6-luna",
   "effort": null,
   "status": "passed",
-  "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-1/luna-visible-1-v3.mp4",
+  "video": "sample-app/.videos/compare/luna-visible-1/luna-visible-1-v3.mp4",
   "seconds": 188,
   "modelCalls": 4,
   "repairs": 2,
@@ -35,7 +35,7 @@
     {
       "kind": "write",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-1/luna-visible-1-v1.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-1/luna-visible-1-v1.mp4",
       "error": "locator.waitFor: Timeout 30000ms exceeded.",
       "notes": "The tour uses accessible labels and roles for the picker, options, status selector, and task headings. It assumes the provided seed data, including one unassigned task and no tasks assigned to Ana Lima.",
       "seconds": 34.9,
@@ -49,7 +49,7 @@
     {
       "kind": "repair",
       "status": "failed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-1/luna-visible-1-v2.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-1/luna-visible-1-v2.mp4",
       "error": "Check \"Priya’s task in another status is hidden\" was hidden before and after every action in the step, so it shows nothing disappearing. Check something that is on screen at some point in the step and gone at the end.",
       "notes": "The previous failure occurred because the search for Ana was still active when the next step tried to choose Unassigned; this version clears the search first. The toolbar status select is scoped to avoid matching the per-task status controls.",
       "seconds": 13.9,
@@ -63,7 +63,7 @@
     {
       "kind": "repair",
       "status": "passed",
-      "video": "/Users/happyhome/Desktop/pro-tour-sol-low-grok47-low/sample-app/.videos/compare/luna-visible-1/luna-visible-1-v3.mp4",
+      "video": "sample-app/.videos/compare/luna-visible-1/luna-visible-1-v3.mp4",
       "notes": "The combined-filter step checks that the unassigned task, which was visible before filtering, disappears after selecting To do and Priya. The option counts reflect all tasks, so Priya's picker count remains two.",
       "seconds": 11.5,
       "usage": {
