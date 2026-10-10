@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import { InfrastructureError, load, runAgent, totals } from './agent.js';
 import { listBehaviors, prContext, writeTour } from './planner.js';
 import { baseFromEnvironment, branchDiff, currentBranch, defaultBase, repoRoot, sanitizedBranch, TourError, videosDir } from './repo.js';
+import { doctor } from './doctor.js';
 import { githubEnv, publish, resolvePr } from './publish.js';
 import { recordTour } from './runtime.js';
 
@@ -15,6 +16,8 @@ const USAGE = `Usage:
       Record a saved tour with no model.
   pro-tour publish <video.mp4> [--pr <number|url>] [--retry-upload]
       Comment on the PR with the video and its behavior checklist. tour and run accept --publish too.
+  pro-tour doctor [--publish] [--channel chromium|chrome]
+      Check prerequisites and print the command that fixes each problem.
 
 Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 browser or encoder failure.
 
@@ -135,7 +138,15 @@ function usage(asked) {
   return asked ? 0 : 2;
 }
 
-const COMMANDS = { tour, run, publish: publishCommand };
+async function doctorCommand(argv) {
+  const { values } = parseArgs({ args: argv, options: { publish: { type: 'boolean', default: false }, channel: COMMON.channel, help: COMMON.help } });
+  if (values.help) return usage(true);
+  const checks = await doctor({ channel: values.channel, publishing: values.publish });
+  for (const check of checks) console.log(`${check.ok ? '✓' : '✗'} ${check.name}${check.ok ? '' : `\n    ${check.fix}`}`);
+  return checks.every(check => check.ok) ? 0 : 2;
+}
+
+const COMMANDS = { tour, run, publish: publishCommand, doctor: doctorCommand };
 
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
