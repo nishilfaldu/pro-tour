@@ -6,7 +6,7 @@ import { createAppServer } from '../sample-app/server.js';
 import { Tour } from '../src/runtime.js';
 
 const overlay = fileURLToPath(new URL('../src/overlay.js', import.meta.url));
-const fast = { move: 0, afterAction: 0, typeDelay: 0, stepIntro: 0, stepOutro: 0, checkTimeout: 600, chip: 0, failHold: 0 };
+const fast = { move: 0, afterAction: 0, typeDelay: 0, stepIntro: 0, stepOutro: 0, checkTimeout: 600, chip: 0, failHold: 0, menu: 0 };
 let server;
 let browser;
 

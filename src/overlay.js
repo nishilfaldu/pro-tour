@@ -9,6 +9,10 @@
     .cursor svg { display: block; transform-origin: 5px 2.5px; }
     .ripple { position: fixed; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; z-index: 3;
       border: 3px solid #5b8cff; background: rgba(91,140,255,.25); }
+    .menu { position: fixed; z-index: 3; display: none; padding: 4px; border-radius: 8px; background: #fff; color: #111;
+      font: 15px/1.2 system-ui, -apple-system, sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.08); }
+    .menu div { padding: 7px 12px; border-radius: 5px; white-space: nowrap; transition: background .15s, color .15s; }
+    .menu div.on { background: #5b8cff; color: #fff; }
     .ring { position: fixed; border: 2px solid #5b8cff; border-radius: 8px; z-index: 2; opacity: 0;
       box-shadow: 0 0 0 5px rgba(91,140,255,.18); transition: opacity .25s, left .4s, top .4s, width .4s, height .4s; }
     .caption { position: fixed; left: 50%; bottom: 28px; z-index: 5; max-width: 82%; display: flex; gap: 14px; align-items: center;
@@ -53,11 +57,11 @@
     host.setAttribute('popover', 'manual');
     host.style.cssText = 'display:block;position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none;';
     const shadow = host.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `<style>${STYLE}</style><div class="ring"></div><div class="cursor">${ARROW}</div>
+    shadow.innerHTML = `<style>${STYLE}</style><div class="ring"></div><div class="menu"></div><div class="cursor">${ARROW}</div>
       <div class="caption"><span class="badge"></span><span class="text"></span></div><div class="checks"></div>
       <div class="card"><div class="eyebrow"></div><h1></h1><p></p></div>`;
     const $ = selector => shadow.querySelector(selector);
-    ui = { ring: $('.ring'), cursor: $('.cursor'), caption: $('.caption'), checks: $('.checks'), card: $('.card') };
+    ui = { ring: $('.ring'), menu: $('.menu'), cursor: $('.cursor'), caption: $('.caption'), checks: $('.checks'), card: $('.card') };
     place(0);
     document.documentElement.append(host);
     raise();
@@ -98,6 +102,22 @@
         width: `${box.width + pad * 2}px`, height: `${box.height + pad * 2}px`, opacity: 1 });
     },
     clearRing() { mount(); ui.ring.style.opacity = 0; },
+    // Headless Chromium does not draw a native <select>'s open menu, so the overlay draws one.
+    // Returns the box of the option at index `to`, for the cursor to move to.
+    menu(box, labels, from) {
+      mount();
+      ui.menu.replaceChildren(...labels.map((label, i) => Object.assign(document.createElement('div'), { textContent: label, className: i === from ? 'on' : '' })));
+      Object.assign(ui.menu.style, { display: 'block', left: `${box.x}px`, minWidth: `${box.width}px`, top: `${box.y + box.height + 4}px` });
+      const height = ui.menu.getBoundingClientRect().height;
+      if (box.y + box.height + 4 + height > innerHeight) ui.menu.style.top = `${Math.max(4, box.y - height - 4)}px`;
+    },
+    menuItem(index) {
+      mount();
+      [...ui.menu.children].forEach((item, i) => item.classList.toggle('on', i === index));
+      const { x, y, width, height } = ui.menu.children[index].getBoundingClientRect();
+      return { x, y, width, height };
+    },
+    hideMenu() { mount(); ui.menu.style.display = 'none'; },
     caption(badge, text) {
       mount();
       ui.caption.querySelector('.badge').textContent = badge;

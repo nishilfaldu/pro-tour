@@ -9,7 +9,7 @@ import { markdown } from './report.js';
 
 const OVERLAY = join(dirname(fileURLToPath(import.meta.url)), 'overlay.js');
 const SIZE = { width: 1280, height: 800 };
-const PACE = { move: 650, afterAction: 500, typeDelay: 45, stepIntro: 1000, stepOutro: 1200, checkTimeout: 5000, chip: 450, failHold: 1500 };
+const PACE = { move: 650, afterAction: 500, typeDelay: 45, stepIntro: 1000, stepOutro: 1200, checkTimeout: 5000, chip: 450, failHold: 1500, menu: 450 };
 
 class TourCheckError extends Error {}
 
@@ -148,6 +148,7 @@ export class Tour {
     await this.ui('ring', box);
     await traced('  moveTo', () => this.ui('moveTo', x, y, this.pace.move));
     await this.ui('press', x, y);
+    return box;
   }
 
   click(locator) {
@@ -179,8 +180,22 @@ export class Tour {
   }
 
   async select(locator, label) {
-    await this.point(locator);
-    await locator.selectOption({ label });
+    const box = await this.point(locator);
+    const { labels, from } = await locator.evaluate(el => ({ labels: [...el.options].map(option => option.label), from: el.selectedIndex }));
+    const to = labels.indexOf(label);
+    if (to >= 0) {
+      await this.ui('menu', box, labels, from);
+      await this.pause(this.pace.menu);
+      const item = await this.ui('menuItem', to);
+      await this.ui('moveTo', item.x + Math.min(item.width / 2, 60), item.y + item.height / 2, this.pace.move);
+      await this.ui('press', item.x + Math.min(item.width / 2, 60), item.y + item.height / 2);
+      await this.pause(this.pace.menu / 2);
+    }
+    try {
+      await locator.selectOption({ label });
+    } finally {
+      await this.ui('hideMenu');
+    }
     await this.settle();
   }
 
