@@ -75,7 +75,8 @@ reads; defaults to the repository), `--model` (default `gpt-6-sol`, or `PRO_TOUR
 (default `high`, or `PRO_TOUR_EFFORT`), `--rounds 3`, `--replan` (ignore the saved tour),
 `--channel chrome` (record with an installed Chrome instead of Playwright's Chromium).
 
-Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 browser or encoder failure.
+Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser
+or encoder), which never spends a repair.
 
 ## In CI
 

@@ -45,9 +45,14 @@ export async function runAgent({ tourPath, rounds = 3, replan = false, planner, 
   try {
     if (!replan && await exists(tourPath)) {
       source = await readFile(tourPath, 'utf8');
-      const tour = await load(tourPath);
-      behaviors = tour.meta.behaviors;
-      report = await recordSafely(record, tour, name, recordAttempts);
+      const tour = await load(tourPath).catch(error => error);
+      if (tour instanceof Error || !tour.meta || typeof tour.run !== 'function') {
+        const why = tour instanceof Error ? tour.message.split('\n')[0] : 'it must export meta and an async run(t)';
+        report = failed(`Saved tour failed to load: ${why}`, tour instanceof Error ? tour.stack ?? tour.message : why);
+      } else {
+        behaviors = tour.meta.behaviors;
+        report = await recordSafely(record, tour, name, recordAttempts);
+      }
       entry({ kind: 'replay', status: report.status, video: report.video, error: report.error });
       if (report.status === 'passed') return { status: 'passed', tourPath, report, history };
     }
@@ -69,7 +74,9 @@ export async function runAgent({ tourPath, rounds = 3, replan = false, planner, 
       let tour;
       try {
         tour = await load(attempt);
+        if (typeof tour.run !== 'function') throw new Error('it must export an async run(t)');
       } catch (error) {
+        tour = null;
         report = failed(`Tour module failed to load: ${error.message.split('\n')[0]}`, error.stack ?? error.message);
       }
       if (tour && !isDeepStrictEqual(tour.meta?.behaviors, behaviors)) {

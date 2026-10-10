@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, normalize, relative, resolve } from 'node:path';
-import { isSafePath } from './repo.js';
+import { isSafePath, TourError } from './repo.js';
 import { fileURLToPath } from 'node:url';
 
 const API = join(dirname(fileURLToPath(import.meta.url)), 'tour-api.md');
@@ -79,7 +79,7 @@ export async function prContext({ diff, src, changed = [] }) {
       chosen.push(file);
       used += bodies.get(file).length;
     }
-    if (!chosen.length) throw new Error(`The app source under ${src} is ${total} chars and none of the PR's changed source files fit in ${MAX_SOURCE_CHARS}.`);
+    if (!chosen.length) throw new TourError(`The app source under ${src} is ${total} chars and none of the PR's changed source files fit in ${MAX_SOURCE_CHARS}.`);
     note = `App source after the PR: the ${chosen.length} files the PR changed and their direct neighbors (imports, importers and components used in templates); the whole app is ${files.length} files.`;
   }
   return [fence('PR diff', diff), note, ...chosen.map(file => fence(file, bodies.get(file)))];
@@ -100,11 +100,11 @@ export async function ask(parts, schema, { model, effort }) {
       let stderr = '';
       child.stdout.on('data', chunk => { stdout += chunk; });
       child.stderr.on('data', chunk => { stderr += chunk; });
-      child.on('error', reject);
+      child.on('error', error => reject(error.code === 'ENOENT' ? new TourError('The Codex CLI (codex) was not found on PATH; it is needed to plan or repair tours.') : error));
       child.on('close', code => resolve({ code, stdout, stderr }));
       child.stdin.end(parts.join('\n\n'));
     });
-    if (code !== 0) throw new Error(`codex exec failed (${code}): ${stderr.slice(-2000)}`);
+    if (code !== 0) throw new TourError(`codex exec failed (${code}); is Codex installed and logged in? ${stderr.trim().slice(-1500)}`);
     const usage = { input: 0, cached: 0, output: 0, reasoning: 0 };
     for (const line of stdout.split('\n')) {
       if (!line.includes('"turn.completed"')) continue;

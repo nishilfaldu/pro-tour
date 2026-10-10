@@ -84,3 +84,14 @@ test('a recorder crash is retried without a repair, and a persistent one stops t
   await assert.rejects(runAgent({ tourPath, planner: plan, record: async () => { throw new Error('ffmpeg failed'); } }), InfrastructureError);
   assert.deepEqual(plan.calls, [], 'infrastructure failures never reach the model');
 });
+
+test('a saved tour that no longer loads is repaired like a failed replay', async () => {
+  const tourPath = await scratch();
+  await writeFile(tourPath, 'export const meta = {');
+  const plan = planner(tour('pass'));
+  const result = await runAgent({ tourPath, planner: plan, record });
+  assert.equal(result.status, 'passed');
+  assert.equal(result.history[0].kind, 'replay');
+  assert.match(result.history[0].error, /Saved tour failed to load/);
+  assert.deepEqual(plan.calls, ['behaviors', 'repair after: Saved tour failed to load: Unexpected end of input']);
+});

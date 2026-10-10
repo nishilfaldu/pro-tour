@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { InfrastructureError, load, runAgent, totals } from './agent.js';
@@ -19,7 +19,7 @@ const USAGE = `Usage:
   pro-tour doctor [--publish] [--channel chromium|chrome]
       Check prerequisites and print the command that fixes each problem.
 
-Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 browser or encoder failure.
+Exit codes: 0 passed, 1 tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser or encoder).
 
 Defaults: --tour .tours/<branch>.tour.js, --src the repository root, --out .videos/,
 --base $GITHUB_BASE_REF or origin/HEAD, --model $PRO_TOUR_MODEL or gpt-6-sol, --effort $PRO_TOUR_EFFORT or high.`;
@@ -51,6 +51,19 @@ function appUrl(value) {
   return url.href;
 }
 
+async function tourFile(path) {
+  const file = resolve(path);
+  await access(file).catch(() => {
+    throw new TourError(`Tour file not found: ${file}`);
+  });
+  return file;
+}
+
+// Files a unified diff touches, from its "+++ b/<path>" headers (deleted files have none).
+export function diffFiles(diff) {
+  return [...diff.matchAll(/^\+\+\+ b\/(.+)$/gm)].map(match => match[1].trim());
+}
+
 function printReport(report) {
   console.log(`${report.status.toUpperCase()}: ${report.video} (${report.seconds}s)`);
   for (const step of report.steps) console.log(`  ${step.status === 'passed' ? '✓' : '✗'} ${step.title}`);
@@ -61,7 +74,7 @@ function printReport(report) {
 async function run(argv) {
   const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: COMMON });
   if (values.help || positionals.length !== 1 || !values.url) return usage(values.help);
-  const file = resolve(positionals[0]);
+  const file = await tourFile(positionals[0]);
   const outDir = values.out ? resolve(values.out) : await videosDir(repoRoot(dirname(file)));
   const report = await recordTour(await load(file), { url: appUrl(values.url), outDir, name: basename(file, '.tour.js'), channel: values.channel });
   printReport(report);
@@ -78,6 +91,8 @@ async function tour(argv) {
   } });
   if (values.help || !values.url) return usage(values.help);
   const url = appUrl(values.url);
+  const rounds = Number(values.rounds);
+  if (!Number.isInteger(rounds) || rounds < 0) throw new TourError('--rounds must be a whole number, 0 or more');
   const repo = repoRoot(process.cwd());
   const tourPath = resolve(values.tour ?? join(repo, '.tours', `${sanitizedBranch(currentBranch(repo))}.tour.js`));
   const name = basename(tourPath, '.tour.js');
@@ -91,8 +106,12 @@ async function tour(argv) {
     if (context) return context;
     let diff;
     let changed = [];
-    if (values.diff) diff = await readFile(values.diff, 'utf8');
-    else ({ diff, files: changed } = branchDiff(repo, values.base ?? baseFromEnvironment(repo) ?? defaultBase(repo)));
+    if (values.diff) {
+      diff = await readFile(values.diff, 'utf8').catch(() => {
+        throw new TourError(`Cannot read --diff ${values.diff}`);
+      });
+      changed = diffFiles(diff);
+    } else ({ diff, files: changed } = branchDiff(repo, values.base ?? baseFromEnvironment(repo) ?? defaultBase(repo)));
     context = await prContext({ diff, src, changed: changed.map(file => join(repo, file)) });
     return context;
   };
@@ -104,7 +123,7 @@ async function tour(argv) {
   const started = Date.now();
   const result = await runAgent({
     tourPath,
-    rounds: Number(values.rounds),
+    rounds,
     replan: values.replan,
     planner,
     record: (tourModule, tourName) => recordTour(tourModule, { url, outDir, name: tourName, channel: values.channel }),
@@ -158,7 +177,7 @@ export async function main(argv = process.argv.slice(2)) {
     return await COMMANDS[command](rest);
   } catch (error) {
     if (error instanceof InfrastructureError) {
-      console.error(`pro-tour: ${error.message} (browser or encoder problem, not a tour failure)`);
+      console.error(`pro-tour: ${error.message}\n(not a tour failure: check that the app is reachable at --url and that pro-tour doctor passes)`);
       return 3;
     }
     if (!(error instanceof TourError) && error?.code !== 'ERR_PARSE_ARGS_UNKNOWN_OPTION') throw error;
