@@ -77,7 +77,16 @@ failures are now retried without spending a repair.
 Decision rule, fixed before reading the results: highest pass rate, then fewest repairs, then wall time.
 The default became gpt-6-sol at high effort. High effort did not help gpt-6-luna.
 
-## 6. A real app
+## 6. Replay stability
+
+A saved tour has to pass every time it is replayed, with no model. On the final runtime:
+
+- the 34 passing tours from the model comparison, written by both models against both fixture
+  variants, plus the hand-written gold tour: 35/35 passed on replay;
+- the nine passing it-tools tours, replayed twice each: 18/18 (after one transient-feedback flake was
+  fixed, see [`it-tools/`](it-tools/README.md)).
+
+## 7. A real app
 
 See [`it-tools/`](it-tools/README.md): three merged PRs from
 [CorentinTh/it-tools](https://github.com/CorentinTh/it-tools), toured with the default settings.
