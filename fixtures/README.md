@@ -15,6 +15,6 @@ node fixtures/serve.js fixtures/assignee-board/head 4180
 - `head-divs/` is the same app with the dropdown rebuilt from plain divs with no ARIA roles.
   `libvariant/` is the planner input for it: the diff and source without the dropdown component, as if
   it came from a library.
-- `gold.tour.js` is a hand-written tour of the PR.
+- `gold.tour.ts` is a hand-written tour of the PR.
 
 [`experiments/`](../experiments/README.md) describes the runs made against these fixtures.

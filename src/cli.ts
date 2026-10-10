@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
-import { githubEnv, publish, resolvePr } from './publish.ts';
+import { publish, resolvePr } from './publish.ts';
 import { changedTours, currentBranch, isTourFile, repoRoot, TourError, tourName, videosDir } from './repo.ts';
 import { recordings, recordTour } from './runtime.ts';
 import type { Report, TourModule } from './types.ts';
@@ -179,7 +179,7 @@ async function publishCommand(argv: string[]): Promise<number> {
   });
   if (values.help) return usage(true);
   const repo = repoRoot(process.cwd());
-  const env = githubEnv();
+  const env = process.env;
   const pr = await resolvePr(repo, { target: values.pr, branch: values.pr ? undefined : currentBranch(repo), env });
   const outDir = values.out ? resolve(values.out) : join(repo, '.videos');
 

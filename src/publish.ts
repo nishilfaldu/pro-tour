@@ -55,16 +55,6 @@ async function retryRead<T>(read: () => Promise<T>, attempts = 3): Promise<T> {
   }
 }
 
-// GH_MEDIA_TOKEN, when set, is the token gh uses for publishing; otherwise gh's own login is used.
-export function githubEnv(env: Env = process.env): Env {
-  const clean = { ...env };
-  if (env.GH_MEDIA_TOKEN) {
-    delete clean.GITHUB_TOKEN;
-    clean.GH_TOKEN = env.GH_MEDIA_TOKEN;
-  }
-  return clean;
-}
-
 export async function requireMediaSupport(env: Env): Promise<void> {
   const help = await exec('gh', ['pr', 'comment', '--help'], { env });
   if (!help.includes('--attach'))
@@ -185,7 +175,7 @@ export async function publish(
   videoPath: string,
   pr: PullRequest,
   {
-    env = githubEnv(),
+    env = process.env,
     retryUpload = false,
     keep = false,
     dryRun = false,

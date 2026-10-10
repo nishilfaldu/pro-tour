@@ -10,7 +10,6 @@
     "lint": "biome check",
     "format": "biome check --write"
   },
-  "license": "MIT",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",

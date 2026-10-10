@@ -501,10 +501,6 @@ export async function recordTour(
           .catch(() => null)) ?? null;
       report.failure = {
         message: [message(error), (error as Error)?.cause ? message((error as Error).cause) : ''].filter(Boolean).join('\n').slice(0, 4000),
-        aria: await page
-          .locator('body')
-          .ariaSnapshot({ timeout: 2000 })
-          .catch(() => null),
         dom: await page.evaluate(failureDom, target).catch(() => null),
       };
     }

@@ -1,7 +1,6 @@
 // Read-only setup checks with the command that fixes each problem. No app startup, nothing published.
 import { execFile } from 'node:child_process';
 import { chromium } from 'playwright';
-import { githubEnv } from './publish.ts';
 
 const run = (command: string, args: string[], env?: NodeJS.ProcessEnv) =>
   new Promise<{ ok: boolean; out: string }>(done => {
@@ -48,14 +47,13 @@ export async function doctor({ channel = 'chromium' }: { channel?: string } = {}
     );
   }
 
-  const env = githubEnv();
-  const help = await run('gh', ['pr', 'comment', '--help'], env);
+  const help = await run('gh', ['pr', 'comment', '--help']);
   add(
     'GitHub CLI with --attach',
     help.ok && help.out.includes('--attach'),
     'Install or update gh (https://cli.github.com) until `gh pr comment --help` lists --attach.',
   );
-  const auth = await run('gh', ['auth', 'status'], env);
-  add(`GitHub auth (${process.env.GH_MEDIA_TOKEN ? 'GH_MEDIA_TOKEN' : 'gh login'})`, auth.ok, 'Run gh auth login.');
+  const auth = await run('gh', ['auth', 'status']);
+  add('GitHub CLI logged in', auth.ok, 'Run gh auth login.');
   return checks;
 }

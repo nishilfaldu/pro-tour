@@ -66,7 +66,7 @@ export interface Report {
   steps: StepResult[];
   coverage?: Coverage[];
   error?: string;
-  failure?: { message: string; aria: string | null; dom: string | null };
+  failure?: { message: string; dom: string | null };
   seconds?: number;
   video?: string;
   failureFile?: string;
