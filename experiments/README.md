@@ -1,7 +1,10 @@
 # Experiments
 
-How the planner contract, the step rules and the default model were chosen. All runs used Codex
-(`codex exec`, read-only, no tools) with a JSON schema for the answer. Samples are small, so treat the
+How the tour rules were chosen and how tours held up on real apps. These runs used a built-in planner:
+Codex (`codex exec`, read-only, no tools, a JSON schema for the answer) writing and repairing tours
+from the diff. That planner has since been removed. The coding agent that makes the change now writes
+the tour through the `pro-tour` skill, but the findings shaped what the skill and the tour API tell it,
+and the runtime still produces the failure context described here. Samples are small, so treat the
 numbers as directional.
 
 ## 1. Is the diff plus app source enough, without a live page?
