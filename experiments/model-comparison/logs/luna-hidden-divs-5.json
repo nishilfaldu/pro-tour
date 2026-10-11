@@ -1,0 +1,92 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-hidden-divs-5.tour.js",
+  "model": "gpt-6-luna",
+  "effort": null,
+  "status": "failed",
+  "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
+  "seconds": 247,
+  "modelCalls": 5,
+  "repairs": 3,
+  "modelSeconds": 83.7,
+  "tokens": {
+    "input": 103222,
+    "cached": 65280,
+    "output": 5768,
+    "reasoning": 701
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-filter": "Filter the seeded task board by a person or by Unassigned, with each assignee option showing its task count.",
+        "search-assignees": "Search for a person in the assignee filter using the Find a person field.",
+        "combine-filters": "Apply an assignee filter together with a status filter to narrow the visible tasks.",
+        "clear-filters": "Clear active filters to restore all tasks, including from the no-results state.",
+        "assignee-empty-state": "Show a person-specific empty message when filtering for a seeded assignee with no assigned tasks."
+      },
+      "seconds": 8.2,
+      "usage": {
+        "input": 18881,
+        "cached": 13056,
+        "output": 151,
+        "reasoning": 0
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v1.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "Assumes the Assignee dropdown exposes its trigger as a button named “Assignee” and renders option labels as clickable text; task counts are visible in the open list. The counts predicate checks the list text while it remains open, and exact task headings identify seeded cards.",
+      "seconds": 20.1,
+      "usage": {
+        "input": 19708,
+        "cached": 13056,
+        "output": 1925,
+        "reasoning": 701
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v2.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "The assignee control is a custom dropdown whose button has no accessible name, so the script locates `.dd-button` and scopes option text to `.dd`. Counts are checked while the dropdown is open; the option list is opened inside that check because this UI only renders the options on demand.",
+      "seconds": 15,
+      "usage": {
+        "input": 21586,
+        "cached": 13056,
+        "output": 1239,
+        "reasoning": 0
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v3.mp4",
+      "error": "Check failed: The assignee filter shows Priya",
+      "notes": "The dropdown options render in the separate `.dd-popup.open` portal, so the option locator targets that popup and its `.dd-option-label`. Counts are checked while the menu is open; the custom check opens it as needed.",
+      "seconds": 13.6,
+      "usage": {
+        "input": 21706,
+        "cached": 13056,
+        "output": 1227,
+        "reasoning": 0
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-hidden-divs-5/luna-hidden-divs-5-v4.mp4",
+      "error": "Check failed: Assignee options display their seeded task counts (locator.innerText: Timeout 30000ms exceeded.)",
+      "notes": "Used the stable `.dd-value` span for the selected assignee because the button itself contains nested text. The empty message is targeted as `.empty p` since the empty state also contains a Clear filters button.",
+      "seconds": 26.8,
+      "usage": {
+        "input": 21341,
+        "cached": 13056,
+        "output": 1226,
+        "reasoning": 0
+      }
+    }
+  ]
+}

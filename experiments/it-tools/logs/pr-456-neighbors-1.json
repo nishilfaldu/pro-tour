@@ -1,0 +1,64 @@
+{
+  "tour": "experiments/it-tools/tours/pr-456-neighbors-1.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-456-neighbors-1/pr-456-neighbors-1-v2.mp4",
+  "seconds": 229,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 116.2,
+  "tokens": {
+    "input": 67150,
+    "cached": 42496,
+    "output": 6251,
+    "reasoning": 4006
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "find-percentage-calculator": "The Percentage calculator appears in the Math tools and opens at /percentage-calculator.",
+        "calculate-percent-of-value": "Entering a percentage and a value shows the calculated amount.",
+        "calculate-value-as-percent": "Entering two values shows what percentage the first is of the second.",
+        "calculate-percentage-change": "Entering a starting and ending value shows the percentage increase or decrease.",
+        "show-empty-incomplete-result": "A calculation’s result stays empty until both of its inputs are filled.",
+        "copy-calculated-result": "The copy button copies a calculated result to the clipboard."
+      },
+      "seconds": 17.3,
+      "usage": {
+        "input": 20203,
+        "cached": 13824,
+        "output": 600,
+        "reasoning": 384
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": ".videos/it-tools/pr-456-neighbors-1/pr-456-neighbors-1-v1.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "The calculator inputs use the test IDs established by the PR’s end-to-end tests. The copy step targets the button inside the result component and reads the clipboard to verify the copied value.",
+      "seconds": 57.1,
+      "usage": {
+        "input": 21083,
+        "cached": 13824,
+        "output": 3630,
+        "reasoning": 2588
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-456-neighbors-1/pr-456-neighbors-1-v2.mp4",
+      "notes": "The calculator uses data-test-id attributes, so CSS attribute locators replace Playwright’s default getByTestId locators. The navigation locator is scoped to the Math category in the sidebar.",
+      "seconds": 41.8,
+      "usage": {
+        "input": 25864,
+        "cached": 14848,
+        "output": 2021,
+        "reasoning": 1034
+      }
+    }
+  ]
+}

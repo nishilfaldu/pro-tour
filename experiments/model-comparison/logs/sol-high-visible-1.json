@@ -1,0 +1,50 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-1.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
+  "seconds": 139,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 80.6,
+  "tokens": {
+    "input": 44792,
+    "cached": 27648,
+    "output": 4400,
+    "reasoning": 2793
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-choices": "Opening the Assignee filter shows Anyone, each person, and Unassigned with task counts.",
+        "search-assignees": "Typing in Find a person narrows the assignee choices.",
+        "filter-by-person": "Selecting a person shows only their tasks that match the selected status and updates the task count.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks with no assignee.",
+        "assignee-empty-state": "Selecting Ana Lima shows a message that nothing is assigned to her yet and offers Clear filters.",
+        "clear-filters": "Clear filters resets both filters and restores the full task list."
+      },
+      "seconds": 27.7,
+      "usage": {
+        "input": 21976,
+        "cached": 13824,
+        "output": 1019,
+        "reasoning": 855
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-high-visible-1/sol-high-visible-1-v1.mp4",
+      "notes": "The tour uses the supplied seed data and scopes task locators to board cards. The status control is scoped to the toolbar because task cards also contain status selects.",
+      "seconds": 52.9,
+      "usage": {
+        "input": 22816,
+        "cached": 13824,
+        "output": 3381,
+        "reasoning": 1938
+      }
+    }
+  ]
+}

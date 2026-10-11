@@ -1,0 +1,63 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-high-hidden-divs-1.tour.js",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/luna-high-hidden-divs-1/luna-high-hidden-divs-1-v2.mp4",
+  "seconds": 145,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 66.1,
+  "tokens": {
+    "input": 60492,
+    "cached": 13056,
+    "output": 5211,
+    "reasoning": 2442
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignees": "Search the Assignee menu by name and see task counts for each person, Anyone, and Unassigned.",
+        "filter-by-assignee": "Choose a person or Unassigned to show only matching tasks and update the visible task summary.",
+        "combine-filters": "Apply an assignee filter together with a status filter to show tasks matching both.",
+        "assignee-empty-state": "Choose Ana Lima, who has no seeded tasks, to see the empty message naming her and a Clear filters button.",
+        "clear-filters": "Use Clear filters to reset both filters and restore all seeded tasks."
+      },
+      "seconds": 15,
+      "usage": {
+        "input": 18879,
+        "cached": 0,
+        "output": 531,
+        "reasoning": 374
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-1/luna-high-hidden-divs-1-v1.mp4",
+      "error": "Check failed: Marco Diaz has 1 task",
+      "notes": "The script uses the toolbar’s visible assignee button, the provided search placeholder, task headings, and the labeled status select. It assumes dropdown options expose their label and count as readable text, as indicated by the supplied UI strings.",
+      "seconds": 32.7,
+      "usage": {
+        "input": 19716,
+        "cached": 13056,
+        "output": 2820,
+        "reasoning": 1552
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-1/luna-high-hidden-divs-1-v2.mp4",
+      "notes": "Count checks target each `.dd-option`, since menu labels and counts are separate descendants. Empty-state and toolbar Clear filters buttons are scoped to avoid strict locator ambiguity.",
+      "seconds": 18.4,
+      "usage": {
+        "input": 21897,
+        "cached": 0,
+        "output": 1860,
+        "reasoning": 516
+      }
+    }
+  ]
+}

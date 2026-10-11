@@ -1,0 +1,78 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
+  "seconds": 257,
+  "modelCalls": 4,
+  "repairs": 2,
+  "modelSeconds": 147.5,
+  "tokens": {
+    "input": 83470,
+    "cached": 13824,
+    "output": 7856,
+    "reasoning": 3392
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee filter shows Anyone, each person, and Unassigned with task counts.",
+        "search-assignees": "Searching the Assignee dropdown narrows the available choices by name.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks without an assignee.",
+        "combine-filters": "Selecting a person and a status shows only tasks matching both filters.",
+        "assignee-empty-state": "Selecting Ana Lima from the seed data shows “Nothing assigned to Ana Lima yet” with a Clear filters button.",
+        "clear-filters": "Clear filters resets both controls to All statuses and Anyone and restores the full task list."
+      },
+      "seconds": 24.9,
+      "usage": {
+        "input": 19060,
+        "cached": 0,
+        "output": 922,
+        "reasoning": 754
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v1.mp4",
+      "error": "Check failed: Anyone: 4 tasks",
+      "notes": "Locators scope task titles to the board and filter choices to the toolbar to avoid duplicate names. The tour assumes the dropdown options render inside the toolbar, as the supplied app structure suggests.",
+      "seconds": 48.2,
+      "usage": {
+        "input": 19904,
+        "cached": 0,
+        "output": 3044,
+        "reasoning": 1552
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v2.mp4",
+      "error": "Check failed: Anyone has 4 tasks",
+      "notes": "The dropdown popup is attached outside the toolbar, so its options and search input are located through `.dd-popup`. Each option is scoped to its own row to distinguish repeated task counts.",
+      "seconds": 37.6,
+      "usage": {
+        "input": 22271,
+        "cached": 13824,
+        "output": 1723,
+        "reasoning": 297
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-2/sol-hidden-divs-2-v3.mp4",
+      "notes": "The option locator matches each choice by its label within the option, avoiding the previous locator’s repeated popup scope. Task counts use exact text checks on each option’s count element.",
+      "seconds": 36.8,
+      "usage": {
+        "input": 22235,
+        "cached": 0,
+        "output": 2167,
+        "reasoning": 789
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-high-hidden-divs-4.tour.js",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/luna-high-hidden-divs-4/luna-high-hidden-divs-4-v3.mp4",
+  "seconds": 283,
+  "modelCalls": 4,
+  "repairs": 2,
+  "modelSeconds": 153,
+  "tokens": {
+    "input": 81879,
+    "cached": 13056,
+    "output": 9666,
+    "reasoning": 5369
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignee-options": "Search the assignee dropdown and see matching people alongside Anyone, Unassigned, and task counts.",
+        "filter-by-assignee": "Choose a person such as Priya Shah or Marco Diaz and see only tasks assigned to them.",
+        "filter-unassigned-tasks": "Choose Unassigned and see only tasks with no assignee.",
+        "assignee-empty-state": "Choose Ana Lima and see the personalized empty state that says nothing is assigned to her yet.",
+        "clear-filters": "Use Clear filters to reset the status and assignee filters and restore all seeded tasks."
+      },
+      "seconds": 7.5,
+      "usage": {
+        "input": 18881,
+        "cached": 0,
+        "output": 492,
+        "reasoning": 339
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-4/luna-high-hidden-divs-4-v1.mp4",
+      "error": "Check failed: Priya Shah matches the search (locator.isVisible: Error: strict mode violation: getByText('Priya Shah', { exact: true }) resolved to 2 elements:)",
+      "notes": "The dropdown is located through its selected-value button and the supplied search placeholder; task cards and the result count use the labels shown in the provided app source. The tour assumes the custom dropdown exposes its trigger as a button and its option labels as visible text.",
+      "seconds": 77.1,
+      "usage": {
+        "input": 19708,
+        "cached": 0,
+        "output": 4018,
+        "reasoning": 2631
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-4/luna-high-hidden-divs-4-v2.mp4",
+      "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 2 elements:",
+      "notes": "Dropdown options and counts are scoped to the open popup to avoid strict locator matches with task cards and the task editor. The search uses “a,” which matches the seeded people names while keeping Anyone and Unassigned visible with their counts.",
+      "seconds": 29.1,
+      "usage": {
+        "input": 21960,
+        "cached": 0,
+        "output": 3314,
+        "reasoning": 1932
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-4/luna-high-hidden-divs-4-v3.mp4",
+      "notes": "Scoped the status selector to the toolbar so it cannot match the task dialog’s Status field. Kept the dropdown option and count checks aligned with the selectors used in the failed tour.",
+      "seconds": 39.3,
+      "usage": {
+        "input": 21330,
+        "cached": 13056,
+        "output": 1842,
+        "reasoning": 467
+      }
+    }
+  ]
+}

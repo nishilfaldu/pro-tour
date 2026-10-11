@@ -1,0 +1,93 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/luna-high-hidden-divs-2.tour.js",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "failed",
+  "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
+  "seconds": 379,
+  "modelCalls": 5,
+  "repairs": 3,
+  "modelSeconds": 189.7,
+  "tokens": {
+    "input": 105077,
+    "cached": 52224,
+    "output": 11056,
+    "reasoning": 5858
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "search-assignees": "Open the Assignee menu and search for a person by name.",
+        "assignee-task-counts": "See each assignee option display how many tasks match it.",
+        "filter-by-assignee": "Choose a named assignee and see only their tasks on the board.",
+        "filter-unassigned": "Choose Unassigned and see tasks with no assignee.",
+        "assignee-empty-state": "Choose Ana Lima and see the message that nothing is assigned to her yet.",
+        "clear-filters": "Use Clear filters to reset the status and assignee filters and restore all tasks."
+      },
+      "seconds": 16.8,
+      "usage": {
+        "input": 20560,
+        "cached": 0,
+        "output": 600,
+        "reasoning": 442
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v1.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "The script assumes the Assignee control is a button named for its current selection and the dropdown exposes its search field by the supplied placeholder. It uses the toolbar-scoped Clear filters button to avoid the duplicate button in the empty state.",
+      "seconds": 82.7,
+      "usage": {
+        "input": 19709,
+        "cached": 13056,
+        "output": 4268,
+        "reasoning": 3098
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v2.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "The menu’s visible `.dd-option-label` and `.dd-count` elements target dropdown options without matching hidden native `<option>` elements. The tour assumes opening the Assignee dropdown resets its search field, as the previous run showed the dropdown search UI.",
+      "seconds": 50.5,
+      "usage": {
+        "input": 21693,
+        "cached": 13056,
+        "output": 2433,
+        "reasoning": 1112
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v3.mp4",
+      "error": "locator.waitFor: Error: strict mode violation: getByLabel('Status') resolved to 3 elements:",
+      "notes": "The search step uses the menu opened in the preceding step; clicking Assignee again would close it before the search field can be filled. Option and count locators follow the dropdown classes reflected in the failed run and prior script.",
+      "seconds": 21.6,
+      "usage": {
+        "input": 21711,
+        "cached": 13056,
+        "output": 1974,
+        "reasoning": 694
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/luna-high-hidden-divs-2/luna-high-hidden-divs-2-v4.mp4",
+      "error": "Check failed: Assignee returns to Anyone",
+      "notes": "The failure came from the accessible Status label matching the toolbar filter and card controls; the tour now targets `.toolbar select.filter` specifically. The toolbar-scoped Clear filters locator avoids matching the empty-state button.",
+      "seconds": 18.1,
+      "usage": {
+        "input": 21404,
+        "cached": 13056,
+        "output": 1781,
+        "reasoning": 512
+      }
+    }
+  ]
+}

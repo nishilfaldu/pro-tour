@@ -1,0 +1,240 @@
+:root {
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1d2927;
+  background: #f5f4f0;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.shell {
+  max-width: 1120px;
+  margin: auto;
+  padding: 0 44px;
+}
+.topbar {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid #d9ddd7;
+  color: #6c7872;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.mark {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  background: #203b35;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+}
+.mark span,
+.period {
+  color: #c6d96f;
+}
+.topbar button {
+  margin-left: auto;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  padding: 76px 0 54px;
+}
+.eyebrow {
+  color: #708077;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(54px, 7vw, 84px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  margin: 0;
+  line-height: 1;
+}
+.subtitle {
+  color: #738079;
+  font-size: 16px;
+  margin: 22px 0 0;
+}
+.primary {
+  background: #234b40;
+  color: #fff;
+  border-color: #234b40;
+}
+.primary:hover {
+  background: #17372e;
+}
+button,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid #ccd3cb;
+  background: transparent;
+  border-radius: 5px;
+  padding: 11px 17px;
+  color: #244239;
+  font-size: 13px;
+  font-weight: 700;
+}
+.toolbar {
+  border-top: 2px solid #253c35;
+  border-bottom: 1px solid #dce0d9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 17px 0;
+  color: #66756b;
+  font-size: 13px;
+}
+.summary strong {
+  color: #203d34;
+}
+.sep {
+  margin: 0 9px;
+  color: #bac3ba;
+}
+.toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.toolbar select,
+.task select {
+  appearance: none;
+  border: 1px solid #d1d8cf;
+  border-radius: 4px;
+  background: #fff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%2365796b'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  padding: 10px 34px 10px 12px;
+  color: #294136;
+}
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  background: #fff;
+  border-bottom: 1px solid #dce2d9;
+  padding: 25px 27px;
+  min-height: 104px;
+}
+.task h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.task p {
+  font-size: 13px;
+  color: #77837c;
+  margin: 0;
+}
+.task-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.task-controls button {
+  border: 0;
+  text-decoration: underline;
+  padding: 10px;
+}
+.empty {
+  padding: 45px;
+  text-align: center;
+  color: #738079;
+  background: #fff;
+}
+footer {
+  margin: 42px 0;
+  color: #9aa69d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+footer span {
+  color: #b8c86d;
+}
+dialog {
+  border: 1px solid #d9dfd6;
+  border-radius: 8px;
+  padding: 30px;
+  width: min(450px, calc(100vw - 30px));
+  box-shadow: 0 20px 70px #1c2d2440;
+}
+dialog::backdrop {
+  background: #1b2c27a8;
+}
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+.dialog-head button {
+  font-size: 24px;
+  border: 0;
+  padding: 0;
+}
+dialog h2 {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0 0 28px;
+}
+dialog form > label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 17px 0;
+}
+dialog input,
+dialog textarea,
+dialog form select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #cbd4cb;
+  border-radius: 4px;
+  padding: 11px;
+  font: inherit;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+@media (max-width: 650px) {
+  .shell {
+    padding: 0 20px;
+  }
+  .heading {
+    padding: 48px 0 36px;
+    align-items: start;
+    gap: 22px;
+    flex-direction: column;
+  }
+  .task {
+    align-items: start;
+    flex-direction: column;
+  }
+  .task-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

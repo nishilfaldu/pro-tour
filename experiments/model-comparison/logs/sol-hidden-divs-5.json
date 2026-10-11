@@ -1,0 +1,64 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-hidden-divs-5.tour.js",
+  "model": "gpt-6-sol",
+  "effort": null,
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
+  "seconds": 217,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 100.5,
+  "tokens": {
+    "input": 62916,
+    "cached": 0,
+    "output": 4830,
+    "reasoning": 1801
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "filter-by-person": "Selecting Priya or Marco shows only tasks assigned to that person and updates the task summary.",
+        "search-assignees": "Typing a name in the assignee dropdown narrows its person options.",
+        "filter-unassigned": "Selecting Unassigned shows the seed task with no assignee.",
+        "combine-filters": "Selecting both a status and an assignee shows only tasks matching both choices.",
+        "empty-assignee-state": "Selecting Ana shows “Nothing assigned to Ana Lima yet” with a Clear filters button.",
+        "clear-filters": "Clear filters resets both controls to All statuses and Anyone and restores the full task list."
+      },
+      "seconds": 15.1,
+      "usage": {
+        "input": 19058,
+        "cached": 0,
+        "output": 452,
+        "reasoning": 285
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v1.mp4",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.",
+      "notes": "The tour scopes assignee text to the toolbar to distinguish dropdown choices from task cards, and scopes the empty-state Clear filters button to its container. It assumes the custom dropdown displays its selected label and exposes its search input through the supplied placeholder.",
+      "seconds": 55.1,
+      "usage": {
+        "input": 21580,
+        "cached": 0,
+        "output": 2561,
+        "reasoning": 1088
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-hidden-divs-5/sol-hidden-divs-5-v2.mp4",
+      "notes": "The dropdown popup is mounted outside the toolbar, so person options are located through `.dd-popup.open`; the toolbar’s `.dd-button` identifies the assignee control. The tour assumes the documented fresh seed data.",
+      "seconds": 30.3,
+      "usage": {
+        "input": 22278,
+        "cached": 0,
+        "output": 1817,
+        "reasoning": 428
+      }
+    }
+  ]
+}

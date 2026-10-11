@@ -1,0 +1,50 @@
+{
+  "tour": "experiments/it-tools/tours/pr-1243-neighbors-1.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-1243-neighbors-1/pr-1243-neighbors-1-v1.mp4",
+  "seconds": 143,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 100.1,
+  "tokens": {
+    "input": 45651,
+    "cached": 13824,
+    "output": 5265,
+    "reasoning": 3945
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "find-email-normalizer": "The Email normalizer appears in the Development tools and opens at /email-normalizer.",
+        "normalize-emails": "Entering email addresses one per line shows a normalized result for each line in the read-only output.",
+        "show-invalid-email": "An email that cannot be parsed shows “Unable to parse email:” followed by the original line.",
+        "show-empty-state": "With no input, the output is empty and the Copy normalized emails button is disabled.",
+        "copy-results": "Copy normalized emails copies the displayed results and shows a confirmation toast.",
+        "clear-emails": "Clear emails removes the input and resets the output to its empty state."
+      },
+      "seconds": 11.7,
+      "usage": {
+        "input": 22381,
+        "cached": 0,
+        "output": 411,
+        "reasoning": 240
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-1243-neighbors-1/pr-1243-neighbors-1-v1.mp4",
+      "notes": "The two textareas use their unique placeholders. The custom button’s disabled state is a CSS class, and the clipboard check reads back the copied output.",
+      "seconds": 88.4,
+      "usage": {
+        "input": 23270,
+        "cached": 13824,
+        "output": 4854,
+        "reasoning": 3705
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-visible-5.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
+  "seconds": 184,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 122.4,
+  "tokens": {
+    "input": 44793,
+    "cached": 11776,
+    "output": 6118,
+    "reasoning": 4545
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee filter shows Anyone, each person, and Unassigned with task counts.",
+        "search-assignees": "Typing a name in Find a person narrows the assignee options.",
+        "combined-filters": "With To do selected, choosing Priya Shah shows only her To do task.",
+        "filter-unassigned": "Choosing Unassigned shows only the unassigned task.",
+        "assignee-empty-state": "Choosing Ana Lima shows “Nothing assigned to Ana Lima yet” with a Clear filters control.",
+        "clear-filters": "Clicking Clear filters resets both filters and restores all four tasks."
+      },
+      "seconds": 35.4,
+      "usage": {
+        "input": 21978,
+        "cached": 0,
+        "output": 1487,
+        "reasoning": 1324
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-high-visible-5/sol-high-visible-5-v1.mp4",
+      "notes": "Locators use the toolbar controls and listbox options to avoid matching task-card controls. Counts and task names assume the fresh seed data supplied in the PR.",
+      "seconds": 87,
+      "usage": {
+        "input": 22815,
+        "cached": 11776,
+        "output": 4631,
+        "reasoning": 3221
+      }
+    }
+  ]
+}

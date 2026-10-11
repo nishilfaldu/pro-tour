@@ -1,0 +1,50 @@
+{
+  "tour": "experiments/it-tools/tours/pr-456-focused.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-456-focused/pr-456-focused-v1.mp4",
+  "seconds": 111,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 71.2,
+  "tokens": {
+    "input": 42103,
+    "cached": 28672,
+    "output": 3507,
+    "reasoning": 2501
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "open-percentage-calculator": "The new Percentage calculator appears in the Math tools and opens at /percentage-calculator.",
+        "calculate-percent-of-value": "Entering a percentage and a value shows the calculated portion, such as 123% of 456 = 560.88.",
+        "calculate-value-as-percent": "Entering two values shows what percent the first is of the second.",
+        "calculate-percentage-increase": "Entering a lower From value and a higher To value shows the percentage increase.",
+        "calculate-percentage-decrease": "Entering a higher From value and a lower To value shows a negative percentage change.",
+        "show-empty-incomplete-result": "A calculator’s result stays blank until both of its inputs are filled."
+      },
+      "seconds": 16.3,
+      "usage": {
+        "input": 21441,
+        "cached": 14848,
+        "output": 674,
+        "reasoning": 492
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-456-focused/pr-456-focused-v1.mp4",
+      "notes": "The tour clicks the calculator link from the home listing and uses the component’s data-test-id attributes to distinguish the three input groups. The Math category placement follows the supplied tool registry.",
+      "seconds": 54.9,
+      "usage": {
+        "input": 20662,
+        "cached": 13824,
+        "output": 2833,
+        "reasoning": 2009
+      }
+    }
+  ]
+}

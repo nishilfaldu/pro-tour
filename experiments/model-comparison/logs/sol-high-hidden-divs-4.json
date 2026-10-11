@@ -1,0 +1,64 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-hidden-divs-4.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-high-hidden-divs-4/sol-high-hidden-divs-4-v2.mp4",
+  "seconds": 302,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 203.4,
+  "tokens": {
+    "input": 61324,
+    "cached": 0,
+    "output": 10997,
+    "reasoning": 7719
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-counts": "Opening the Assignee filter shows Anyone, each person, and Unassigned with their task counts.",
+        "search-assignees": "Typing in Find a person narrows the assignee options.",
+        "filter-by-person": "Selecting Priya Shah shows only her tasks and updates the task summary.",
+        "filter-unassigned": "Selecting Unassigned shows only tasks without an assignee.",
+        "empty-assignee-state": "Selecting Ana Lima shows an empty state saying nothing is assigned to her yet, with a Clear filters button.",
+        "clear-filters": "Clear filters resets both Status and Assignee and restores all four seed tasks."
+      },
+      "seconds": 31.9,
+      "usage": {
+        "input": 19060,
+        "cached": 0,
+        "output": 1292,
+        "reasoning": 1125
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/sol-high-hidden-divs-4/sol-high-hidden-divs-4-v1.mp4",
+      "error": "Check failed: Person search",
+      "notes": "The second toolbar child is the Assignee dropdown in the supplied app source, and the toolbar’s select.filter is the Status filter. Count checks read visible option text so they do not depend on the dropdown’s undisclosed internal markup.",
+      "seconds": 121.7,
+      "usage": {
+        "input": 19899,
+        "cached": 0,
+        "output": 7286,
+        "reasoning": 5696
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-high-hidden-divs-4/sol-high-hidden-divs-4-v2.mp4",
+      "notes": "The dropdown popup is rendered outside the toolbar, so its search field and options are located through `.dd-popup.open`. The filter button remains scoped to the toolbar.",
+      "seconds": 49.8,
+      "usage": {
+        "input": 22365,
+        "cached": 0,
+        "output": 2419,
+        "reasoning": 898
+      }
+    }
+  ]
+}

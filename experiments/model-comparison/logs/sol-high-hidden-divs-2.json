@@ -1,0 +1,64 @@
+{
+  "tour": "sample-app/tours/lab/assignee-board/compare/tours/sol-high-hidden-divs-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": "sample-app/.videos/compare/sol-high-hidden-divs-2/sol-high-hidden-divs-2-v2.mp4",
+  "seconds": 250,
+  "modelCalls": 3,
+  "repairs": 1,
+  "modelSeconds": 157.6,
+  "tokens": {
+    "input": 61223,
+    "cached": 0,
+    "output": 8267,
+    "reasoning": 5134
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "assignee-options": "Opening the Assignee dropdown shows Anyone, each person, and Unassigned with task counts.",
+        "search-people": "Typing a name in Find a person narrows the dropdown options.",
+        "combined-filters": "With To do selected, choosing Priya shows only her To do task.",
+        "unassigned-filter": "Choosing Unassigned shows only tasks without an assignee.",
+        "assignee-empty-state": "Choosing Ana shows “Nothing assigned to Ana Lima yet” and a Clear filters control.",
+        "clear-filters": "Clear filters restores All statuses and Anyone, showing all four seed tasks."
+      },
+      "seconds": 25.5,
+      "usage": {
+        "input": 19058,
+        "cached": 0,
+        "output": 851,
+        "reasoning": 690
+      }
+    },
+    {
+      "kind": "write",
+      "status": "failed",
+      "video": "sample-app/.videos/compare/sol-high-hidden-divs-2/sol-high-hidden-divs-2-v1.mp4",
+      "error": "Check failed: Priya Shah",
+      "notes": "The toolbar scopes assignee choices away from matching names on task cards. This assumes the dropdown renders its choices inside the toolbar, as implied by the supplied app structure.",
+      "seconds": 86.7,
+      "usage": {
+        "input": 19897,
+        "cached": 0,
+        "output": 4563,
+        "reasoning": 3091
+      }
+    },
+    {
+      "kind": "repair",
+      "status": "passed",
+      "video": "sample-app/.videos/compare/sol-high-hidden-divs-2/sol-high-hidden-divs-2-v2.mp4",
+      "notes": "Dropdown options render in a popup outside the toolbar, so option locators use the open popup. The toolbar locator is used only for the selected Assignee value and Status control.",
+      "seconds": 45.4,
+      "usage": {
+        "input": 22268,
+        "cached": 0,
+        "output": 2853,
+        "reasoning": 1353
+      }
+    }
+  ]
+}

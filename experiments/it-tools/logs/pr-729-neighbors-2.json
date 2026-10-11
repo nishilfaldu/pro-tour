@@ -1,0 +1,49 @@
+{
+  "tour": "experiments/it-tools/tours/pr-729-neighbors-2.tour.js",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "status": "passed",
+  "video": ".videos/it-tools/pr-729-neighbors-2/pr-729-neighbors-2-v1.mp4",
+  "seconds": 135,
+  "modelCalls": 2,
+  "repairs": 0,
+  "modelSeconds": 79,
+  "tokens": {
+    "input": 46585,
+    "cached": 27648,
+    "output": 3733,
+    "reasoning": 2854
+  },
+  "history": [
+    {
+      "kind": "behaviors",
+      "behaviors": {
+        "find-numeronym-tool": "The Numeronym generator appears in the Text tools and opens its own page.",
+        "generate-numeronym": "Entering “internationalization” immediately produces “i18n”.",
+        "preserve-short-word": "Entering a word of three letters or fewer shows the word unchanged.",
+        "copy-numeronym": "The generated numeronym can be copied to the clipboard.",
+        "clear-input": "Clearing the word removes the result and restores the empty result placeholder."
+      },
+      "seconds": 14.2,
+      "usage": {
+        "input": 22865,
+        "cached": 13824,
+        "output": 413,
+        "reasoning": 280
+      }
+    },
+    {
+      "kind": "write",
+      "status": "passed",
+      "video": ".videos/it-tools/pr-729-neighbors-2/pr-729-neighbors-2-v1.mp4",
+      "notes": "The inputs use data-test-id because c-input-text renders that attribute rather than Playwright’s default data-testid. The copy and clear buttons are scoped to their respective input components.",
+      "seconds": 64.8,
+      "usage": {
+        "input": 23720,
+        "cached": 13824,
+        "output": 3320,
+        "reasoning": 2574
+      }
+    }
+  ]
+}
