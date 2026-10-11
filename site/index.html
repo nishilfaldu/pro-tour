@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pro Tour · Watch the change, skip the checkout</title>
+  <meta name="description" content="Pro Tour lets Claude Code, Codex and Cursor attach a captioned video of what they built, and a checklist of every behavior it proves, to the pull request.">
+  <meta property="og:title" content="Pro Tour">
+  <meta property="og:description" content="Your coding agent attaches a captioned video tour of its change to the pull request.">
+  <meta property="og:image" content="https://pro-tour.nishilfaldu.site/media/poster.jpg">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314120f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23e5482d'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="bar">
+      <a class="mark" href="#"><span class="rec" aria-hidden="true"></span>pro-tour</a>
+      <nav>
+        <a href="#how">How it works</a>
+        <a href="#trust">Why trust it</a>
+        <a href="#setup">Setup</a>
+        <a href="https://github.com/nishilfaldu/pro-tour">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="hero">
+      <div>
+        <p class="kicker rise d1">Feature tours for agent-written pull requests</p>
+        <h1 class="rise d2">Watch the change.<br><em>Skip the checkout.</em></h1>
+      </div>
+      <div>
+        <p class="lede rise d3">When <b>Claude Code</b>, <b>Codex</b> or <b>Cursor</b> opens a pull request, Pro Tour lets it attach a captioned video of what it built, with a checklist of every behavior the video proves. You read the list, watch it work, and review.</p>
+        <div class="cta rise d4">
+          <a class="btn primary" href="#setup">Set it up in a minute</a>
+          <a class="btn ghost" href="#watch">Watch a tour</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="screening rise d4" id="watch">
+      <div class="reel">
+        <span class="label"><span class="rec" aria-hidden="true"></span>Recorded tour</span>
+        <video id="tour" src="media/tour.mp4" poster="media/poster.jpg" controls muted playsinline autoplay loop preload="metadata" aria-label="A feature tour of an Assignee filter, recorded by Pro Tour"></video>
+      </div>
+      <aside class="comment" aria-label="The pull request comment Pro Tour posts">
+        <div class="meta"><span class="avatar">PT</span>pro-tour commented on the pull request</div>
+        <h3>Feature tour: Assignee filter</h3>
+        <p class="status">Passed · 7/7 steps · 46s video</p>
+        <h4>What this PR does</h4>
+        <ul class="checklist" id="checklist"></ul>
+        <p class="caption-note">Written, recorded and attached by <b>Codex</b>, told only “please open a pull request for this branch.” Each item ticks as the video reaches the step that proves it.</p>
+      </aside>
+    </div>
+
+    <section id="how">
+      <div class="section-head">
+        <h2>Your agent already knows what it changed.</h2>
+        <p>So it writes the tour. Pro Tour gives it a small, typed tour API, records the result in a real browser with a visible cursor, captions and on-screen checks, and posts it where you review. No model key, no CI setup: it runs on the agent you already use and your <code>gh</code> login.</p>
+      </div>
+      <div class="strip">
+        <div class="frame">
+          <span class="n">1</span>
+          <h3>List the behaviors</h3>
+          <p>The agent writes what the change lets a user see or do, as a checklist, before any step.</p>
+          <span class="cmd">pro-tour api</span>
+        </div>
+        <div class="frame">
+          <span class="n">2</span>
+          <h3>Write the tour</h3>
+          <p>A short TypeScript file in <code>.tours/</code>, type-checked in a second before anything records.</p>
+          <span class="cmd">pro-tour check</span>
+        </div>
+        <div class="frame">
+          <span class="n">3</span>
+          <h3>Record it</h3>
+          <p>Playwright plays it with a cursor and captions. If a check fails, the agent reads the failure and fixes the tour or the code.</p>
+          <span class="cmd">pro-tour run .tours/x.tour.ts --url …</span>
+        </div>
+        <div class="frame">
+          <span class="n">4</span>
+          <h3>Attach it</h3>
+          <p>One comment on the PR: the video and the checklist. A newer recording hides the older one.</p>
+          <span class="cmd">pro-tour publish</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="section-head">
+        <h2>A video you can <em>believe.</em></h2>
+        <p>Anyone can record a demo that looks fine. A tour only passes when its checks prove what each step claims, against the real app, and a failing tour is never posted.</p>
+      </div>
+      <div class="rules">
+        <div class="rule">
+          <span class="tag">✓ Every step</span>
+          <h3>must change something</h3>
+          <p>Checks are sampled before the actions and after each one. A step that only asserts what was already on screen fails.</p>
+        </div>
+        <div class="rule">
+          <span class="tag">✓ Every behavior</span>
+          <h3>must be shown</h3>
+          <p>Each item on the checklist is tied to the passing step that demonstrates it. Nothing on the list goes unproven.</p>
+        </div>
+        <div class="rule">
+          <span class="tag">✓ Every comment</span>
+          <h3>must come from a passing run</h3>
+          <p>Failed recordings, and recordings made from an older version of the tour, are refused at publish time.</p>
+        </div>
+      </div>
+      <div class="agents">
+        <span class="agent">Claude Code</span>
+        <span class="agent">Codex</span>
+        <span class="agent">Cursor</span>
+        <span class="agent">any agent with a shell <small>reads the same skill</small></span>
+      </div>
+      <div class="proof">
+        <div><b>6/6</b><span>real merged PRs toured end to end by Codex and Cursor, unprompted, with only the skill</span></div>
+        <div><b>61/61</b><span>replays of saved tours passed with no model involved</span></div>
+        <div><b>~1s</b><span>to type-check a tour before a 30-second recording</span></div>
+      </div>
+    </section>
+
+    <section id="setup">
+      <div class="section-head">
+        <h2>Three commands.<br><em>Then just ask for a PR.</em></h2>
+        <p><code>init</code> installs the <code>pro-tour</code> skill where Claude Code, Codex and Cursor look for skills, and points <code>AGENTS.md</code> and <code>CLAUDE.md</code> at it. Commit those files; from then on, a user-visible change comes with its tour.</p>
+      </div>
+      <div class="terminal">
+        <div class="chrome"><i></i><i></i><i></i><span>your app repository</span></div>
+        <ol>
+          <li><span class="p">$</span><span class="c">pnpm add -D github:nishilfaldu/pro-tour</span><span class="note">needs Node 22.18+, ffmpeg, gh</span><button class="copy" type="button">Copy</button></li>
+          <li><span class="p">$</span><span class="c">pnpm exec playwright install --with-deps chromium</span><button class="copy" type="button">Copy</button></li>
+          <li><span class="p">$</span><span class="c">pnpm exec pro-tour init</span><span class="note">writes the skill</span><button class="copy" type="button">Copy</button></li>
+        </ol>
+      </div>
+      <p class="after">Check everything with <code>pnpm exec pro-tour doctor</code>. The tour API is one command away: <code>pnpm exec pro-tour api</code>.</p>
+    </section>
+
+    <footer>
+      <span><span class="rec inline" aria-hidden="true"></span>pro-tour · feature tours for pull requests</span>
+      <span><a href="https://github.com/nishilfaldu/pro-tour">github.com/nishilfaldu/pro-tour</a></span>
+    </footer>
+  </div>
+  <script src="tour-sync.js"></script>
+</body>
+</html>

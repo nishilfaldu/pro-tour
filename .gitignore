@@ -25,3 +25,6 @@ test-results/
 
 # Build output
 dist/
+
+# Vercel project link
+.vercel/
