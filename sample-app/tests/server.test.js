@@ -16,8 +16,8 @@ test('serves the task board and its local assets', async () => {
       assert.equal(response.status, 200);
       assert.match(await response.text(), new RegExp(expected));
     }
-    assert.equal((await fetch(base + '/missing')).status, 404);
-    assert.equal((await fetch(base + '/.env.local')).status, 404);
+    assert.equal((await fetch(`${base}/missing`)).status, 404);
+    assert.equal((await fetch(`${base}/.env.local`)).status, 404);
   } finally {
     server.close();
   }
