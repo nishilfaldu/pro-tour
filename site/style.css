@@ -107,19 +107,11 @@ nav a:hover {
 }
 
 .hero {
-  padding: 88px 0 56px;
+  padding: 80px 0 48px;
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 56px;
   align-items: end;
-}
-
-.kicker {
-  font: 500 12px var(--mono);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin: 0 0 22px;
 }
 
 h1 {
@@ -233,26 +225,6 @@ h2 em {
   border-left: 1px solid var(--ink);
 }
 
-.comment .meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font: 400 13px var(--mono);
-  color: var(--ink-3);
-  margin-bottom: 14px;
-}
-
-.avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--paper);
-  display: grid;
-  place-items: center;
-  font: 600 11px var(--mono);
-}
-
 .comment h3 {
   font: 500 22px / 1.2 var(--serif);
   margin: 0 0 4px;
@@ -346,27 +318,17 @@ h2 em {
 }
 
 section {
-  padding: 96px 0 0;
+  padding: 72px 0 0;
 }
 
-.section-head {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 56px;
-  margin-bottom: 40px;
-  align-items: end;
+#setup h2 {
+  margin-bottom: 24px;
 }
 
 h2 {
   font: 400 clamp(36px, 4.4vw, 58px) / 1 var(--serif);
   letter-spacing: -0.02em;
   margin: 0;
-}
-
-.section-head p {
-  margin: 0;
-  color: var(--ink-2);
-  max-width: 34em;
 }
 
 /* How it works: a storyboard strip */
@@ -399,13 +361,7 @@ h2 {
 
 .frame h3 {
   font: 500 19px / 1.25 var(--sans);
-  margin: 34px 0 8px;
-}
-
-.frame p {
-  margin: 0 0 16px;
-  font-size: 15px;
-  color: var(--ink-2);
+  margin: 34px 0 14px;
 }
 
 .cmd {
@@ -429,29 +385,19 @@ h2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 22px;
+  margin-top: 28px;
 }
 
 .rule {
   border-top: 2px solid var(--ink);
-  padding-top: 18px;
+  padding-top: 14px;
+  margin: 0;
+  font: 400 22px / 1.25 var(--serif);
 }
 
 .rule .tag {
-  font: 500 12px var(--mono);
   color: var(--green);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.rule h3 {
-  font: 400 26px / 1.15 var(--serif);
-  margin: 10px 0;
-}
-
-.rule p {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 15.5px;
+  margin-right: 6px;
 }
 
 .agents {
@@ -469,41 +415,6 @@ h2 {
   background: var(--paper);
 }
 
-.agent small {
-  color: var(--ink-3);
-  font-weight: 400;
-  margin-left: 6px;
-}
-
-.proof {
-  margin-top: 26px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--rule);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.proof div {
-  padding: 20px 22px;
-  border-right: 1px solid var(--rule);
-}
-
-.proof div:last-child {
-  border-right: 0;
-}
-
-.proof b {
-  display: block;
-  font: 400 44px / 1 var(--serif);
-  margin-bottom: 6px;
-}
-
-.proof span {
-  font-size: 14.5px;
-  color: var(--ink-2);
-}
-
 /* Setup terminal */
 .terminal {
   border-radius: 14px;
@@ -511,26 +422,6 @@ h2 {
   border: 1px solid var(--ink);
   background: var(--screen);
   color: #efe9dc;
-}
-
-.terminal .chrome {
-  display: flex;
-  gap: 7px;
-  padding: 13px 16px;
-  border-bottom: 1px solid #2c2a23;
-}
-
-.terminal .chrome i {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #3a372e;
-}
-
-.terminal .chrome span {
-  margin-left: auto;
-  font: 400 12px var(--mono);
-  color: #8a8270;
 }
 
 .terminal ol {
@@ -551,13 +442,8 @@ h2 {
   background: #1d1c16;
 }
 
-.terminal li .p,
-.terminal li .note {
+.terminal li .p {
   color: #8a8270;
-}
-
-.terminal li .note {
-  font-size: 12.5px;
 }
 
 .terminal li .c {
@@ -640,8 +526,7 @@ footer {
 }
 
 @media (max-width: 900px) {
-  .hero,
-  .section-head {
+  .hero {
     grid-template-columns: 1fr;
     gap: 28px;
   }
@@ -671,14 +556,8 @@ footer {
     border-bottom: 1px solid var(--ink);
   }
 
-  .rules,
-  .proof {
+  .rules {
     grid-template-columns: 1fr;
-  }
-
-  .proof div {
-    border-right: 0;
-    border-bottom: 1px solid var(--rule);
   }
 
   nav a:not(:last-child) {
@@ -702,9 +581,5 @@ footer {
 
   .frame:last-child {
     border-bottom: 0;
-  }
-
-  .terminal li .note {
-    display: none;
   }
 }
