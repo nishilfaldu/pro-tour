@@ -1,5 +1,7 @@
 # Pro Tour
 
+**[pro-tour.nishilfaldu.site](https://pro-tour.nishilfaldu.site)**
+
 Pro Tour lets your coding agent attach a short, captioned video of what a change does to its pull
 request, so you can review the change by watching it instead of running the app.
 
@@ -122,6 +124,7 @@ The source is TypeScript in `src/`, run directly by Node in a checkout and compi
 `pnpm build` for the published package. `src/overlay.js` is plain JavaScript because it is injected
 into the page as is.
 
-`fixtures/` holds harder test apps (a custom dropdown, duplicate labels, an inaccessible variant), and
+`site/` is the website, deployed to Vercel as the `pro-tour` project (`vercel deploy --prod` from
+`site/`). `fixtures/` holds harder test apps (a custom dropdown, duplicate labels, an inaccessible variant), and
 [`experiments/`](experiments/README.md) records how the tour rules were chosen and how tours held up on
 real open-source apps.
