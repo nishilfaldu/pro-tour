@@ -3,89 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pro Tour · Watch the change, skip the checkout</title>
-  <meta name="description" content="Your coding agent attaches a video of its change, and a checklist of what it proves, to the pull request.">
-  <meta property="og:title" content="Pro Tour">
-  <meta property="og:description" content="Your coding agent attaches a video of its change to the pull request.">
+  <title>pro-tour</title>
+  <meta name="description" content="Coding agents attach a video of the change to the pull request, with a checklist of what the video shows.">
+  <meta property="og:title" content="pro-tour">
+  <meta property="og:description" content="Coding agents attach a video of the change to the pull request, with a checklist of what the video shows.">
   <meta property="og:image" content="https://pro-tour.nishilfaldu.site/media/poster.jpg">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314120f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23e5482d'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23cf222e'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wrap">
-    <header class="bar">
-      <a class="mark" href="/"><span class="rec" aria-hidden="true"></span>pro-tour</a>
-      <nav>
-        <a href="#setup">Setup</a>
-        <a href="https://github.com/nishilfaldu/pro-tour">GitHub</a>
-      </nav>
+  <main>
+    <header>
+      <h1>pro-tour</h1>
+      <a href="https://github.com/nishilfaldu/pro-tour">github</a>
     </header>
 
-    <div class="hero">
-      <div>
-        <h1 class="rise d2">Watch the change.<br><em>Skip the checkout.</em></h1>
-      </div>
-      <div>
-        <p class="lede rise d3">Your coding agent attaches a video of its change, and a checklist of what it proves, to the pull request.</p>
-        <div class="cta rise d4">
-          <a class="btn primary" href="#setup">Set it up</a>
-        </div>
-      </div>
-    </div>
+    <p>Coding agents attach a video of the change to the pull request, with a checklist of what the video shows. You review by watching instead of checking out the branch.</p>
 
-    <div class="screening rise d4" id="watch">
-      <div class="reel">
-        <span class="label"><span class="rec" aria-hidden="true"></span>Recorded tour</span>
-        <video id="tour" src="media/tour.mp4" poster="media/poster.jpg" controls muted playsinline autoplay loop preload="metadata" aria-label="A feature tour of an Assignee filter, recorded by Pro Tour"></video>
-      </div>
-      <aside class="comment" aria-label="The pull request comment Pro Tour posts">
-        <h3>Feature tour: Assignee filter</h3>
-        <p class="status">Passed · 7/7 steps</p>
-        <h4>What this PR does</h4>
+    <p class="aside">This is the comment Codex left on a PR after being asked only to open it:</p>
+
+    <article class="comment" aria-label="A pull request comment posted by pro-tour">
+      <div class="comment-head"><b>pro-tour</b> commented</div>
+      <div class="comment-body">
+        <h2>Feature tour: Assignee filter</h2>
+        <p><b>Passed</b>: 7/7 steps · 46s video</p>
+        <video id="tour" src="media/tour.mp4" poster="media/poster.jpg" controls muted playsinline autoplay loop preload="metadata" aria-label="Feature tour of an Assignee filter"></video>
+        <p><b>What this PR does</b></p>
         <ul class="checklist" id="checklist"></ul>
-        <p class="caption-note">Made by <b>Codex</b> from one prompt: “open a PR.”</p>
-      </aside>
-    </div>
+      </div>
+    </article>
 
-    <section id="how">
-      <div class="strip">
-        <div class="frame"><span class="n">1</span><h3>Write</h3><span class="cmd">pro-tour api</span></div>
-        <div class="frame"><span class="n">2</span><h3>Check</h3><span class="cmd">pro-tour check</span></div>
-        <div class="frame"><span class="n">3</span><h3>Record</h3><span class="cmd">pro-tour run</span></div>
-        <div class="frame"><span class="n">4</span><h3>Attach</h3><span class="cmd">pro-tour publish</span></div>
-      </div>
-      <div class="rules">
-        <p class="rule"><span class="tag">✓</span> Every step must change something.</p>
-        <p class="rule"><span class="tag">✓</span> Every behavior must be shown.</p>
-        <p class="rule"><span class="tag">✓</span> Failed tours are never posted.</p>
-      </div>
-      <div class="agents">
-        <span class="agent">Claude Code</span>
-        <span class="agent">Codex</span>
-        <span class="agent">Cursor</span>
-      </div>
-    </section>
+    <h3>How it works</h3>
+    <ol>
+      <li>The agent finishes a change you can see in the app.</li>
+      <li>It writes <code>.tours/&lt;feature&gt;.tour.ts</code>: the behaviors, then a step that shows each one.</li>
+      <li><code>pro-tour run</code> plays it in a browser and records it. A step only passes if its checks see something change, so the video can't just show a page that was already there.</li>
+      <li><code>pro-tour publish</code> posts the video and checklist on the PR. A failed tour isn't posted.</li>
+    </ol>
+    <p>No API key or CI. It runs on the agent you already use (Claude Code, Codex, Cursor) and your <code>gh</code> login.</p>
 
-    <section id="setup">
-      <h2>Set up in three commands.</h2>
-      <div class="terminal">
-        <ol>
-          <li><span class="p">$</span><span class="c">pnpm add -D github:nishilfaldu/pro-tour</span><button class="copy" type="button">Copy</button></li>
-          <li><span class="p">$</span><span class="c">pnpm exec playwright install --with-deps chromium</span><button class="copy" type="button">Copy</button></li>
-          <li><span class="p">$</span><span class="c">pnpm exec pro-tour init</span><button class="copy" type="button">Copy</button></li>
-        </ol>
-      </div>
-      <p class="after">Then ask your agent to open a PR.</p>
-    </section>
+    <h3 id="setup">Setup</h3>
+<pre><code>pnpm add -D github:nishilfaldu/pro-tour
+pnpm exec playwright install --with-deps chromium
+pnpm exec pro-tour init   <span class="dim"># installs the skill agents read</span></code></pre>
+    <p>Commit what <code>init</code> writes. Node 22.18+, ffmpeg and <code>gh</code> are needed; <code>pro-tour doctor</code> checks them.</p>
 
     <footer>
-      <span><span class="rec inline" aria-hidden="true"></span>pro-tour</span>
-      <span><a href="https://github.com/nishilfaldu/pro-tour">GitHub</a></span>
+      <a href="https://github.com/nishilfaldu/pro-tour">github.com/nishilfaldu/pro-tour</a>
     </footer>
-  </div>
+  </main>
   <script src="tour-sync.js"></script>
 </body>
 </html>
