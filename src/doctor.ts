@@ -19,8 +19,9 @@ export async function doctor({ channel = 'chromium' }: { channel?: string } = {}
   const checks: DoctorCheck[] = [];
   const add = (name: string, ok: boolean, fix?: string) => checks.push({ name, ok, fix });
 
-  const [major] = process.versions.node.split('.').map(Number);
-  add(`Node.js ${process.versions.node}`, major >= 20, 'Install Node.js 20 or newer.');
+  // Tours are .ts files that Node loads by stripping their types, which needs 22.18.
+  const [major, minor] = process.versions.node.split('.').map(Number);
+  add(`Node.js ${process.versions.node}`, major > 22 || (major === 22 && minor >= 18), 'Install Node.js 22.18 or newer.');
 
   const browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true }).catch(error => error);
   if (browser instanceof Error) {
