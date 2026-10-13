@@ -42,8 +42,9 @@ not to.
 7. **Commit the tour** with the change.
 8. **Publish**: push and open or update the pull request, then run `{{run}} pro-tour publish`. It posts
    the video and checklist of every tour the pull request changed and hides older videos of the same
-   tours. It refuses a recording of code the pull request no longer has: if you changed the app after
-   recording, record again. Give the user the comment link.
+   tours. It refuses a recording of code the pull request does not have, and names the files that
+   differ: commit or delete them (untracked files count), then record again. Give the user the comment
+   link.
 
 ## Rules
 

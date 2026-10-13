@@ -128,5 +128,21 @@ test('a recording of uncommitted app code publishes once that code is committed,
 
   await writeFile(join(dir, 'feature.js'), 'export const feature = false;\n');
   git(dir, 'commit', '-qam', 'a different change');
-  await assert.rejects(publishTours(dir, head(), [tour], { env, dryRun: true }), /recorded from app code that differs/);
+  await assert.rejects(
+    publishTours(dir, head(), [tour], { env, dryRun: true }),
+    /recorded from app code that differs from the pull request's head: feature\.js\. Commit or delete/,
+  );
+});
+
+test('an untracked file at recording time is named when publish refuses', async () => {
+  const dir = await repo();
+  const { env } = await fakeGh();
+  await writeFile(join(dir, 'scratch.md'), 'notes\n');
+  const tour = await recordUncommitted(dir, 'feature');
+  git(dir, 'add', '.tours');
+  git(dir, 'commit', '-qm', 'tour');
+  await assert.rejects(
+    publishTours(dir, { ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() }, [tour], { env, dryRun: true }),
+    /differs from the pull request's head: scratch\.md\./,
+  );
 });

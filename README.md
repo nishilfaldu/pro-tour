@@ -66,8 +66,9 @@ Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording faile
 browser or encoder).
 
 `publish` posts a recording only if it passed and shows the code at the head of the PR: the branch is
-pushed, and neither the app nor the tour has changed since the recording. After any later commit
-outside `.tours/`, record again. The comment names the commit the video shows. Rerunning `publish` is
+pushed, and neither the app nor the tour has changed since the recording. Untracked files count as
+part of the app, so commit or delete them before recording. After any later commit outside `.tours/`,
+record again; publish names the files that differ. The comment names the commit the video shows. Rerunning `publish` is
 safe: each comment carries a marker for its recording, so a comment already on the PR is reused, not
 posted twice.
 

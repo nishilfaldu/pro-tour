@@ -119,8 +119,17 @@ async function ready(repo: string, tour: string, headTree: string): Promise<Read
         : `${path} changed after its latest recording; record it again before publishing.`,
     );
   }
-  if (report.appTree !== headTree)
-    throw new TourError(`${name} was recorded from app code that differs from the pull request's; record it again before publishing.`);
+  if (report.appTree !== headTree) {
+    let files = '';
+    try {
+      const paths = git(['diff-tree', '-r', '--name-only', headTree, report.appTree], repo).trim().split('\n');
+      files = `: ${paths.slice(0, 10).join(', ')}${paths.length > 10 ? ', …' : ''}`;
+    } catch {}
+    // Untracked files count: they were part of the app when it was recorded.
+    throw new TourError(
+      `${name} was recorded from app code that differs from the pull request's head${files}. Commit or delete what differs, then record it again.`,
+    );
+  }
   return { name, video: files.video, report };
 }
 
