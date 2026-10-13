@@ -62,6 +62,18 @@ test('a step passes when a check changes, and records which checks were already 
   await page.context().close();
 });
 
+test("a check cannot see the overlay's caption or chips, only the app", async () => {
+  const { t, page, filter } = await board();
+  await assert.rejects(
+    t.step('Filter to Done: a Nice work notice appears', () => t.select(filter, 'Done'), [
+      t.text('1 task in view', page.locator('#visible-count'), '1'),
+      t.visible('Nice work notice', page.getByText('Nice work')),
+    ]),
+    /Check failed: Nice work notice/,
+  );
+  await page.context().close();
+});
+
 test('a step whose checks were all true before its actions fails', async () => {
   const { t, filter, heading } = await board();
   await assert.rejects(

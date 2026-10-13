@@ -58,7 +58,8 @@
     host.setAttribute('popover', 'manual');
     host.style.cssText =
       'display:block;position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none;';
-    const shadow = host.attachShadow({ mode: 'open' });
+    // Closed, so the tour's locators (which pierce open shadow roots) cannot match a caption or chip.
+    const shadow = host.attachShadow({ mode: 'closed' });
     shadow.innerHTML = `<style>${STYLE}</style><div class="ring"></div><div class="menu"></div><div class="cursor">${ARROW}</div>
       <div class="caption"><span class="badge"></span><span class="text"></span></div><div class="checks"></div>
       <div class="card"><div class="eyebrow"></div><h1></h1><p></p></div>`;
