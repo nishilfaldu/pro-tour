@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { access, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { type PullRequest, publishTours } from '../src/publish.ts';
@@ -103,4 +103,30 @@ test('a recording is refused unless it shows the tour and the app code at the he
   await writeFile(tours[0], "export const meta = { title: 'edited again' };\n");
   await assert.rejects(publishTours(dir, changed, tours, { env }), /changed after its latest recording/);
   assert.equal((await read()).posts ?? 0, 0);
+});
+
+// Record a tour of the working tree as it is, before anything is committed.
+async function recordUncommitted(dir: string, name: string): Promise<string> {
+  const tour = join(dir, '.tours', `${name}.tour.js`);
+  await mkdir(join(dir, '.tours'), { recursive: true });
+  await writeFile(tour, `export const meta = { title: '${name}' };\n`);
+  await mkdir(join(dir, '.videos'), { recursive: true });
+  await recording(join(dir, '.videos', `${name}.mp4`), { tourSha: sha(await readFile(tour)), appTree: appTree(dir) });
+  return tour;
+}
+
+test('a recording of uncommitted app code publishes once that code is committed, and not other code', async () => {
+  const dir = await repo();
+  const { env } = await fakeGh();
+  await writeFile(join(dir, 'README.md'), 'app with the change\n');
+  await writeFile(join(dir, 'feature.js'), 'export const feature = true;\n');
+  const tour = await recordUncommitted(dir, 'feature');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'the change and its tour');
+  const head = () => ({ ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() });
+  await publishTours(dir, head(), [tour], { env, dryRun: true });
+
+  await writeFile(join(dir, 'feature.js'), 'export const feature = false;\n');
+  git(dir, 'commit', '-qam', 'a different change');
+  await assert.rejects(publishTours(dir, head(), [tour], { env, dryRun: true }), /recorded from app code that differs/);
 });
