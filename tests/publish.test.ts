@@ -25,7 +25,7 @@ test('publishes one comment with the video and checklist, and a rerun reuses it'
   const { comments, posts } = await read();
   assert.equal(posts, 1);
   assert.match(comments[0].body, /### Feature tour: Filter by assignee/);
-  assert.match(comments[0].body, /!\[\]\(https:\/\/github.com\/user-attachments\/assets\/abc\)/);
+  assert.match(comments[0].body, /^https:\/\/github.com\/user-attachments\/assets\/abc$/m);
   assert.match(comments[0].body, /- ✓ Picking a person shows their tasks \(step 1\)/);
   assert.match(comments[0].body, /<!-- pro-tour:[0-9a-f]{64} -->/);
 });

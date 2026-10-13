@@ -28,7 +28,8 @@ if (args[0] === 'api') { console.log(JSON.stringify([state.comments])); process.
 if (args[0] === 'pr' && args[1] === 'comment') {
   state.posts = (state.posts || 0) + 1;
   const video = args[args.indexOf('--attach') + 1];
-  const body = fs.readFileSync(args[args.indexOf('--body-file') + 1], 'utf8').replace('](' + video + ')', '](https://github.com/user-attachments/assets/abc)');
+  // Real gh replaces a body reference to the attached file with the uploaded asset's bare URL.
+  const body = fs.readFileSync(args[args.indexOf('--body-file') + 1], 'utf8').replace('![](' + video + ')', 'https://github.com/user-attachments/assets/abc');
   const mode = state.mode;
   if (mode === 'error') { state.mode = null; save(); process.exit(1); }
   const url = pr.url + '#issuecomment-' + (state.comments.length + 1);

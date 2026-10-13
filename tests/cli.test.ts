@@ -59,7 +59,8 @@ after(() => server.close());
 test('bad arguments are usage errors, not crashes', async () => {
   const dir = await repo();
   assert.equal((await cli(dir, ['run', 'missing.tour.js'])).code, 2);
-  assert.match((await cli(dir, ['run', 'x.tour.js', '--url', 'ftp://example.com'])).out, /http\(s\) URL/);
+  const ftp = await cli(dir, ['run', 'x.tour.js', '--url', 'ftp://example.com']);
+  assert.deepEqual([ftp.code, /http\(s\) URL/.test(ftp.out)], [2, true]);
   assert.match((await cli(dir, ['run', 'x.tour.js', '--url', 'http://user:pw@localhost:1'])).out, /must not contain credentials/);
   assert.match((await cli(dir, ['run', 'missing.tour.js', '--url', appUrl])).out, /Tour file not found/);
   assert.equal((await cli(dir, ['nope'])).code, 2);
@@ -107,18 +108,22 @@ export async function run(t: Tour): Promise<void> {
   assert.equal(passed.code, 0, passed.out);
   const [result] = JSON.parse(passed.out);
   assert.equal(result.status, 'passed');
-  assert.deepEqual(
-    (await readdir(join(dir, '.videos'))).filter(file => file.endsWith('.mp4')),
-    [result.video.split('/').at(-1)],
-  );
+  const latest = result.video
+    .split('/')
+    .at(-1)
+    .replace(/\.mp4$/, '');
+  assert.deepEqual((await readdir(join(dir, '.videos'))).sort(), [`${latest}.json`, `${latest}.md`, `${latest}.mp4`]);
 
   await writeFile(tour, (await readFile(tour, 'utf8')).replace("'1')", "'7')"));
   const failed = await cli(dir, ['run', tour, '--url', appUrl]);
   assert.equal(failed.code, 1);
+  assert.match(failed.out, /^FAILED: Filter to Done/m);
   const file = /Failure details: (\S+)/.exec(failed.out)?.[1] ?? '';
   const details = await readFile(join(dir, file), 'utf8');
   assert.match(details, /Error: Check failed: 1 task in view/);
   assert.match(details, /Around the element the tour last acted on/);
+  const report = JSON.parse(await readFile(join(dir, file.replace(/\.failure\.md$/, '.json')), 'utf8'));
+  assert.deepEqual([report.status, report.steps.map((step: { status: string }) => step.status)], ['failed', ['failed']]);
 });
 
 test('check and run report type errors in a tour without recording anything', async () => {
