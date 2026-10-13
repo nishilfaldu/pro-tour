@@ -61,7 +61,7 @@ task is still shown"); the video marks them as unchanged.
 a passing step, and a step may not cover an id that is missing from `meta.behaviors`. The PR
 comment shows each behavior with the step that proves it.
 
-## Actions (each moves a visible cursor to the element, then acts)
+## Actions (each moves a visible cursor to the element, then acts; waits up to 10 seconds for it)
 
 - `t.click(locator)`
 - `t.fill(locator, text)`: types the text visibly into an input.

@@ -16,6 +16,8 @@ const PACE = {
   stepIntro: 1000,
   stepOutro: 1200,
   checkTimeout: 5000,
+  // How long an action waits for its element: a wrong locator fails a repair round in seconds, not 30.
+  actionTimeout: 10_000,
   chip: 450,
   failHold: 1500,
   menu: 450,
@@ -70,6 +72,9 @@ export class Tour {
   constructor(page: Page, { pace = {}, behaviors = {} }: { pace?: Partial<Pace>; behaviors?: Record<string, string> } = {}) {
     this.page = page;
     this.pace = { ...PACE, ...pace };
+    page.setDefaultTimeout(this.pace.actionTimeout);
+    // A dev server may compile a page on its first visit.
+    page.setDefaultNavigationTimeout(30_000);
     this.behaviors = behaviors;
   }
 

@@ -9,7 +9,18 @@ import { type Pace, Tour } from '../src/runtime.ts';
 import type { Check } from '../src/types.ts';
 
 const overlay = fileURLToPath(new URL('../src/overlay.js', import.meta.url));
-const fast = { move: 0, afterAction: 0, typeDelay: 0, stepIntro: 0, stepOutro: 0, checkTimeout: 600, chip: 0, failHold: 0, menu: 0 };
+const fast = {
+  move: 0,
+  afterAction: 0,
+  typeDelay: 0,
+  stepIntro: 0,
+  stepOutro: 0,
+  checkTimeout: 600,
+  chip: 0,
+  failHold: 0,
+  menu: 0,
+  actionTimeout: 1000,
+};
 let server: Server;
 let browser: Browser;
 
@@ -166,6 +177,19 @@ test('a check too slow to sample is not counted as changed, and a check that thr
   }, [throwsUntilPicked]);
   assert.equal(t.steps[1].status, 'passed');
   await t.page.context().close();
+});
+
+test('an action on an element that never appears fails after the action timeout', async () => {
+  const { t, page } = await board();
+  const started = Date.now();
+  await assert.rejects(
+    t.step('Dismiss the banner', () => t.click(page.getByRole('button', { name: 'Dismiss' })), [
+      t.hidden('Banner', page.locator('#banner')),
+    ]),
+    /Timeout 1000ms exceeded/,
+  );
+  assert.ok(Date.now() - started < 3000);
+  await page.context().close();
 });
 
 test('goto and press are actions the runner samples after', async () => {
