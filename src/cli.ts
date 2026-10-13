@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { access, readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -6,9 +5,9 @@ import { parseArgs } from 'node:util';
 import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
-import { publish, resolvePr } from './publish.ts';
-import { changedTours, currentBranch, isTourFile, repoRoot, TourError, tourName, videosDir } from './repo.ts';
-import { recordingFiles, recordTour } from './runtime.ts';
+import { publishTours, resolvePr } from './publish.ts';
+import { changedTours, currentBranch, isTourFile, repoRoot, sha, TourError, tourName, videosDir } from './repo.ts';
+import { recordTour } from './runtime.ts';
 import type { Report, TourModule } from './types.ts';
 
 // docs/ sits beside src/ and dist/ at the package root.
@@ -17,10 +16,10 @@ const API = new URL('../docs/tour-api.md', import.meta.url);
 const USAGE = `Usage:
   pro-tour check [<file.tour.ts>...]
       Type-check tours (default: every tour in .tours/) without recording.
-  pro-tour run <file.tour.ts>... --url <app url> [--json] [--out <dir>] [--channel chromium|chrome]
+  pro-tour run <file.tour.ts>... --url <app url> [--json] [--channel chromium|chrome]
       Type-check, then record tours into .videos/. On failure, prints the file with the error and the page's
       visible DOM.
-  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run] [--keep] [--allow-failed] [--retry-upload]
+  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run]
       Comment on the pull request with each tour's latest video and behavior checklist. Without tour names,
       publishes the tours the pull request adds or changes. Deletes the local video once it is on the PR.
   pro-tour init
@@ -38,7 +37,6 @@ const exists = (path: string) =>
     () => true,
     () => false,
   );
-const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 class RecordingError extends TourError {}
@@ -102,7 +100,6 @@ async function run(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       url: { type: 'string' },
-      out: { type: 'string' },
       json: { type: 'boolean', default: false },
       'skip-check': { type: 'boolean', default: false },
       channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' },
@@ -124,7 +121,7 @@ async function run(argv: string[]): Promise<number> {
   }
   const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
   for (const file of files) {
-    const outDir = values.out ? resolve(values.out) : await videosDir(repoRoot(dirname(file)));
+    const outDir = await videosDir(repoRoot(dirname(file)));
     const { tour, error } = await loadTour(file);
     if (!tour) {
       results.push({ tour: file, status: 'failed', error: error ?? null });
@@ -168,11 +165,7 @@ async function publishCommand(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       pr: { type: 'string' },
-      out: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
-      keep: { type: 'boolean', default: false },
-      'allow-failed': { type: 'boolean', default: false },
-      'retry-upload': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -180,7 +173,6 @@ async function publishCommand(argv: string[]): Promise<number> {
   const repo = repoRoot(process.cwd());
   const env = process.env;
   const pr = await resolvePr(repo, { target: values.pr, branch: values.pr ? undefined : currentBranch(repo), env });
-  const outDir = values.out ? resolve(values.out) : join(repo, '.videos');
 
   // A tour named without a path is .tours/<name>.tour.ts, or .tour.js if that is what exists.
   const named = async (name: string) => {
@@ -200,37 +192,9 @@ async function publishCommand(argv: string[]): Promise<number> {
       );
   }
 
-  // Check every tour before posting anything, so a problem does not leave the PR half published.
-  const ready: { name: string; video: string }[] = [];
-  for (const file of tours) {
-    const name = tourName(file);
-    const { video, report: reportFile } = recordingFiles(outDir, name);
-    const saved = await readFile(reportFile, 'utf8').catch(() => null);
-    if (!saved)
-      throw new TourError(
-        `No recording of ${name} in ${relative(repo, outDir) || outDir}; run pro-tour run ${relative(repo, file)} --url <app url> first.`,
-      );
-    const report: Report = JSON.parse(saved);
-    if (report.videoSha !== sha(await readFile(video).catch(() => '')))
-      throw new TourError(`The recording of ${name} is incomplete; record it again.`);
-    if (report.status !== 'passed' && !values['allow-failed'])
-      throw new TourError(
-        `The latest recording of ${name} failed; fix the tour or the change and record it again (or pass --allow-failed).`,
-      );
-    if (report.tourSha && (await exists(file)) && report.tourSha !== sha(await readFile(file))) {
-      throw new TourError(`${relative(repo, file)} changed after its latest recording; record it again before publishing.`);
-    }
-    ready.push({ name, video });
-  }
-
-  for (const { name, video } of ready) {
-    const result = await publish(video, pr, { env, retryUpload: values['retry-upload'], keep: values.keep, dryRun: values['dry-run'] });
-    if (result.status === 'dry-run') console.log(`--- ${name}: comment that would be posted to ${pr.url} ---\n${result.body}`);
-    else
-      console.log(
-        `${result.reused ? 'Already published' : 'Published'} ${name}: ${result.commentUrl}` +
-          `${result.hidden ? ` (hid ${result.hidden} older recording${result.hidden > 1 ? 's' : ''})` : ''}`,
-      );
+  for (const result of await publishTours(repo, pr, tours, { env, dryRun: values['dry-run'] })) {
+    if ('body' in result) console.log(`--- ${result.name}: comment that would be posted to ${pr.url} ---\n${result.body}`);
+    else console.log(`${result.reused ? 'Already published' : 'Published'} ${result.name}: ${result.url}`);
   }
   return 0;
 }

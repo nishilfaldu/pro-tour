@@ -32,7 +32,7 @@ const report: Report = {
 };
 
 test('the comment shows the result, the video, the behavior checklist and collapsed steps', () => {
-  const body = markdown(report, { video: 'VIDEO', collapseSteps: true });
+  const body = markdown(report, 'VIDEO');
   assert.equal(
     body,
     [

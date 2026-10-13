@@ -1,4 +1,4 @@
-// Markdown for a tour report: written beside each video, and used as the PR comment body.
+// The PR comment for a tour's recording.
 // Tour text comes from model-written scripts, so HTML in it is escaped.
 import type { Report } from './types.ts';
 
@@ -8,7 +8,7 @@ const text = (value: unknown) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-export function markdown(report: Report, { video, collapseSteps = false }: { video?: string; collapseSteps?: boolean } = {}): string {
+export function markdown(report: Report, video: string): string {
   const passed = report.steps.filter(step => step.status === 'passed').length;
   const lines = [
     `### Feature tour: ${text(report.title)}`,
@@ -19,7 +19,7 @@ export function markdown(report: Report, { video, collapseSteps = false }: { vid
     '',
   ];
   if (report.status !== 'passed' && report.error) lines.push(`> ✗ ${text(report.error)}`, '');
-  if (video) lines.push(video, '');
+  lines.push(video, '');
   if (report.coverage?.length) {
     lines.push('**What this PR does**', '');
     for (const behavior of report.coverage) {
@@ -28,13 +28,13 @@ export function markdown(report: Report, { video, collapseSteps = false }: { vid
     }
     lines.push('');
   }
-  lines.push(collapseSteps ? '<details><summary><b>Steps and checks</b></summary>\n' : '**Steps**\n');
+  lines.push('<details><summary><b>Steps and checks</b></summary>\n');
   for (const step of report.steps) {
     lines.push(`- ${step.status === 'passed' ? '✓' : '✗'} **${text(step.title)}** (${step.seconds}s)`);
     for (const check of step.checks)
       lines.push(`  - ${check.passed ? '✓' : '✗'} ${text(check.label)}${check.passed && !check.changed ? ' _(already true before)_' : ''}`);
     if (step.error && !step.checks.some(check => !check.passed)) lines.push(`  - ✗ ${text(step.error)}`);
   }
-  if (collapseSteps) lines.push('', '</details>');
+  lines.push('', '</details>');
   return `${lines.join('\n')}\n`;
 }

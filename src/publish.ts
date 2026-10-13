@@ -1,14 +1,13 @@
-// Publish a recorded tour to its pull request as one comment: the video, then the behavior checklist.
-// Retry-safe: every attempt first looks for an earlier comment carrying this recording's marker, and an
-// upload whose outcome is unknown is not repeated until the user confirms the comment is absent.
+// Publish recorded tours to their pull request: one comment per tour with the video and the behavior checklist.
+// Retry-safe without local state: each comment carries a marker for its recording, and a rerun that finds the
+// marker on the PR reuses that comment instead of posting again.
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { mkdtemp, open, readFile, rm, unlink, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
-import { git, TourError } from './repo.ts';
+import { join, relative } from 'node:path';
+import { git, sha, TourError, tourName } from './repo.ts';
 import { markdown } from './report.ts';
-import { removeRecording } from './runtime.ts';
+import { recordingFiles, removeRecording } from './runtime.ts';
 import type { Report } from './types.ts';
 
 type Env = NodeJS.ProcessEnv;
@@ -28,12 +27,8 @@ interface Comment {
   node_id?: string;
 }
 
-function exec(
-  command: string,
-  args: string[],
-  { env, cwd, timeout = 60_000 }: { env?: Env; cwd?: string; timeout?: number } = {},
-): Promise<string> {
-  return new Promise((done, fail) => {
+function exec(command: string, args: string[], { env, cwd, timeout = 60_000 }: { env?: Env; cwd?: string; timeout?: number } = {}) {
+  return new Promise<string>((done, fail) => {
     execFile(command, args, { env, cwd, timeout, maxBuffer: 64 << 20, encoding: 'utf8' }, (error, stdout, stderr) => {
       if (error?.code === 'ENOENT') fail(new TourError(`${command} was not found on PATH`));
       else if (error)
@@ -55,23 +50,13 @@ async function retryRead<T>(read: () => Promise<T>, attempts = 3): Promise<T> {
   }
 }
 
-export async function requireMediaSupport(env: Env): Promise<void> {
-  const help = await exec('gh', ['pr', 'comment', '--help'], { env });
-  if (!help.includes('--attach'))
-    throw new TourError('This GitHub CLI cannot attach videos. Update gh until `gh pr comment --help` lists --attach.');
-}
-
-export function validatePrTarget(target?: string): void {
-  if (target && !/^([1-9]\d*|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/[1-9]\d*)$/.test(target))
-    throw new TourError('Invalid PR number or GitHub PR URL');
-}
-
 // The PR to publish to: --pr, else the single open PR whose head is this branch in this repository.
 export async function resolvePr(
   repo: string,
   { target, branch, env }: { target?: string; branch?: string; env: Env },
 ): Promise<PullRequest> {
-  validatePrTarget(target);
+  if (target && !/^([1-9]\d*|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/[1-9]\d*)$/.test(target))
+    throw new TourError('Invalid PR number or GitHub PR URL');
   if (!target) {
     if (!branch) throw new TourError('Pass --pr, or run from the pull request branch');
     const head = branch;
@@ -98,129 +83,82 @@ export async function resolvePr(
   return { number: data.number, url: data.url, repo: match[1], base: data.baseRefName };
 }
 
-export async function probeVideo(video: string): Promise<void> {
-  if (!video.endsWith('.mp4')) throw new TourError('Expected an MP4 recording');
-  const info = JSON.parse(await exec('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', video]));
-  const stream = info.streams?.find((item: { codec_type?: string }) => item.codec_type === 'video');
-  if (stream?.codec_name !== 'h264' || !(Number(info.format?.duration) > 0))
-    throw new TourError('The MP4 must contain playable H.264 video');
-  // Decode every frame before uploading.
-  await exec('ffmpeg', ['-hide_banner', '-v', 'error', '-xerror', '-i', video, '-f', 'null', '-'], { timeout: 120_000 });
+interface Ready {
+  name: string;
+  video: string;
+  report: Report;
 }
 
-async function withLock<T>(video: string, run: () => Promise<T>): Promise<T> {
-  const path = video.replace(/\.mp4$/, '.upload.lock');
-  const owner = Number(await readFile(path, 'utf8').catch(() => ''));
-  if (owner) {
-    let alive = true;
-    try {
-      process.kill(owner, 0);
-    } catch (error) {
-      alive = (error as NodeJS.ErrnoException).code === 'EPERM';
-    }
-    if (alive) throw new TourError('Another upload owns this video; retry when it finishes');
-    await unlink(path).catch(() => {});
-  }
-  let handle: Awaited<ReturnType<typeof open>>;
-  try {
-    handle = await open(path, 'wx', 0o600);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') throw new TourError('Another upload owns this video; retry when it finishes');
-    throw error;
-  }
-  try {
-    await handle.writeFile(String(process.pid));
-    await handle.close();
-    return await run();
-  } finally {
-    await unlink(path).catch(() => {});
-  }
+// Every tour is checked before anything is posted, so a problem does not leave the PR half published.
+async function ready(repo: string, tour: string): Promise<Ready> {
+  const name = tourName(tour);
+  const files = recordingFiles(join(repo, '.videos'), name);
+  const saved = await readFile(files.report, 'utf8').catch(() => null);
+  if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${relative(repo, tour)} --url <app url> first.`);
+  const report: Report = JSON.parse(saved);
+  if (report.videoSha !== sha(await readFile(files.video).catch(() => '')))
+    throw new TourError(`The recording of ${name} is incomplete; record it again.`);
+  if (report.status !== 'passed')
+    throw new TourError(`The latest recording of ${name} failed; fix the tour or the change and record it again.`);
+  if (report.tourSha !== sha(await readFile(tour).catch(() => '')))
+    throw new TourError(`${relative(repo, tour)} changed after its latest recording; record it again before publishing.`);
+  return { name, video: files.video, report };
 }
 
 async function comments(pr: PullRequest, env: Env): Promise<Comment[]> {
-  // Every page: an upload whose response was lost must not be repeated.
   const raw = await retryRead(() =>
     exec('gh', ['api', '--paginate', '--slurp', `repos/${pr.repo}/issues/${pr.number}/comments?per_page=100`], { env, timeout: 30_000 }),
   );
   try {
     return JSON.parse(raw).flat();
   } catch {
-    throw new TourError('Cannot read the PR comments to reconcile; the upload was not repeated');
+    throw new TourError('GitHub returned invalid PR comments');
   }
 }
 
-async function findUpload(pr: PullRequest, marker: string, env: Env): Promise<string | null> {
-  const matches = (await comments(pr, env)).filter(
+// The posted comment for this recording, if any: its marker, and the video gh uploaded.
+async function findPosted(pr: PullRequest, marker: string, env: Env): Promise<string | null> {
+  const posted = (await comments(pr, env)).filter(
     comment => comment.body?.includes(marker) && comment.body.includes('github.com/user-attachments/assets/'),
   );
-  if (matches.length > 1) throw new TourError('More than one comment matches this recording; inspect the PR before retrying');
-  return matches[0]?.html_url ?? null;
+  return posted.at(-1)?.html_url ?? null;
 }
 
-// The comment body for a recording: video first, then the behavior checklist, then collapsible steps.
-export function commentBody(report: Report, video: string): string {
-  return markdown(report, { video: `![](${video})`, collapseSteps: true });
-}
-
-// After a confirmed upload the local recording is deleted (the PR hosts it) unless keep is set.
-export interface PublishResult {
-  status: 'uploaded' | 'dry-run';
-  commentUrl?: string;
-  reused?: boolean;
-  hidden?: number;
-  body?: string;
-}
-
-export async function publish(
-  videoPath: string,
-  pr: PullRequest,
-  {
-    env = process.env,
-    retryUpload = false,
-    keep = false,
-    dryRun = false,
-  }: { env?: Env; retryUpload?: boolean; keep?: boolean; dryRun?: boolean } = {},
-): Promise<PublishResult> {
-  const video = resolve(videoPath);
-  await probeVideo(video);
-  const report: Report = JSON.parse(
-    await readFile(video.replace(/\.mp4$/, '.json'), 'utf8').catch(() => {
-      throw new TourError(`No report beside ${basename(video)}; publish a video recorded by pro-tour`);
-    }),
-  );
-  if (dryRun) return { status: 'dry-run', body: commentBody(report, video) };
-  await requireMediaSupport(env);
-  const digest = createHash('sha256')
-    .update(await readFile(video))
-    .digest('hex');
-  const identity = createHash('sha256')
-    .update(`${basename(video)}:${digest}:${pr.url}`)
-    .digest('hex');
-  const marker = `<!-- pro-tour:${identity} -->`;
-  // Names the tour, so a newer recording of it can hide the older comments.
-  const name = basename(video, '.mp4');
-  const tourMarker = `<!-- pro-tour-tour:${createHash('sha256').update(`${name}:${pr.url}`).digest('hex').slice(0, 16)} -->`;
-  const journal = video.replace(/\.mp4$/, '.upload.json');
-  const record = (data: Record<string, unknown>) =>
-    writeFile(journal, `${JSON.stringify({ pr_url: pr.url, sha256: digest, identity, ...data }, null, 2)}\n`);
-
-  return withLock(video, async () => {
-    // Reconcile first, including a retry from another checkout or CI run.
-    const existing = await findUpload(pr, marker, env);
-    if (existing) {
-      if (keep) await record({ status: 'uploaded', comment_url: existing, reused: true });
-      else await removeRecording(dirname(video), name).then(() => rm(journal, { force: true }));
-      return { status: 'uploaded', commentUrl: existing, reused: true };
-    }
-    const previous = JSON.parse(await readFile(journal, 'utf8').catch(() => 'null'));
-    if (previous?.identity === identity && ['pending', 'unknown'].includes(previous.status) && !retryUpload) {
-      throw new TourError(
-        'A previous upload of this video has an unknown result and no matching comment is visible. Check the PR, then rerun with --retry-upload only if the comment is absent.',
+// Earlier comments of the same tour are minimized as outdated, not deleted. Best effort: the new comment is
+// already up, so a failure here only leaves the old ones expanded.
+async function hideOlder(pr: PullRequest, tourMarker: string, current: string, env: Env): Promise<void> {
+  try {
+    for (const comment of await comments(pr, env)) {
+      if (!comment.body?.includes(tourMarker) || comment.html_url === current || !comment.node_id) continue;
+      await exec(
+        'gh',
+        [
+          'api',
+          'graphql',
+          '-f',
+          'query=mutation($id: ID!) { minimizeComment(input: { subjectId: $id, classifier: OUTDATED }) { clientMutationId } }',
+          '-f',
+          `id=${comment.node_id}`,
+        ],
+        { env },
       );
     }
-    await record({ status: 'pending' });
+  } catch (error) {
+    console.warn(`pro-tour: could not hide older tour comments: ${(error as Error).message}`);
+  }
+}
+
+// gh replaces the body's reference to the attached file with the uploaded video.
+const commentBody = (report: Report, video: string) => markdown(report, `![](${video})`);
+
+async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): Promise<{ url: string; reused: boolean }> {
+  const marker = `<!-- pro-tour:${sha(`${name}:${report.videoSha}:${pr.url}`)} -->`;
+  // Names the tour, so a newer recording of it can hide the older comments.
+  const tourMarker = `<!-- pro-tour-tour:${sha(`${name}:${pr.url}`).slice(0, 16)} -->`;
+  let url = await findPosted(pr, marker, env);
+  const reused = Boolean(url);
+  if (!url) {
     const work = await mkdtemp(join(tmpdir(), 'pro-tour-publish-'));
-    let url: string | null;
     try {
       const body = join(work, 'comment.md');
       await writeFile(body, `${commentBody(report, video)}\n${marker}\n${tourMarker}\n`);
@@ -231,44 +169,34 @@ export async function publish(
         })
       ).trim();
     } catch (error) {
-      url = await findUpload(pr, marker, env).catch(() => null);
-      if (!url) {
-        await record({ status: 'unknown' });
-        throw new TourError(
-          `The upload failed or its result is unknown; the local video is kept. Run publish again to reconcile before another upload. (${(error as Error).message})`,
-        );
-      }
+      // The comment may have been posted even though gh reported a failure (a dropped response).
+      url = await findPosted(pr, marker, env).catch(() => null);
+      if (!url) throw new TourError(`Publishing ${name} failed and no comment for it is on the PR: ${(error as Error).message}`);
     } finally {
       await rm(work, { recursive: true, force: true });
     }
-    await record({ status: 'uploaded', comment_url: url });
-    const hidden = await hideOlder(pr, tourMarker, url ?? '', env);
-    if (!keep) await removeRecording(dirname(video), name).then(() => rm(journal, { force: true }));
-    return { status: 'uploaded', commentUrl: url ?? undefined, reused: false, hidden };
-  });
+  }
+  await hideOlder(pr, tourMarker, url, env);
+  return { url, reused };
 }
 
-// Earlier recordings of the same tour are minimized as outdated, not deleted. Best effort: publishing
-// already succeeded, so a failure here only leaves the old comments visible.
-async function hideOlder(pr: PullRequest, tourMarker: string, newUrl: string, env: Env): Promise<number> {
-  let hidden = 0;
-  try {
-    for (const comment of await comments(pr, env)) {
-      if (!comment.body?.includes(tourMarker) || comment.html_url === newUrl || !comment.node_id) continue;
-      await exec(
-        'gh',
-        [
-          'api',
-          'graphql',
-          '-f',
-          `query=mutation { minimizeComment(input: { subjectId: "${comment.node_id}", classifier: OUTDATED }) { minimizedComment { isMinimized } } }`,
-        ],
-        { env },
-      );
-      hidden++;
-    }
-  } catch (error) {
-    console.warn(`pro-tour: could not hide older tour comments: ${(error as Error).message}`);
-  }
-  return hidden;
+export type PublishResult = { name: string; body: string } | { name: string; url: string; reused: boolean };
+
+/**
+ * Post each tour's recording to the PR. A dry run returns the comment bodies instead. The local recordings
+ * are deleted once every tour is on the PR; until then a rerun reuses the comments already posted.
+ */
+export async function publishTours(
+  repo: string,
+  pr: PullRequest,
+  tours: string[],
+  { env = process.env, dryRun = false }: { env?: Env; dryRun?: boolean } = {},
+): Promise<PublishResult[]> {
+  const recordings = [];
+  for (const tour of tours) recordings.push(await ready(repo, tour));
+  if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording.report, recording.video) }));
+  const results = [];
+  for (const recording of recordings) results.push({ name: recording.name, ...(await post(recording, pr, env)) });
+  for (const { name } of recordings) await removeRecording(join(repo, '.videos'), name);
+  return results;
 }

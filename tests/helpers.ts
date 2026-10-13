@@ -7,8 +7,8 @@ import { join } from 'node:path';
 
 export const PR = { number: 1, url: 'https://github.com/owner/app/pull/1', repo: 'owner/app', base: 'main' };
 
-// Keeps PR comments in a JSON state file. `mode` makes `pr comment` fail: "error" posts nothing;
-// "lost" posts the comment but reports a failure, as a dropped response would.
+// Keeps PR comments in a JSON state file. `fail` makes post number `at` fail: with `lost`, the comment is
+// posted but gh reports a failure, as a dropped response would; without it, nothing is posted.
 const FAKE_GH = `#!/usr/bin/env node
 const fs = require('fs');
 const file = process.env.FAKE_GH_STATE;
@@ -16,11 +16,10 @@ const state = JSON.parse(fs.readFileSync(file, 'utf8'));
 const args = process.argv.slice(2);
 const save = () => fs.writeFileSync(file, JSON.stringify(state));
 const pr = ${JSON.stringify(PR)};
-if (args[0] === 'pr' && args[1] === 'comment' && args.includes('--help')) { console.log('--attach file'); process.exit(0); }
 if (args[0] === 'pr' && args[1] === 'list') { console.log(JSON.stringify([{ number: pr.number, url: pr.url, headRepositoryOwner: { login: 'owner' } }])); process.exit(0); }
 if (args[0] === 'pr' && args[1] === 'view') { console.log(JSON.stringify({ number: pr.number, url: pr.url, baseRefName: pr.base })); process.exit(0); }
 if (args[0] === 'api' && args[1] === 'graphql') {
-  const id = /subjectId: "([^"]+)"/.exec(args.join(' '))[1];
+  const id = args.find(arg => arg.startsWith('id=')).slice(3);
   state.comments.find(comment => comment.node_id === id).minimized = true;
   save();
   process.exit(0);
@@ -28,27 +27,27 @@ if (args[0] === 'api' && args[1] === 'graphql') {
 if (args[0] === 'api') { console.log(JSON.stringify([state.comments])); process.exit(0); }
 if (args[0] === 'pr' && args[1] === 'comment') {
   state.posts = (state.posts || 0) + 1;
+  const failing = state.fail && state.fail.at === state.posts ? state.fail : null;
+  if (failing && !failing.lost) { save(); process.exit(1); }
   const video = args[args.indexOf('--attach') + 1];
   // Real gh replaces a body reference to the attached file with the uploaded asset's bare URL.
-  const body = fs.readFileSync(args[args.indexOf('--body-file') + 1], 'utf8').replace('![](' + video + ')', 'https://github.com/user-attachments/assets/abc');
-  const mode = state.mode;
-  if (mode === 'error') { state.mode = null; save(); process.exit(1); }
+  const body = fs.readFileSync(args[args.indexOf('--body-file') + 1], 'utf8').replace('![](' + video + ')', 'https://github.com/user-attachments/assets/' + state.posts);
   const url = pr.url + '#issuecomment-' + (state.comments.length + 1);
   state.comments.push({ body, html_url: url, node_id: 'node' + (state.comments.length + 1) });
-  if (mode === 'lost') { state.mode = null; save(); process.exit(1); }
   save();
+  if (failing) process.exit(1);
   console.log(url);
   process.exit(0);
 }
 process.exit(1);
 `;
 
-export async function fakeGh(mode: 'error' | 'lost' | null = null) {
+export async function fakeGh(fail: { at: number; lost?: boolean } | null = null) {
   const dir = await mkdtemp(join(tmpdir(), 'fake-gh-'));
   await writeFile(join(dir, 'gh'), FAKE_GH);
   await chmod(join(dir, 'gh'), 0o755);
   const state = join(dir, 'state.json');
-  await writeFile(state, JSON.stringify({ comments: [], mode }));
+  await writeFile(state, JSON.stringify({ comments: [], fail }));
   return {
     env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, FAKE_GH_STATE: state },
     read: async () => JSON.parse(await readFile(state, 'utf8')),

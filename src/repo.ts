@@ -1,9 +1,12 @@
 // Git and filesystem handling for the app repository a tour belongs to.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { appendFile, lstat, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export class TourError extends Error {}
+
+export const sha = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 /** Tours are `.tour.ts` (type-checked) or `.tour.js` files. */
 export const isTourFile = (path: string) => /\.tour\.[jt]s$/.test(path);
