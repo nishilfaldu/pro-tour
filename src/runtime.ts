@@ -93,7 +93,15 @@ export class Tour {
    * false at some sample and pass at the end, and a hidden check must have been visible at some sample.
    * `covers` names the meta.behaviors this step demonstrates; the tour fails if any is left uncovered.
    */
-  async step(title: string, run: () => Promise<void>, checks: Check[] = [], { covers = [] }: StepOptions = {}): Promise<void> {
+  step(title: string, run: () => Promise<void>, checks: Check[] = [], options: StepOptions = {}): Promise<void> {
+    const done = this.runStep(title, run, checks, options);
+    // A step the tour forgot to await must not crash the process when the browser closes under it;
+    // finish() fails the tour instead.
+    done.catch(() => {});
+    return done;
+  }
+
+  private async runStep(title: string, run: () => Promise<void>, checks: Check[], { covers = [] }: StepOptions): Promise<void> {
     const step: StepResult = { index: this.steps.length + 1, title, status: 'running', covers, checks: [] };
     this.steps.push(step);
     const started = Date.now();
@@ -156,8 +164,14 @@ export class Tour {
     }));
   }
 
-  /** @internal */
-  async assertCovered(): Promise<void> {
+  /** @internal Fails the tour unless every step ran and passed and every behavior is covered. */
+  async finish(): Promise<void> {
+    if (!this.steps.length) throw new TourCheckError('The tour ran no steps. Show the change with t.step.');
+    const running = this.steps.find(step => step.status === 'running');
+    if (running) throw new TourCheckError(`Step "${running.title}" was still running when run() returned. Await every t.step.`);
+    const failed = this.steps.find(step => step.status === 'failed');
+    // A tour that catches a failed step would otherwise pass with that step marked failed.
+    if (failed) throw new TourCheckError(`Step "${failed.title}" failed: ${failed.error}`);
     const missing = this.coverage().filter(behavior => !behavior.steps.length);
     if (!missing.length) return;
     await this.ui('check', `Not shown: ${missing[0].description}`, 'fail');
@@ -489,7 +503,7 @@ export async function recordTour(
     await t.pause(500);
     try {
       await tour.run(t);
-      await t.assertCovered();
+      await t.finish();
       report.status = 'passed';
     } catch (error) {
       report.error = firstLine(error);

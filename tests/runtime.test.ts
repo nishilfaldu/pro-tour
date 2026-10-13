@@ -174,28 +174,51 @@ test('a step without checks fails, and a missing element fails a text check quic
   await page.context().close();
 });
 
-test('coverage: every behavior needs a passing step that covers it, and unknown ids fail', async () => {
+test('a tour fails if it ran no steps, left a step running, or caught a failed step', async () => {
+  const { t, page, filter } = await board();
+  await assert.rejects(t.finish(), /ran no steps/);
+  const count = page.locator('#visible-count');
+  const pending = t.step('Filter to Done', () => t.select(filter, 'Done'), [t.text('1 task in view', count, '1')], {
+    covers: ['filter-done'],
+  });
+  await assert.rejects(t.finish(), /"Filter to Done" was still running when run\(\) returned/);
+  await pending;
+  await t
+    .step('Filter to To do', () => t.select(filter, 'To do'), [t.text('Nothing in view', count, '0')], { covers: ['filter-progress'] })
+    .catch(() => {});
+  await assert.rejects(t.finish(), /Step "Filter to To do" failed: Check failed: Nothing in view/);
+  await page.context().close();
+});
+
+test('coverage: every behavior needs a passing step that covers it', async () => {
   const { t, page, filter } = await board();
   const count = page.locator('#visible-count');
   await t.step('Filter to Done', () => t.select(filter, 'Done'), [t.text('1 task in view', count, '1')], { covers: ['filter-done'] });
-  await assert.rejects(t.assertCovered(), /Behavior "filter-progress" .* is not shown by any passing step/);
-  await assert.rejects(
-    t.step('Filter to To do', () => t.select(filter, 'To do'), [t.text('1 task in view', count, '1')], { covers: ['filter-todo'] }),
-    /covers "filter-todo", which is not in meta.behaviors/,
-  );
+  await assert.rejects(t.finish(), /Behavior "filter-progress" .* is not shown by any passing step/);
   await t.step(
     'Filter to In progress',
     () => t.select(filter, 'In progress'),
     [t.hidden('Done task is hidden', page.getByRole('heading', { name: 'Approve color palette' }))],
     { covers: ['filter-progress'] },
   );
-  await t.assertCovered();
+  await t.finish();
   assert.deepEqual(
     t.coverage().map(behavior => [behavior.id, behavior.steps]),
     [
       ['filter-done', [1]],
-      ['filter-progress', [3]],
+      ['filter-progress', [2]],
     ],
+  );
+  await page.context().close();
+});
+
+test('a step may not cover an id missing from meta.behaviors', async () => {
+  const { t, page, filter } = await board();
+  await assert.rejects(
+    t.step('Filter to To do', () => t.select(filter, 'To do'), [t.text('1 task in view', page.locator('#visible-count'), '1')], {
+      covers: ['filter-todo'],
+    }),
+    /covers "filter-todo", which is not in meta.behaviors/,
   );
   await page.context().close();
 });
