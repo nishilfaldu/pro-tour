@@ -148,6 +148,26 @@ test('checks are evaluated together right after the actions, so short-lived feed
   await page.context().close();
 });
 
+test('a check too slow to sample is not counted as changed, and a check that throws counts as false', async () => {
+  const { t, filter } = await board();
+  const slowAndTrue = t.check('Always true, slowly', () => new Promise<boolean>(resolve => setTimeout(resolve, 1700, true)));
+  await assert.rejects(
+    t.step('Filter to Done', () => t.select(filter, 'Done'), [slowAndTrue]),
+    /changed nothing/,
+  );
+  let picked = false;
+  const throwsUntilPicked = t.check('Picked', () => {
+    if (!picked) throw new Error('not yet');
+    return true;
+  });
+  await t.step('Filter to To do', async () => {
+    await t.select(filter, 'To do');
+    picked = true;
+  }, [throwsUntilPicked]);
+  assert.equal(t.steps[1].status, 'passed');
+  await t.page.context().close();
+});
+
 test('goto and press are actions the runner samples after', async () => {
   const { t, page } = await board();
   await t.step('Open and dismiss the new task dialog with the keyboard', async () => {

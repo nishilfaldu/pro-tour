@@ -50,8 +50,8 @@ async function traced<T>(name: string, run: () => Promise<T>): Promise<T> {
   }
 }
 
-const within = <T>(ms: number, promise: Promise<T>) =>
-  Promise.race([promise, new Promise<false>(resolve => setTimeout(resolve, ms, false))]);
+// Resolves to null if the promise takes longer than ms.
+const within = <T>(ms: number, promise: Promise<T>) => Promise.race([promise, new Promise<null>(resolve => setTimeout(resolve, ms, null))]);
 
 interface Sample {
   check: Check;
@@ -192,7 +192,15 @@ export class Tour {
 
   private async sample(): Promise<void> {
     for (const entry of this.sampling ?? []) {
-      if (!entry.sawFalse) entry.sawFalse = !(await within(1500, Promise.resolve(entry.check.test())).catch(() => false));
+      if (entry.sawFalse) continue;
+      // A check that throws (the element is missing) was false; one that is too slow to answer was not seen false.
+      const passed = await within(
+        1500,
+        Promise.resolve()
+          .then(() => entry.check.test())
+          .then(Boolean, () => false),
+      );
+      if (passed === false) entry.sawFalse = true;
     }
   }
 
