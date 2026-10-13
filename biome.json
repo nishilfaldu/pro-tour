@@ -6,15 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist",
-      "!experiments",
-      "!fixtures/assignee-board/base",
-      "!fixtures/assignee-board/head",
-      "!fixtures/assignee-board/head-divs",
-      "!fixtures/assignee-board/libvariant"
-    ]
+    "includes": ["**", "!!**/dist"]
   },
   "formatter": {
     "enabled": true,

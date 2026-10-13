@@ -125,7 +125,5 @@ The source is TypeScript in `src/`, run directly by Node in a checkout and compi
 `pnpm build` for the published package. `src/overlay.js` is plain JavaScript because it is injected
 into the page as is.
 
-`site/` is the website, deployed to Vercel as the `pro-tour` project (`vercel deploy --prod` from
-`site/`). `fixtures/` holds harder test apps (a custom dropdown, duplicate labels, an inaccessible variant), and
-[`experiments/`](experiments/README.md) records how the tour rules were chosen and how tours held up on
-real open-source apps.
+`site/` is the website, deployed by Vercel on every push to `main`. The experiments that chose the
+tour rules, and the harder test apps they ran against, are at the `research-archive` tag.

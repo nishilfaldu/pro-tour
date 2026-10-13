@@ -8,5 +8,5 @@
     },
     "allowJs": true
   },
-  "include": ["src", "tests", "fixtures/**/*.tour.ts", "sample-app/.tours/*.tour.ts"]
+  "include": ["src", "tests", "sample-app/.tours/*.tour.ts"]
 }
