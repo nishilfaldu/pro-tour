@@ -116,7 +116,7 @@ Plain `.tour.js` tours also run, without type checking.
 ```sh
 pnpm install          # also builds dist/
 pnpm exec playwright install --with-deps chromium
-pnpm test             # type-checks src, tests and tours, then runs the tests
+pnpm test             # lint, type-check src, tests and tours, then run the tests
 node sample-app/server.js &   # the sample app, http://127.0.0.1:4173
 ./bin/pro-tour.js run sample-app/.tours/status-filter.tour.ts --url http://127.0.0.1:4173
 ```

@@ -11,5 +11,6 @@ test('the build ships the overlay unchanged, .js imports in declarations, and a 
   for (const file of readdirSync('dist').filter(name => name.endsWith('.d.ts'))) {
     assert.doesNotMatch(readFileSync(`dist/${file}`, 'utf8'), /from '\.\.?\/[^']+\.ts'/, file);
   }
-  assert.match(execFileSync(process.execPath, ['bin/pro-tour.js', '--help'], { encoding: 'utf8' }), /pro-tour check/);
+  const help = "import('./dist/cli.js').then(cli => cli.main(['--help']))";
+  assert.match(execFileSync(process.execPath, ['--input-type=module', '-e', help], { encoding: 'utf8' }), /pro-tour check/);
 });
