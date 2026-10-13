@@ -351,7 +351,7 @@ const builtCheck = (kind: CheckKind, label: string, test: () => Promise<boolean>
 const isLocator = (value: unknown): boolean =>
   typeof (value as Locator)?.isVisible === 'function' && typeof (value as Locator)?.count === 'function';
 
-// Tours are often model-written or plain JavaScript, so arguments are checked at run time too.
+// Tours may be plain JavaScript, which check does not type-check, so arguments are checked at run time too.
 function expectArgs(builder: string, label: unknown, ...args: [boolean, string][]): void {
   if (typeof label !== 'string') throw new TypeError(`t.${builder}() needs a label string as its first argument`);
   args.forEach(([ok, what], i) => {

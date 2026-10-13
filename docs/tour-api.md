@@ -1,7 +1,7 @@
 # Tour API
 
 A tour is a TypeScript module in `.tours/<feature>.tour.ts` that records a short, captioned video of one
-feature for PR reviewers. The runner opens the app at its root URL in a fresh browser (no cookies or
+feature for PR reviewers. The runner opens the `--url` you pass in a fresh browser (no cookies or
 local storage) with a 1280×800 viewport. Data on the app's server persists between runs, so a tour must
 not depend on what an earlier run created.
 
@@ -27,8 +27,8 @@ export async function run(t: Tour): Promise<void> {
 }
 ```
 
-The tour starts on the app's root URL. To reach another page, click through the app's navigation
-as a user would, or call `await t.goto('/some/path')` (paths resolve against the app URL).
+The tour starts on that page. To reach another page, click through the app's navigation as a user
+would, or call `await t.goto('/some/path')` (paths resolve against the app URL).
 
 `pro-tour check` type-checks tours in about a second, and `pro-tour run` does so before recording, so
 a misused API is reported before any video is made. The `pro-tour` types resolve even if the app
@@ -42,6 +42,8 @@ locators are strict: an action on a locator that matches more than one element f
 
 `t.step(title, actions, checks)` is one captioned step: an async function with the visible user
 actions, then the array of checks that prove what those actions did. Keep tours to 3–7 steps.
+Await every step. The tour passes only if every step passes, so catching a step's error does not
+save the tour: fix the step or remove it.
 
 The runner evaluates every check before the actions, after each action, and at the end:
 

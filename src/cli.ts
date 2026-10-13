@@ -32,8 +32,9 @@ const USAGE = `Usage:
       Type-check, then record tours into .videos/. On failure, prints the file with the error and the page's
       visible DOM.
   pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run]
-      Comment on the pull request with each tour's latest video and behavior checklist. Without tour names,
-      publishes the tours the pull request adds or changes. Deletes the local video once it is on the PR.
+      Comment on the pull request with each tour's video and behavior checklist. Without tour names, publishes
+      the tours the pull request adds or changes. Refuses a recording that failed or does not show the code at
+      the pull request's head. Deletes the local recordings once they are on the PR.
   pro-tour init
       Install the pro-tour skill for coding agents (.agents/skills, .claude/skills) and point AGENTS.md
       and CLAUDE.md at it.

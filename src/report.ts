@@ -1,5 +1,5 @@
 // The PR comment for a tour's recording.
-// Tour text comes from model-written scripts, so HTML in it is escaped.
+// Agents write the tour text, so HTML in it is escaped.
 import type { Report } from './types.ts';
 
 const text = (value: unknown) =>
