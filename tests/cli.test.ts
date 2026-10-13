@@ -121,9 +121,24 @@ test('a recording that fails to encode leaves the previous recording as it was',
   await chmod(join(bin, 'ffmpeg'), 0o755);
   const run = await cli(dir, ['run', tour, '--url', appUrl], { ...process.env, PATH: `${bin}:${process.env.PATH}` });
   assert.equal(run.code, 3, run.out);
-  assert.match(run.out, /ffmpeg failed: encoder broke/);
+  assert.match(run.out, /^ERROR: .*status-filter\.tour\.ts\n {2}Recording failed: ffmpeg failed: encoder broke/m);
   assert.deepEqual((await readdir(videos)).sort(), ['status-filter.json', 'status-filter.mp4']);
   assert.equal(await readFile(join(videos, 'status-filter.json'), 'utf8'), before);
+});
+
+test('an unreachable app is a recording error, and --json still reports every tour', async () => {
+  const dir = await repo();
+  await mkdir(join(dir, '.tours'));
+  const tour = join(dir, '.tours', 'status-filter.tour.ts');
+  await writeFile(tour, FILTER_TOUR);
+  const run = await cli(dir, ['run', tour, tour, '--url', 'http://127.0.0.1:9', '--json']);
+  assert.equal(run.code, 3, run.out);
+  const results = JSON.parse(run.out);
+  assert.deepEqual(
+    results.map((result: { status: string }) => result.status),
+    ['error', 'error'],
+  );
+  assert.match(results[0].error, /^Recording failed: page\.goto: net::ERR_/);
 });
 
 test('check and run report type errors in a tour without recording anything', async () => {

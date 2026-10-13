@@ -39,8 +39,6 @@ const exists = (path: string) =>
   );
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-class RecordingError extends TourError {}
-
 function appUrl(value: string): string {
   let url: URL;
   try {
@@ -137,21 +135,21 @@ async function run(argv: string[]): Promise<number> {
       tourSha: sha(await readFile(file)),
       appTree: appTree(repo),
     };
-    let report: Report | undefined;
-    // A browser or encoder failure is retried once; it says nothing about the tour.
-    for (let attempt = 1; !report; attempt++) {
-      try {
-        report = await recordTour(tour, options);
-      } catch (cause) {
-        if (attempt < 2) continue;
-        const browser = /browserType\.launch/.test(message(cause));
-        throw new RecordingError(
-          `Recording ${tourName(file)} failed twice: ${message(cause).split('\n')[0]}` +
-            (browser
-              ? "\nThe browser could not start. Inside a coding agent's sandbox (such as Codex on macOS), a browser cannot run: run pro-tour outside the sandbox."
-              : ''),
+    let report: Report;
+    try {
+      report = await recordTour(tour, options);
+    } catch (cause) {
+      // The app, the browser or the encoder failed, not the tour.
+      const sandbox = /browserType\.launch/.test(message(cause))
+        ? "\n  The browser could not start. Inside a coding agent's sandbox (such as Codex on macOS) a browser cannot run: run pro-tour outside the sandbox."
+        : '';
+      const error = `Recording failed: ${message(cause).split('\n')[0]}${sandbox}`;
+      results.push({ tour: file, status: 'error', error });
+      if (!values.json)
+        console.log(
+          `ERROR: ${relative(process.cwd(), file)}\n  ${error}\n  This is not a tour failure. Check that the app is reachable at --url and that pro-tour doctor passes.`,
         );
-      }
+      continue;
     }
     results.push({
       tour: file,
@@ -164,6 +162,7 @@ async function run(argv: string[]): Promise<number> {
     if (!values.json) printReport(report, process.cwd());
   }
   if (values.json) console.log(JSON.stringify(results, null, 2));
+  if (results.some(result => result.status === 'error')) return 3;
   return results.every(result => result.status === 'passed') ? 0 : 1;
 }
 
@@ -254,12 +253,6 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   try {
     return await COMMANDS[command](rest);
   } catch (error) {
-    if (error instanceof RecordingError) {
-      console.error(
-        `pro-tour: ${error.message}\n(This is not a tour failure. Check that the app is reachable at --url and that pro-tour doctor passes.)`,
-      );
-      return 3;
-    }
     if (!(error instanceof TourError) && !String((error as NodeJS.ErrnoException)?.code).startsWith('ERR_PARSE_ARGS')) throw error;
     console.error(`pro-tour: ${message(error)}`);
     return 2;
