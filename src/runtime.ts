@@ -1,11 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, open, readdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, type BrowserContext, chromium, type Locator, type Page } from 'playwright';
-import { markdown } from './report.ts';
 import type { Check, CheckKind, Coverage, Report, StepOptions, StepResult, TourModule } from './types.ts';
 
 // The overlay is plain JavaScript injected into the page as is, so it ships beside this module.
@@ -420,50 +418,26 @@ function failureDom(node: Node | null): string {
   return sections.join('\n\n');
 }
 
-// Exclusive creation: concurrent runs of the same tour never write to one file.
-async function reserveVideo(outDir: string, name: string): Promise<string> {
-  for (let version = 1; ; version++) {
-    const path = join(outDir, `${name}-v${version}.mp4`);
-    if (existsSync(path.replace(/\.mp4$/, '.json'))) continue;
-    try {
-      await (await open(path, 'wx', 0o600)).close();
-      return path;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-    }
-  }
+/** A tour's latest recording: the video, its report (written last, once the video is in place) and failure details. */
+export function recordingFiles(outDir: string, name: string) {
+  const base = join(outDir, name);
+  return { video: `${base}.mp4`, report: `${base}.json`, failure: `${base}.failure.md` };
 }
 
-const SIDECARS = ['.json', '.md', '.failure.md', '.upload.json'];
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** Recordings of one tour in outDir, oldest first: `<name>-v<N>.mp4`. */
-export async function recordings(outDir: string, name: string): Promise<string[]> {
-  const pattern = new RegExp(`^${escapeRegExp(name)}-v(\\d+)\\.mp4$`);
-  const files = await readdir(outDir).catch(() => [] as string[]);
-  return files
-    .map(file => [file, pattern.exec(file)?.[1]] as const)
-    .filter((entry): entry is readonly [string, string] => Boolean(entry[1]))
-    .sort((a, b) => Number(a[1]) - Number(b[1]))
-    .map(([file]) => join(outDir, file));
+export async function removeRecording(outDir: string, name: string): Promise<void> {
+  await Promise.all(Object.values(recordingFiles(outDir, name)).map(file => rm(file, { force: true })));
 }
 
-/** Delete a recording and the report files beside it. */
-export async function removeRecording(video: string): Promise<void> {
-  const base = video.replace(/\.mp4$/, '');
-  await Promise.all([video, ...SIDECARS.map(suffix => base + suffix)].map(file => rm(file, { force: true })));
-}
-
-function failureText(report: Report): string {
+function failureText(title: string, failure: { message: string; dom: string | null }): string {
   return [
-    `# ${report.title}: failed`,
+    `# ${title}: failed`,
     '',
-    `Error: ${report.failure?.message}`,
+    `Error: ${failure.message}`,
     '',
     'Visible DOM at the failure:',
     '',
     '```',
-    report.failure?.dom ?? '(not available)',
+    failure.dom ?? '(not available)',
     '```',
     '',
   ].join('\n');
@@ -477,113 +451,128 @@ export interface RecordOptions {
   channel?: string;
   /** Fingerprint of the tour script, so publish can tell a video recorded from an older script. */
   sourceSha?: string | null;
-  /** Keep the tour's older recordings (by default they are deleted once this one is written). */
-  keep?: boolean;
 }
 
+/** Record the tour, replacing its previous recording in outDir. */
 export async function recordTour(
   tour: TourModule,
-  { url, outDir, name, channel = 'chromium', sourceSha = null, keep = false }: RecordOptions,
+  { url, outDir, name, channel = 'chromium', sourceSha = null }: RecordOptions,
 ): Promise<Report> {
-  const work = await mkdtemp(join(tmpdir(), 'tour-'));
-  const browser: Browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true });
-  const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha: sourceSha, status: 'failed', steps: [] };
-  let page: Page | undefined;
-  let context: BrowserContext | undefined;
-  let trimSeconds = 0;
-  try {
-    context = await browser.newContext({
-      baseURL: url,
-      viewport: SIZE,
-      deviceScaleFactor: 1,
-      bypassCSP: true,
-      recordVideo: { dir: work, size: SIZE },
-    });
-    await context.addInitScript({ path: OVERLAY });
-    page = await context.newPage();
-    const opened = Date.now();
-    await page.goto(url, { waitUntil: 'networkidle' });
-    const t = new Tour(page, { behaviors: tour.meta.behaviors });
-    await t.ui('card', 'Feature tour', tour.meta.title, tour.meta.summary);
-    trimSeconds = (Date.now() - opened) / 1000;
-    await t.pause(2800);
-    await t.ui('hideCard');
-    await t.pause(500);
-    try {
-      await tour.run(t);
-      await t.finish();
-      report.status = 'passed';
-    } catch (error) {
-      report.error = firstLine(error);
-      // Repair context: the full Playwright message (strict-mode errors list every match) and what the page showed.
-      const target =
-        (await t.lastTarget
-          ?.first()
-          .elementHandle({ timeout: 1000 })
-          .catch(() => null)) ?? null;
-      report.failure = {
-        message: [message(error), (error as Error)?.cause ? message((error as Error).cause) : ''].filter(Boolean).join('\n').slice(0, 4000),
-        dom: await page.evaluate(failureDom, target).catch(() => null),
-      };
-    }
-    report.steps = t.steps;
-    report.coverage = t.coverage();
-    const passed = t.steps.filter(step => step.status === 'passed').length;
-    await t.ui('clearCaption');
-    await t.ui('clearChecks');
-    await t.ui(
-      'card',
-      report.status === 'passed' ? 'Tour passed' : 'Tour failed',
-      `${passed}/${t.steps.length} steps passed`,
-      report.error || tour.meta.title,
-    );
-    await t.pause(2200);
-  } finally {
-    await context?.close();
-    await browser.close();
-  }
-
   await mkdir(outDir, { recursive: true });
-  const video = await reserveVideo(outDir, name);
-  const raw = await page?.video()?.path();
-  if (!raw) throw new Error('Playwright did not record a video');
-  const encode = spawnSync(
-    'ffmpeg',
-    [
-      '-hide_banner',
-      '-loglevel',
-      'error',
-      '-y',
-      '-ss',
-      trimSeconds.toFixed(2),
-      '-i',
-      raw,
-      '-an',
-      '-c:v',
-      'libx264',
-      '-preset',
-      'veryfast',
-      '-crf',
-      '20',
-      '-pix_fmt',
-      'yuv420p',
-      '-movflags',
-      '+faststart',
-      video,
-    ],
-    { encoding: 'utf8' },
-  );
-  await rm(work, { recursive: true, force: true });
-  if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr}`);
-  const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', video], { encoding: 'utf8' });
-  report.seconds = Math.round(Number(probe.stdout) * 10) / 10;
-  report.video = video;
-  if (report.failure) {
-    report.failureFile = video.replace(/\.mp4$/, '.failure.md');
-    await writeFile(report.failureFile, failureText(report));
+  // Work beside the destination, so the finished files are renamed into place on the same file system.
+  const work = await mkdtemp(join(outDir, '.recording-'));
+  try {
+    const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha: sourceSha, status: 'failed', steps: [] };
+    let failure: { message: string; dom: string | null } | undefined;
+    let page: Page | undefined;
+    let trimSeconds = 0;
+    const browser: Browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true });
+    let context: BrowserContext | undefined;
+    try {
+      context = await browser.newContext({
+        baseURL: url,
+        viewport: SIZE,
+        deviceScaleFactor: 1,
+        bypassCSP: true,
+        recordVideo: { dir: work, size: SIZE },
+      });
+      await context.addInitScript({ path: OVERLAY });
+      page = await context.newPage();
+      const opened = Date.now();
+      await page.goto(url, { waitUntil: 'networkidle' });
+      const t = new Tour(page, { behaviors: tour.meta.behaviors });
+      await t.ui('card', 'Feature tour', tour.meta.title, tour.meta.summary);
+      trimSeconds = (Date.now() - opened) / 1000;
+      await t.pause(2800);
+      await t.ui('hideCard');
+      await t.pause(500);
+      try {
+        await tour.run(t);
+        await t.finish();
+        report.status = 'passed';
+      } catch (error) {
+        report.error = firstLine(error);
+        // Repair context: the full Playwright message (strict-mode errors list every match) and what the page showed.
+        const target =
+          (await t.lastTarget
+            ?.first()
+            .elementHandle({ timeout: 1000 })
+            .catch(() => null)) ?? null;
+        failure = {
+          message: [message(error), (error as Error)?.cause ? message((error as Error).cause) : '']
+            .filter(Boolean)
+            .join('\n')
+            .slice(0, 4000),
+          dom: await page.evaluate(failureDom, target).catch(() => null),
+        };
+      }
+      report.steps = t.steps;
+      report.coverage = t.coverage();
+      const passed = t.steps.filter(step => step.status === 'passed').length;
+      await t.ui('clearCaption');
+      await t.ui('clearChecks');
+      await t.ui(
+        'card',
+        report.status === 'passed' ? 'Tour passed' : 'Tour failed',
+        `${passed}/${t.steps.length} steps passed`,
+        report.error || tour.meta.title,
+      );
+      await t.pause(2200);
+    } finally {
+      await context?.close();
+      await browser.close();
+    }
+
+    const raw = await page?.video()?.path();
+    if (!raw) throw new Error('Playwright did not record a video');
+    const encoded = join(work, 'tour.mp4');
+    const encode = spawnSync(
+      'ffmpeg',
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-y',
+        '-ss',
+        trimSeconds.toFixed(2),
+        '-i',
+        raw,
+        '-an',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '20',
+        '-pix_fmt',
+        'yuv420p',
+        '-movflags',
+        '+faststart',
+        encoded,
+      ],
+      { encoding: 'utf8' },
+    );
+    if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr}`);
+    const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', encoded], {
+      encoding: 'utf8',
+    });
+    report.seconds = Math.round(Number(probe.stdout) * 10) / 10;
+
+    const files = recordingFiles(outDir, name);
+    report.video = files.video;
+    report.videoSha = createHash('sha256')
+      .update(await readFile(encoded))
+      .digest('hex');
+    if (failure) {
+      report.failureFile = files.failure;
+      await writeFile(files.failure, failureText(tour.meta.title, failure));
+    } else await rm(files.failure, { force: true });
+    await rename(encoded, files.video);
+    // The report goes in last: until it does, the old report names another video's sha and publish refuses the pair.
+    await writeFile(join(work, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
+    await rename(join(work, 'report.json'), files.report);
+    return report;
+  } finally {
+    await rm(work, { recursive: true, force: true });
   }
-  await writeFile(video.replace(/\.mp4$/, '.json'), `${JSON.stringify(report, null, 2)}\n`);
-  await writeFile(video.replace(/\.mp4$/, '.md'), markdown(report));
-  if (!keep) for (const older of await recordings(outDir, name)) if (older !== video) await removeRecording(older);
-  return report;
 }

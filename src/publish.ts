@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtemp, open, readFile, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { git, TourError } from './repo.ts';
 import { markdown } from './report.ts';
 import { removeRecording } from './runtime.ts';
@@ -198,10 +198,8 @@ export async function publish(
     .digest('hex');
   const marker = `<!-- pro-tour:${identity} -->`;
   // Names the tour, so a newer recording of it can hide the older comments.
-  const tourMarker = `<!-- pro-tour-tour:${createHash('sha256')
-    .update(`${basename(video).replace(/-v\d+\.mp4$/, '')}:${pr.url}`)
-    .digest('hex')
-    .slice(0, 16)} -->`;
+  const name = basename(video, '.mp4');
+  const tourMarker = `<!-- pro-tour-tour:${createHash('sha256').update(`${name}:${pr.url}`).digest('hex').slice(0, 16)} -->`;
   const journal = video.replace(/\.mp4$/, '.upload.json');
   const record = (data: Record<string, unknown>) =>
     writeFile(journal, `${JSON.stringify({ pr_url: pr.url, sha256: digest, identity, ...data }, null, 2)}\n`);
@@ -211,7 +209,7 @@ export async function publish(
     const existing = await findUpload(pr, marker, env);
     if (existing) {
       if (keep) await record({ status: 'uploaded', comment_url: existing, reused: true });
-      else await removeRecording(video);
+      else await removeRecording(dirname(video), name).then(() => rm(journal, { force: true }));
       return { status: 'uploaded', commentUrl: existing, reused: true };
     }
     const previous = JSON.parse(await readFile(journal, 'utf8').catch(() => 'null'));
@@ -245,7 +243,7 @@ export async function publish(
     }
     await record({ status: 'uploaded', comment_url: url });
     const hidden = await hideOlder(pr, tourMarker, url ?? '', env);
-    if (!keep) await removeRecording(video);
+    if (!keep) await removeRecording(dirname(video), name).then(() => rm(journal, { force: true }));
     return { status: 'uploaded', commentUrl: url ?? undefined, reused: false, hidden };
   });
 }

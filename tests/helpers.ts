@@ -1,5 +1,6 @@
 // Shared test helpers: a stand-in gh CLI and recorded-looking videos.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -79,7 +80,9 @@ export async function recording(video: string, report: Record<string, unknown> =
     'yuv420p',
     video,
   ]);
-  await writeFile(video.replace('.mp4', '.json'), JSON.stringify({ ...REPORT, ...report }));
-  await writeFile(video.replace('.mp4', '.md'), '# report');
+  const videoSha = createHash('sha256')
+    .update(await readFile(video))
+    .digest('hex');
+  await writeFile(video.replace('.mp4', '.json'), JSON.stringify({ ...REPORT, videoSha, ...report }));
   return video;
 }

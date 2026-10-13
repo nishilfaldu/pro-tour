@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { access, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -47,6 +47,15 @@ async function cli(cwd: string, args: string[], env: NodeJS.ProcessEnv = process
   }
 }
 
+// A one-step tour of the sample app's status filter.
+const FILTER_TOUR = `import type { Tour, TourMeta } from 'pro-tour';
+export const meta = { title: 'Filter to Done', behaviors: { done: 'Done shows finished tasks' } } satisfies TourMeta;
+export async function run(t: Tour): Promise<void> {
+  await t.step('Filter to Done', () => t.select(t.page.getByRole('combobox', { name: 'Status', exact: true }), 'Done'),
+    [t.text('1 task in view', t.page.locator('#visible-count'), '1')], { covers: ['done'] });
+}
+`;
+
 let server: Server;
 let appUrl: string;
 before(async () => {
@@ -88,42 +97,54 @@ test("init installs the skill for every agent once, with the project's package r
   assert.equal((await readFile(join(dir, 'AGENTS.md'), 'utf8')).match(/## Feature tours/g)?.length, 1);
 });
 
-test('run records a tour, keeps only its latest recording, and names a failure file on failure', async () => {
+test("run replaces the tour's recording, and names a failure file on failure", async () => {
   const dir = await repo();
   await mkdir(join(dir, '.tours'));
   const tour = join(dir, '.tours', 'status-filter.tour.ts');
-  await writeFile(
-    tour,
-    `import type { Tour, TourMeta } from 'pro-tour';
-export const meta = { title: 'Filter to Done', behaviors: { done: 'Done shows finished tasks' } } satisfies TourMeta;
-export async function run(t: Tour): Promise<void> {
-  await t.step('Filter to Done', () => t.select(t.page.getByRole('combobox', { name: 'Status', exact: true }), 'Done'),
-    [t.text('1 task in view', t.page.locator('#visible-count'), '1')], { covers: ['done'] });
-}
-`,
-  );
-  await mkdir(join(dir, '.videos'));
-  await recording(join(dir, '.videos', 'status-filter-v1.mp4'));
+  await writeFile(tour, FILTER_TOUR);
+  const videos = join(dir, '.videos');
+  await mkdir(videos);
+  await recording(join(videos, 'status-filter.mp4'));
+  await writeFile(join(videos, 'status-filter.failure.md'), 'an older failure');
   const passed = await cli(dir, ['run', tour, '--url', appUrl, '--json']);
   assert.equal(passed.code, 0, passed.out);
   const [result] = JSON.parse(passed.out);
   assert.equal(result.status, 'passed');
-  const latest = result.video
-    .split('/')
-    .at(-1)
-    .replace(/\.mp4$/, '');
-  assert.deepEqual((await readdir(join(dir, '.videos'))).sort(), [`${latest}.json`, `${latest}.md`, `${latest}.mp4`]);
+  assert.ok(result.video.endsWith('/.videos/status-filter.mp4') && result.report.endsWith('/.videos/status-filter.json'), passed.out);
+  assert.deepEqual((await readdir(videos)).sort(), ['status-filter.json', 'status-filter.mp4']);
+  const report = JSON.parse(await readFile(result.report, 'utf8'));
+  assert.equal(report.videoSha, sha(await readFile(result.video)));
 
   await writeFile(tour, (await readFile(tour, 'utf8')).replace("'1')", "'7')"));
   const failed = await cli(dir, ['run', tour, '--url', appUrl]);
   assert.equal(failed.code, 1);
   assert.match(failed.out, /^FAILED: Filter to Done/m);
-  const file = /Failure details: (\S+)/.exec(failed.out)?.[1] ?? '';
-  const details = await readFile(join(dir, file), 'utf8');
+  assert.deepEqual((await readdir(videos)).sort(), ['status-filter.failure.md', 'status-filter.json', 'status-filter.mp4']);
+  const details = await readFile(join(videos, 'status-filter.failure.md'), 'utf8');
+  assert.match(failed.out, /Failure details: \.videos\/status-filter\.failure\.md/);
   assert.match(details, /Error: Check failed: 1 task in view/);
   assert.match(details, /Around the element the tour last acted on/);
-  const report = JSON.parse(await readFile(join(dir, file.replace(/\.failure\.md$/, '.json')), 'utf8'));
-  assert.deepEqual([report.status, report.steps.map((step: { status: string }) => step.status)], ['failed', ['failed']]);
+  const failedReport = JSON.parse(await readFile(result.report, 'utf8'));
+  assert.deepEqual([failedReport.status, failedReport.steps.map((step: { status: string }) => step.status)], ['failed', ['failed']]);
+});
+
+test('a recording that fails to encode leaves the previous recording as it was', async () => {
+  const dir = await repo();
+  await mkdir(join(dir, '.tours'));
+  const tour = join(dir, '.tours', 'status-filter.tour.ts');
+  await writeFile(tour, FILTER_TOUR);
+  const videos = join(dir, '.videos');
+  await mkdir(videos);
+  await recording(join(videos, 'status-filter.mp4'));
+  const before = await readFile(join(videos, 'status-filter.json'), 'utf8');
+  const bin = await mkdtemp(join(tmpdir(), 'broken-ffmpeg-'));
+  await writeFile(join(bin, 'ffmpeg'), '#!/bin/sh\necho "encoder broke" >&2\nexit 1\n');
+  await chmod(join(bin, 'ffmpeg'), 0o755);
+  const run = await cli(dir, ['run', tour, '--url', appUrl], { ...process.env, PATH: `${bin}:${process.env.PATH}` });
+  assert.equal(run.code, 3, run.out);
+  assert.match(run.out, /ffmpeg failed: encoder broke/);
+  assert.deepEqual((await readdir(videos)).sort(), ['status-filter.json', 'status-filter.mp4']);
+  assert.equal(await readFile(join(videos, 'status-filter.json'), 'utf8'), before);
 });
 
 test('check and run report type errors in a tour without recording anything', async () => {
@@ -157,13 +178,16 @@ test('publish posts the tours the PR changed, and refuses failed or stale record
   git(dir, 'commit', '-qm', 'tour');
   git(dir, 'remote', 'add', 'origin', 'https://github.com/owner/app.git');
   await mkdir(join(dir, '.videos'));
-  const video = join(dir, '.videos', 'assignee-filter-v1.mp4');
+  const video = join(dir, '.videos', 'assignee-filter.mp4');
 
   await recording(video, { status: 'failed', tourSha: sha(await readFile(tour)) });
   assert.match((await cli(dir, ['publish'], env)).out, /latest recording of assignee-filter failed/);
 
   await recording(video, { tourSha: 'stale' });
   assert.match((await cli(dir, ['publish'], env)).out, /changed after its latest recording/);
+
+  await recording(video, { tourSha: sha(await readFile(tour)), videoSha: 'another video' });
+  assert.match((await cli(dir, ['publish'], env)).out, /recording of assignee-filter is incomplete/);
 
   await recording(video, { tourSha: sha(await readFile(tour)) });
   const dry = await cli(dir, ['publish', '--dry-run'], env);

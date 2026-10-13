@@ -8,7 +8,7 @@ import { fakeGh, PR, recording } from './helpers.ts';
 
 const pr = PR;
 
-async function setup(mode: 'error' | 'lost' | null = null, name = 'feature-v1.mp4') {
+async function setup(mode: 'error' | 'lost' | null = null, name = 'feature.mp4') {
   const { env, read } = await fakeGh(mode);
   const dir = await mkdtemp(join(tmpdir(), 'publish-test-'));
   const video = await recording(join(dir, name));
@@ -52,7 +52,7 @@ test('an unknown result blocks another upload until --retry-upload', async () =>
 test('a new recording of the same tour hides the older comment as outdated', async () => {
   const { video, env, read } = await setup();
   await publish(video, pr, { env });
-  const newer = await recording(video.replace('-v1.mp4', '-v2.mp4'), {}, 2);
+  const newer = await recording(video, {}, 2);
   const result = await publish(newer, pr, { env });
   assert.equal(result.hidden, 1);
   const { comments } = await read();
@@ -69,7 +69,7 @@ test('a published recording is deleted locally, a dry run posts and deletes noth
   assert.equal((await read()).posts ?? 0, 0);
   await access(video);
   await publish(video, pr, { env });
-  for (const suffix of ['.mp4', '.json', '.md', '.upload.json']) {
+  for (const suffix of ['.mp4', '.json', '.upload.json']) {
     await assert.rejects(access(video.replace('.mp4', suffix)), { code: 'ENOENT' }, `${suffix} should be deleted`);
   }
 });

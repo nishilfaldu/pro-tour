@@ -8,7 +8,7 @@ import { doctor } from './doctor.ts';
 import { init } from './init.ts';
 import { publish, resolvePr } from './publish.ts';
 import { changedTours, currentBranch, isTourFile, repoRoot, TourError, tourName, videosDir } from './repo.ts';
-import { recordings, recordTour } from './runtime.ts';
+import { recordingFiles, recordTour } from './runtime.ts';
 import type { Report, TourModule } from './types.ts';
 
 // docs/ sits beside src/ and dist/ at the package root.
@@ -17,7 +17,7 @@ const API = new URL('../docs/tour-api.md', import.meta.url);
 const USAGE = `Usage:
   pro-tour check [<file.tour.ts>...]
       Type-check tours (default: every tour in .tours/) without recording.
-  pro-tour run <file.tour.ts>... --url <app url> [--json] [--keep] [--out <dir>] [--channel chromium|chrome]
+  pro-tour run <file.tour.ts>... --url <app url> [--json] [--out <dir>] [--channel chromium|chrome]
       Type-check, then record tours into .videos/. On failure, prints the file with the error and the page's
       visible DOM.
   pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run] [--keep] [--allow-failed] [--retry-upload]
@@ -104,7 +104,6 @@ async function run(argv: string[]): Promise<number> {
       url: { type: 'string' },
       out: { type: 'string' },
       json: { type: 'boolean', default: false },
-      keep: { type: 'boolean', default: false },
       'skip-check': { type: 'boolean', default: false },
       channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' },
       help: { type: 'boolean', short: 'h' },
@@ -132,7 +131,7 @@ async function run(argv: string[]): Promise<number> {
       if (!values.json) console.log(`FAILED: ${relative(process.cwd(), file)}\n  ${error}`);
       continue;
     }
-    const options = { url, outDir, name: tourName(file), channel: values.channel, keep: values.keep, sourceSha: sha(await readFile(file)) };
+    const options = { url, outDir, name: tourName(file), channel: values.channel, sourceSha: sha(await readFile(file)) };
     let report: Report | undefined;
     // A browser or encoder failure is retried once; it says nothing about the tour.
     for (let attempt = 1; !report; attempt++) {
@@ -153,7 +152,7 @@ async function run(argv: string[]): Promise<number> {
       tour: file,
       status: report.status,
       video: report.video,
-      report: report.video?.replace(/\.mp4$/, '.md'),
+      report: report.video?.replace(/\.mp4$/, '.json'),
       failure: report.failureFile ?? null,
       error: report.error ?? null,
     });
@@ -205,12 +204,15 @@ async function publishCommand(argv: string[]): Promise<number> {
   const ready: { name: string; video: string }[] = [];
   for (const file of tours) {
     const name = tourName(file);
-    const video = (await recordings(outDir, name)).at(-1);
-    if (!video)
+    const { video, report: reportFile } = recordingFiles(outDir, name);
+    const saved = await readFile(reportFile, 'utf8').catch(() => null);
+    if (!saved)
       throw new TourError(
         `No recording of ${name} in ${relative(repo, outDir) || outDir}; run pro-tour run ${relative(repo, file)} --url <app url> first.`,
       );
-    const report: Report = JSON.parse(await readFile(video.replace(/\.mp4$/, '.json'), 'utf8'));
+    const report: Report = JSON.parse(saved);
+    if (report.videoSha !== sha(await readFile(video).catch(() => '')))
+      throw new TourError(`The recording of ${name} is incomplete; record it again.`);
     if (report.status !== 'passed' && !values['allow-failed'])
       throw new TourError(
         `The latest recording of ${name} failed; fix the tour or the change and record it again (or pass --allow-failed).`,

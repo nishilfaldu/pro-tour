@@ -66,8 +66,9 @@ export interface Report {
   steps: StepResult[];
   coverage?: Coverage[];
   error?: string;
-  failure?: { message: string; dom: string | null };
   seconds?: number;
   video?: string;
+  /** sha256 of the video, so publish can tell the report and the video belong together. */
+  videoSha?: string;
   failureFile?: string;
 }
