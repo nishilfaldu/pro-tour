@@ -11,6 +11,7 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "declaration": true,
+    "stripInternal": true,
     "skipLibCheck": true,
     "rootDir": "src",
     "outDir": "dist"

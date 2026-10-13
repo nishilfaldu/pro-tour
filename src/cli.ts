@@ -40,7 +40,7 @@ const USAGE = `Usage:
       and CLAUDE.md at it.
   pro-tour api
       Print the tour API.
-  pro-tour doctor
+  pro-tour doctor [--channel chromium|chrome]
       Check the browser, ffmpeg and GitHub CLI, printing the command that fixes each problem.
 
 Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser or encoder).`;

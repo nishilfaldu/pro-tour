@@ -49,6 +49,7 @@ interface Sample {
 export class Tour {
   /** The Playwright page showing the app. */
   readonly page: Page;
+  /** @internal */
   readonly steps: StepResult[] = [];
   /** @internal */
   lastTarget: Locator | null = null;
