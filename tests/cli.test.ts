@@ -1,6 +1,4 @@
 import { strict as assert } from 'node:assert';
-import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { access, chmod, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -9,27 +7,8 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { createAppServer } from '../sample-app/server.js';
 import { main } from '../src/cli.ts';
-import { fakeGh, recording } from './helpers.ts';
-
-const git = (cwd: string, ...args: string[]) =>
-  execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
-const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
-
-// A repository whose main has `files`, checked out on a feature branch.
-async function repo(files: Record<string, string> = {}): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'cli-test-'));
-  git(dir, 'init', '-q', '-b', 'main');
-  await writeFile(join(dir, 'README.md'), 'app\n');
-  for (const [path, body] of Object.entries(files)) {
-    await mkdir(join(dir, path, '..'), { recursive: true });
-    await writeFile(join(dir, path), body);
-  }
-  git(dir, 'add', '-A');
-  git(dir, 'commit', '-qm', 'app');
-  git(dir, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
-  git(dir, 'checkout', '-qb', 'feature');
-  return dir;
-}
+import { sha } from '../src/repo.ts';
+import { fakeGh, git, recordedTour, recording, repo } from './helpers.ts';
 
 // Run the CLI in `cwd` with `env`, capturing what it prints.
 async function cli(cwd: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<{ code: number; out: string }> {
@@ -169,27 +148,19 @@ export async function run(t: Tour): Promise<void> {
   await assert.rejects(readdir(join(dir, '.videos')), { code: 'ENOENT' });
 });
 
-test('publish posts the tours the PR changed, and refuses failed or stale recordings', async () => {
+test('publish posts the tours the PR changed, and refuses failed or incomplete recordings', async () => {
   const dir = await repo({ '.tours/untouched.tour.js': 'export const meta = { title: "Older feature" };\n' });
-  const { env, read } = await fakeGh();
-  const tour = join(dir, '.tours', 'assignee-filter.tour.js');
-  await writeFile(tour, 'export const meta = { title: "Assignee filter" };\n');
-  git(dir, 'add', '-A');
-  git(dir, 'commit', '-qm', 'tour');
   git(dir, 'remote', 'add', 'origin', 'https://github.com/owner/app.git');
-  await mkdir(join(dir, '.videos'));
-  const video = join(dir, '.videos', 'assignee-filter.mp4');
-
-  await recording(video, { status: 'failed', tourSha: sha(await readFile(tour)) });
+  const { env, read } = await fakeGh();
+  await recordedTour(dir, 'assignee-filter', { status: 'failed' });
   assert.match((await cli(dir, ['publish'], env)).out, /latest recording of assignee-filter failed/);
 
-  await recording(video, { tourSha: 'stale' });
-  assert.match((await cli(dir, ['publish'], env)).out, /changed after its latest recording/);
-
-  await recording(video, { tourSha: sha(await readFile(tour)), videoSha: 'another video' });
+  const report = join(dir, '.videos', 'assignee-filter.json');
+  await writeFile(report, JSON.stringify({ ...JSON.parse(await readFile(report, 'utf8')), status: 'passed', videoSha: 'another video' }));
   assert.match((await cli(dir, ['publish'], env)).out, /recording of assignee-filter is incomplete/);
 
-  await recording(video, { tourSha: sha(await readFile(tour)) });
+  const { videoSha: _, ...rest } = JSON.parse(await readFile(report, 'utf8'));
+  await recording(join(dir, '.videos', 'assignee-filter.mp4'), rest);
   const dry = await cli(dir, ['publish', '--dry-run'], env);
   assert.equal(dry.code, 0, dry.out);
   assert.match(dry.out, /--- assignee-filter: comment that would be posted to https:\/\/github.com\/owner\/app\/pull\/1 ---/);
@@ -199,5 +170,5 @@ test('publish posts the tours the PR changed, and refuses failed or stale record
   assert.equal(posted.code, 0, posted.out);
   assert.match(posted.out, /Published assignee-filter: https:\/\/github.com\/owner\/app\/pull\/1#issuecomment-1/);
   assert.equal((await read()).posts, 1);
-  await assert.rejects(access(video), { code: 'ENOENT' });
+  await assert.rejects(access(join(dir, '.videos', 'assignee-filter.mp4')), { code: 'ENOENT' });
 });

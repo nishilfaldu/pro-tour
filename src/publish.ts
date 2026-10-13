@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import { git, sha, TourError, tourName } from './repo.ts';
+import { appTree, git, sha, TourError, tourName } from './repo.ts';
 import { markdown } from './report.ts';
 import { recordingFiles, removeRecording } from './runtime.ts';
 import type { Report } from './types.ts';
@@ -19,6 +19,8 @@ export interface PullRequest {
   repo: string;
   /** The base branch name. */
   base: string;
+  /** The commit at the head of the PR. */
+  head: string;
 }
 
 interface Comment {
@@ -77,10 +79,13 @@ export async function resolvePr(
     target = entries[0].url;
   }
   const view = target;
-  const data = JSON.parse(await retryRead(() => exec('gh', ['pr', 'view', view, '--json', 'number,url,baseRefName'], { cwd: repo, env })));
+  const data = JSON.parse(
+    await retryRead(() => exec('gh', ['pr', 'view', view, '--json', 'number,url,baseRefName,headRefOid'], { cwd: repo, env })),
+  );
   const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/([1-9]\d*)$/.exec(data.url ?? '');
-  if (!match || typeof data.number !== 'number') throw new TourError('GitHub returned invalid PR metadata; no PR was guessed');
-  return { number: data.number, url: data.url, repo: match[1], base: data.baseRefName };
+  if (!match || typeof data.number !== 'number' || typeof data.headRefOid !== 'string')
+    throw new TourError('GitHub returned invalid PR metadata; no PR was guessed');
+  return { number: data.number, url: data.url, repo: match[1], base: data.baseRefName, head: data.headRefOid };
 }
 
 interface Ready {
@@ -90,18 +95,32 @@ interface Ready {
 }
 
 // Every tour is checked before anything is posted, so a problem does not leave the PR half published.
-async function ready(repo: string, tour: string): Promise<Ready> {
+// A recording may be posted only if it passed and was made from the tour and the app code the PR's head holds.
+async function ready(repo: string, tour: string, headTree: string): Promise<Ready> {
   const name = tourName(tour);
+  const path = relative(repo, tour);
   const files = recordingFiles(join(repo, '.videos'), name);
   const saved = await readFile(files.report, 'utf8').catch(() => null);
-  if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${relative(repo, tour)} --url <app url> first.`);
+  if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${path} --url <app url> first.`);
   const report: Report = JSON.parse(saved);
   if (report.videoSha !== sha(await readFile(files.video).catch(() => '')))
     throw new TourError(`The recording of ${name} is incomplete; record it again.`);
   if (report.status !== 'passed')
     throw new TourError(`The latest recording of ${name} failed; fix the tour or the change and record it again.`);
-  if (report.tourSha !== sha(await readFile(tour).catch(() => '')))
-    throw new TourError(`${relative(repo, tour)} changed after its latest recording; record it again before publishing.`);
+  let committed: string | null = null;
+  try {
+    committed = sha(git(['show', `HEAD:${path}`], repo));
+  } catch {}
+  if (committed !== report.tourSha) {
+    const onDisk = sha(await readFile(tour).catch(() => ''));
+    throw new TourError(
+      onDisk === report.tourSha
+        ? `Commit ${path} and push it, then publish.`
+        : `${path} changed after its latest recording; record it again before publishing.`,
+    );
+  }
+  if (report.appTree !== headTree)
+    throw new TourError(`${name} was recorded from app code that differs from the pull request's; record it again before publishing.`);
   return { name, video: files.video, report };
 }
 
@@ -149,7 +168,7 @@ async function hideOlder(pr: PullRequest, tourMarker: string, current: string, e
 }
 
 // gh replaces the body's reference to the attached file with the uploaded video.
-const commentBody = (report: Report, video: string) => markdown(report, `![](${video})`);
+const commentBody = (report: Report, video: string, commit: string) => markdown(report, `![](${video})`, commit);
 
 async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): Promise<{ url: string; reused: boolean }> {
   const marker = `<!-- pro-tour:${sha(`${name}:${report.videoSha}:${pr.url}`)} -->`;
@@ -161,7 +180,7 @@ async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): 
     const work = await mkdtemp(join(tmpdir(), 'pro-tour-publish-'));
     try {
       const body = join(work, 'comment.md');
-      await writeFile(body, `${commentBody(report, video)}\n${marker}\n${tourMarker}\n`);
+      await writeFile(body, `${commentBody(report, video, pr.head)}\n${marker}\n${tourMarker}\n`);
       url = (
         await exec('gh', ['pr', 'comment', String(pr.number), '--repo', pr.repo, '--body-file', body, '--attach', video], {
           env,
@@ -192,9 +211,15 @@ export async function publishTours(
   tours: string[],
   { env = process.env, dryRun = false }: { env?: Env; dryRun?: boolean } = {},
 ): Promise<PublishResult[]> {
+  const local = git(['rev-parse', 'HEAD'], repo).trim();
+  if (local !== pr.head)
+    throw new TourError(
+      `This checkout (${local.slice(0, 7)}) is not the head of ${pr.url} (${pr.head.slice(0, 7)}); push or pull, then publish.`,
+    );
+  const headTree = appTree(repo, 'HEAD');
   const recordings = [];
-  for (const tour of tours) recordings.push(await ready(repo, tour));
-  if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording.report, recording.video) }));
+  for (const tour of tours) recordings.push(await ready(repo, tour, headTree));
+  if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording.report, recording.video, pr.head) }));
   const results = [];
   for (const recording of recordings) results.push({ name: recording.name, ...(await post(recording, pr, env)) });
   for (const { name } of recordings) await removeRecording(join(repo, '.videos'), name);

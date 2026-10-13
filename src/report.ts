@@ -8,14 +8,14 @@ const text = (value: unknown) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-export function markdown(report: Report, video: string): string {
+export function markdown(report: Report, video: string, commit: string): string {
   const passed = report.steps.filter(step => step.status === 'passed').length;
   const lines = [
     `### Feature tour: ${text(report.title)}`,
     '',
     text(report.summary),
     '',
-    `**${report.status === 'passed' ? 'Passed' : 'Failed'}**: ${passed}/${report.steps.length} steps · ${report.seconds}s video`,
+    `**${report.status === 'passed' ? 'Passed' : 'Failed'}**: ${passed}/${report.steps.length} steps · ${report.seconds}s video of ${commit.slice(0, 7)}`,
     '',
   ];
   if (report.status !== 'passed' && report.error) lines.push(`> ✗ ${text(report.error)}`, '');

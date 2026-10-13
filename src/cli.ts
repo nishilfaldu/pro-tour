@@ -6,7 +6,7 @@ import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
 import { publishTours, resolvePr } from './publish.ts';
-import { changedTours, currentBranch, isTourFile, repoRoot, sha, TourError, tourName, videosDir } from './repo.ts';
+import { appTree, changedTours, currentBranch, isTourFile, repoRoot, sha, TourError, tourName, videosDir } from './repo.ts';
 import { recordTour } from './runtime.ts';
 import type { Report, TourModule } from './types.ts';
 
@@ -121,14 +121,22 @@ async function run(argv: string[]): Promise<number> {
   }
   const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
   for (const file of files) {
-    const outDir = await videosDir(repoRoot(dirname(file)));
+    const repo = repoRoot(dirname(file));
+    const outDir = await videosDir(repo);
     const { tour, error } = await loadTour(file);
     if (!tour) {
       results.push({ tour: file, status: 'failed', error: error ?? null });
       if (!values.json) console.log(`FAILED: ${relative(process.cwd(), file)}\n  ${error}`);
       continue;
     }
-    const options = { url, outDir, name: tourName(file), channel: values.channel, sourceSha: sha(await readFile(file)) };
+    const options = {
+      url,
+      outDir,
+      name: tourName(file),
+      channel: values.channel,
+      tourSha: sha(await readFile(file)),
+      appTree: appTree(repo),
+    };
     let report: Report | undefined;
     // A browser or encoder failure is retried once; it says nothing about the tour.
     for (let attempt = 1; !report; attempt++) {
@@ -182,10 +190,7 @@ async function publishCommand(argv: string[]): Promise<number> {
   };
   let tours = await Promise.all(positionals.map(named));
   if (!tours.length) {
-    const changed = changedTours(repo, pr.base);
-    if (changed.uncommitted.length)
-      console.warn(`pro-tour: uncommitted tour changes are not published until committed: ${changed.uncommitted.join(', ')}`);
-    tours = changed.tours;
+    tours = changedTours(repo, pr.base);
     if (!tours.length)
       throw new TourError(
         'This pull request adds or changes no tours in .tours/. Record one with pro-tour run, commit it, or name the tours to publish.',

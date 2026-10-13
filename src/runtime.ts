@@ -449,20 +449,21 @@ export interface RecordOptions {
   name: string;
   /** 'chromium' (Playwright's own build, the default) or an installed browser such as 'chrome'. */
   channel?: string;
-  /** Fingerprint of the tour script, so publish can tell a video recorded from an older script. */
-  sourceSha?: string | null;
+  /** sha256 of the tour file and the app's tree id, so publish can tell a video made from other code. */
+  tourSha: string;
+  appTree: string;
 }
 
 /** Record the tour, replacing its previous recording in outDir. */
 export async function recordTour(
   tour: TourModule,
-  { url, outDir, name, channel = 'chromium', sourceSha = null }: RecordOptions,
+  { url, outDir, name, channel = 'chromium', tourSha, appTree }: RecordOptions,
 ): Promise<Report> {
   await mkdir(outDir, { recursive: true });
   // Work beside the destination, so the finished files are renamed into place on the same file system.
   const work = await mkdtemp(join(outDir, '.recording-'));
   try {
-    const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha: sourceSha, status: 'failed', steps: [] };
+    const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourSha, appTree, status: 'failed', steps: [] };
     let failure: { message: string; dom: string | null } | undefined;
     let page: Page | undefined;
     let trimSeconds = 0;

@@ -7,7 +7,8 @@ const report: Report = {
   title: 'Filter <b>by</b> assignee',
   summary: 'Narrow the board & focus.',
   url: 'http://localhost:3000',
-  tourSha: null,
+  tourSha: 'tour',
+  appTree: 'tree',
   status: 'failed',
   error: 'Check failed: <Empty> state',
   seconds: 12.5,
@@ -32,7 +33,7 @@ const report: Report = {
 };
 
 test('the comment shows the result, the video, the behavior checklist and collapsed steps', () => {
-  const body = markdown(report, 'VIDEO');
+  const body = markdown(report, 'VIDEO', '0123456789abcdef');
   assert.equal(
     body,
     [
@@ -40,7 +41,7 @@ test('the comment shows the result, the video, the behavior checklist and collap
       '',
       'Narrow the board &amp; focus.',
       '',
-      '**Failed**: 1/2 steps · 12.5s video',
+      '**Failed**: 1/2 steps · 12.5s video of 0123456',
       '',
       '> ✗ Check failed: &lt;Empty&gt; state',
       '',
