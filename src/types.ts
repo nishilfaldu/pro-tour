@@ -61,8 +61,8 @@ export interface Report {
   title: string;
   summary?: string;
   url: string;
-  /** sha256 of the tour file it was recorded from. */
-  tourSha: string;
+  /** Git blob id of the tour file it was recorded from. */
+  tourBlob: string;
   /** Git tree id of the app's code it was recorded from, without .tours/ (see appTree in repo.ts). */
   appTree: string;
   status: 'passed' | 'failed';

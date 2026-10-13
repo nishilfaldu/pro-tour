@@ -7,7 +7,7 @@ const report: Report = {
   title: 'Filter <b>by</b> assignee',
   summary: 'Narrow the board & focus.',
   url: 'http://localhost:3000',
-  tourSha: 'tour',
+  tourBlob: 'tour',
   appTree: 'tree',
   status: 'failed',
   error: 'Check failed: <Empty> state',

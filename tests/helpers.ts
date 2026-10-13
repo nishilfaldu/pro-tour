@@ -35,7 +35,11 @@ export async function recordedTour(dir: string, name: string, report: Record<str
   git(dir, 'add', '-A');
   git(dir, 'commit', '-qm', `tour ${name}`);
   await mkdir(join(dir, '.videos'), { recursive: true });
-  await recording(join(dir, '.videos', `${name}.mp4`), { tourSha: sha(await readFile(tour)), appTree: appTree(dir), ...report });
+  await recording(join(dir, '.videos', `${name}.mp4`), {
+    tourBlob: git(dir, 'hash-object', tour).trim(),
+    appTree: appTree(dir),
+    ...report,
+  });
   return tour;
 }
 

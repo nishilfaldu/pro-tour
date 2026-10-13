@@ -61,6 +61,9 @@ export function appTree(repo: string, commit?: string): string {
   }
 }
 
+// A file's git blob id as git would commit it (line endings normalized), so it compares with HEAD:<path>.
+export const blobId = (repo: string, file: string) => git(['hash-object', '--', file], repo).trim();
+
 // Tours a pull request adds or changes: committed .tours/*.tour.{ts,js} files that differ from its base.
 export function changedTours(repo: string, base: string): string[] {
   const ref = [`origin/${base}`, base].find(candidate => {

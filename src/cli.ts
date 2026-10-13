@@ -8,13 +8,13 @@ import { init } from './init.ts';
 import { publishTours, resolvePr } from './publish.ts';
 import {
   appTree,
+  blobId,
   changedTours,
   currentBranch,
   exists,
   isTourFile,
   message,
   repoRoot,
-  sha,
   TourError,
   tourName,
   videosDir,
@@ -135,7 +135,7 @@ async function run(argv: string[]): Promise<number> {
       outDir,
       name: tourName(file),
       channel: values.channel,
-      tourSha: sha(await readFile(file)),
+      tourBlob: blobId(repo, file),
       appTree: appTree(repo),
     };
     let report: Report;

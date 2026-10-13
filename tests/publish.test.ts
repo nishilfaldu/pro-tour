@@ -1,9 +1,9 @@
 import { strict as assert } from 'node:assert';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { type PullRequest, publishTours } from '../src/publish.ts';
-import { appTree, sha } from '../src/repo.ts';
+import { appTree } from '../src/repo.ts';
 import { fakeGh, git, PR, recordedTour, recording, repo } from './helpers.ts';
 
 // A repository on a pushed PR branch with a passing recording of each tour.
@@ -77,7 +77,7 @@ test('a new recording of the same tour hides the older comment as outdated', asy
   const { dir, tours, pr } = await setup();
   const { env, read } = await fakeGh();
   await publishTours(dir, pr, tours, { env });
-  await recording(join(dir, '.videos', 'feature.mp4'), { tourSha: sha(await readFile(tours[0])), appTree: appTree(dir) }, 2);
+  await recording(join(dir, '.videos', 'feature.mp4'), { tourBlob: git(dir, 'hash-object', tours[0]).trim(), appTree: appTree(dir) }, 2);
   await publishTours(dir, pr, tours, { env });
   assert.deepEqual(
     (await read()).comments.map((comment: { minimized?: boolean }) => Boolean(comment.minimized)),
@@ -97,7 +97,7 @@ test('a recording is refused unless it shows the tour and the app code at the he
   await assert.rejects(publishTours(dir, changed, tours, { env }), /recorded from app code that differs from the pull request's/);
 
   await writeFile(tours[0], "export const meta = { title: 'edited' };\n");
-  await recording(join(dir, '.videos', 'feature.mp4'), { tourSha: sha(await readFile(tours[0])), appTree: appTree(dir) });
+  await recording(join(dir, '.videos', 'feature.mp4'), { tourBlob: git(dir, 'hash-object', tours[0]).trim(), appTree: appTree(dir) });
   await assert.rejects(publishTours(dir, changed, tours, { env }), /Commit \.tours\/feature\.tour\.js and push it/);
 
   await writeFile(tours[0], "export const meta = { title: 'edited again' };\n");
@@ -111,7 +111,7 @@ async function recordUncommitted(dir: string, name: string): Promise<string> {
   await mkdir(join(dir, '.tours'), { recursive: true });
   await writeFile(tour, `export const meta = { title: '${name}' };\n`);
   await mkdir(join(dir, '.videos'), { recursive: true });
-  await recording(join(dir, '.videos', `${name}.mp4`), { tourSha: sha(await readFile(tour)), appTree: appTree(dir) });
+  await recording(join(dir, '.videos', `${name}.mp4`), { tourBlob: git(dir, 'hash-object', tour).trim(), appTree: appTree(dir) });
   return tour;
 }
 
@@ -145,4 +145,19 @@ test('an untracked file at recording time is named when publish refuses', async 
     publishTours(dir, { ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() }, [tour], { env, dryRun: true }),
     /differs from the pull request's head: scratch\.md\./,
   );
+});
+
+test('a tour with CRLF line endings matches its committed copy', async () => {
+  const dir = await repo();
+  const { env } = await fakeGh();
+  git(dir, 'config', 'core.autocrlf', 'true');
+  const tour = join(dir, '.tours', 'feature.tour.js');
+  await mkdir(join(dir, '.tours'));
+  await writeFile(tour, "export const meta = {\r\n  title: 'feature',\r\n};\r\n");
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'tour');
+  await mkdir(join(dir, '.videos'));
+  await recording(join(dir, '.videos', 'feature.mp4'), { tourBlob: git(dir, 'hash-object', tour).trim(), appTree: appTree(dir) });
+  const [result] = await publishTours(dir, { ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() }, [tour], { env, dryRun: true });
+  assert.ok('body' in result);
 });

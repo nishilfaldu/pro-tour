@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import { appTree, git, sha, TourError, tourName } from './repo.ts';
+import { appTree, blobId, exists, git, sha, TourError, tourName } from './repo.ts';
 import { markdown } from './report.ts';
 import { recordingFiles, removeRecording } from './runtime.ts';
 import type { Report } from './types.ts';
@@ -109,12 +109,11 @@ async function ready(repo: string, tour: string, headTree: string): Promise<Read
     throw new TourError(`The latest recording of ${name} failed; fix the tour or the change and record it again.`);
   let committed: string | null = null;
   try {
-    committed = sha(git(['show', `HEAD:${path}`], repo));
+    committed = git(['rev-parse', `HEAD:${path}`], repo).trim();
   } catch {}
-  if (committed !== report.tourSha) {
-    const onDisk = sha(await readFile(tour).catch(() => ''));
+  if (committed !== report.tourBlob) {
     throw new TourError(
-      onDisk === report.tourSha
+      (await exists(tour)) && blobId(repo, tour) === report.tourBlob
         ? `Commit ${path} and push it, then publish.`
         : `${path} changed after its latest recording; record it again before publishing.`,
     );
