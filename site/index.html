@@ -21,9 +21,9 @@
       <a href="https://github.com/nishilfaldu/pro-tour">github</a>
     </header>
 
-    <p>Coding agents attach a video of the change to the pull request, with a checklist of what the video shows. You review by watching instead of checking out the branch.</p>
+    <p>Coding agents attach a video of the change to the PR, with a checklist of what it shows.</p>
 
-    <p class="aside">This is the comment Codex left on a PR after being asked only to open it:</p>
+    <p class="aside">A real comment Codex left on a PR:</p>
 
     <article class="comment" aria-label="A pull request comment posted by pro-tour">
       <div class="comment-head"><b>pro-tour</b> commented</div>
@@ -38,22 +38,17 @@
 
     <h3>How it works</h3>
     <ol>
-      <li>The agent finishes a change you can see in the app.</li>
-      <li>It writes <code>.tours/&lt;feature&gt;.tour.ts</code>: the behaviors, then a step that shows each one.</li>
-      <li><code>pro-tour run</code> plays it in a browser and records it. A step only passes if its checks see something change, so the video can't just show a page that was already there.</li>
-      <li><code>pro-tour publish</code> posts the video and checklist on the PR. A failed tour isn't posted.</li>
+      <li>The agent writes <code>.tours/&lt;feature&gt;.tour.ts</code>.</li>
+      <li><code>pro-tour run</code> records it. A step fails unless the page changes.</li>
+      <li><code>pro-tour publish</code> posts it on the PR.</li>
     </ol>
-    <p>No API key or CI. It runs on the agent you already use (Claude Code, Codex, Cursor) and your <code>gh</code> login.</p>
+    <p>No API key, no CI.</p>
 
     <h3 id="setup">Setup</h3>
 <pre><code>pnpm add -D github:nishilfaldu/pro-tour
 pnpm exec playwright install --with-deps chromium
-pnpm exec pro-tour init   <span class="dim"># installs the skill agents read</span></code></pre>
-    <p>Commit what <code>init</code> writes. Node 22.18+, ffmpeg and <code>gh</code> are needed; <code>pro-tour doctor</code> checks them.</p>
-
-    <footer>
-      <a href="https://github.com/nishilfaldu/pro-tour">github.com/nishilfaldu/pro-tour</a>
-    </footer>
+pnpm exec pro-tour init   <span class="dim"># commit what it writes</span></code></pre>
+    <p>Needs Node 22.18+, ffmpeg and <code>gh</code>. Check with <code>pro-tour doctor</code>.</p>
   </main>
   <script src="tour-sync.js"></script>
 </body>

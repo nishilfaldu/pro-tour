@@ -96,13 +96,6 @@ pre {
   color: var(--muted);
 }
 
-footer {
-  margin-top: 56px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
-}
-
 /* The pull request comment */
 .comment {
   border: 1px solid var(--gh-line);
