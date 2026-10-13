@@ -2,13 +2,19 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { appendFile, lstat, mkdir, readFile } from 'node:fs/promises';
+import { access, appendFile, lstat, mkdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 export class TourError extends Error {}
 
 export const sha = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
+export const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
+export const exists = (path: string) =>
+  access(path).then(
+    () => true,
+    () => false,
+  );
 
 /** Tours are `.tour.ts` (type-checked) or `.tour.js` files. */
 export const isTourFile = (path: string) => /\.tour\.[jt]s$/.test(path);
@@ -27,9 +33,7 @@ export function repoRoot(cwd: string): string {
   return git(['rev-parse', '--show-toplevel'], cwd).trim();
 }
 
-// CI checkouts of a pull request are detached; GitHub Actions names the branch in the environment.
-export function currentBranch(repo: string, env: NodeJS.ProcessEnv = process.env): string {
-  if (env.GITHUB_HEAD_REF) return env.GITHUB_HEAD_REF;
+export function currentBranch(repo: string): string {
   try {
     return git(['symbolic-ref', '--quiet', '--short', 'HEAD'], repo).trim();
   } catch {

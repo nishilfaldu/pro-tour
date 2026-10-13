@@ -23,14 +23,14 @@ function typesOptions(): Record<string, unknown> {
   };
 }
 
-export interface CheckResult {
+export interface TypeCheck {
   ok: boolean;
   /** Compiler errors, with paths relative to cwd. */
   output: string;
   checked: string[];
 }
 
-export async function checkTours(files: string[], cwd = process.cwd()): Promise<CheckResult> {
+export async function checkTours(files: string[], cwd = process.cwd()): Promise<TypeCheck> {
   const checked = files.filter(file => file.endsWith('.ts'));
   if (!checked.length) return { ok: true, output: '', checked };
   const work = await mkdtemp(join(tmpdir(), 'pro-tour-check-'));

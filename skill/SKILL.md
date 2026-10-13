@@ -40,15 +40,15 @@ not to.
    stopped. Fix the tour and run it again. If the failure is a real bug in your change, fix the change
    instead. After about three failed attempts, stop and tell the user what is failing.
 7. **Commit the tour** with the change.
-8. **Publish**: open or update the pull request, then run `{{run}} pro-tour publish`. It posts the video
-   and checklist of every tour the pull request changed and hides older videos of the same tours. Give
-   the user the comment link.
+8. **Publish**: push and open or update the pull request, then run `{{run}} pro-tour publish`. It posts
+   the video and checklist of every tour the pull request changed and hides older videos of the same
+   tours. It refuses a recording of code the pull request no longer has: if you changed the app after
+   recording, record again. Give the user the comment link.
 
 ## Rules
 
 - Never weaken a check, drop a behavior or skip a step to make a tour pass. A tour that fails because the
   change is broken is a correct result: fix the change, or tell the user.
-- Do not publish a failed tour (`publish` refuses one unless given `--allow-failed`).
 - Keep tours short: 3 to 7 steps, each one visible action and the checks that prove what it did.
 - The recording shows your local app and data. Do not put secrets or personal data on screen.
 

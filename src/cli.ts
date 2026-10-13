@@ -1,4 +1,4 @@
-import { access, readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -6,7 +6,19 @@ import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
 import { publishTours, resolvePr } from './publish.ts';
-import { appTree, changedTours, currentBranch, isTourFile, repoRoot, sha, TourError, tourName, videosDir } from './repo.ts';
+import {
+  appTree,
+  changedTours,
+  currentBranch,
+  exists,
+  isTourFile,
+  message,
+  repoRoot,
+  sha,
+  TourError,
+  tourName,
+  videosDir,
+} from './repo.ts';
 import { recordTour } from './runtime.ts';
 import type { Report, TourModule } from './types.ts';
 
@@ -31,13 +43,6 @@ const USAGE = `Usage:
       Check the browser, ffmpeg and GitHub CLI, printing the command that fixes each problem.
 
 Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser or encoder).`;
-
-const exists = (path: string) =>
-  access(path).then(
-    () => true,
-    () => false,
-  );
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 function appUrl(value: string): string {
   let url: URL;
@@ -99,8 +104,7 @@ async function run(argv: string[]): Promise<number> {
     options: {
       url: { type: 'string' },
       json: { type: 'boolean', default: false },
-      'skip-check': { type: 'boolean', default: false },
-      channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' },
+      channel: { type: 'string', default: 'chromium' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -109,13 +113,11 @@ async function run(argv: string[]): Promise<number> {
   const files = positionals.map(path => resolve(path));
   for (const file of files) if (!(await exists(file))) throw new TourError(`Tour file not found: ${file}`);
   // Type errors are reported in a second, before any recording starts.
-  if (!values['skip-check']) {
-    const checked = await checkTours(files);
-    if (!checked.ok) {
-      if (values.json) console.log(JSON.stringify([{ status: 'type-error', output: checked.output }], null, 2));
-      else console.log(`Type errors, nothing recorded:\n${checked.output}`);
-      return 1;
-    }
+  const checked = await checkTours(files);
+  if (!checked.ok) {
+    if (values.json) console.log(JSON.stringify([{ status: 'type-error', output: checked.output }], null, 2));
+    else console.log(`Type errors, nothing recorded:\n${checked.output}`);
+    return 1;
   }
   const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
   for (const file of files) {
@@ -204,14 +206,13 @@ async function publishCommand(argv: string[]): Promise<number> {
 }
 
 async function initCommand(argv: string[]): Promise<number> {
-  const { values } = parseArgs({ args: argv, options: { runner: { type: 'string' }, help: { type: 'boolean', short: 'h' } } });
+  const { values } = parseArgs({ args: argv, options: { help: { type: 'boolean', short: 'h' } } });
   if (values.help) return usage(true);
-  const repo = repoRoot(process.cwd());
-  const { runner, changes } = await init(repo, { runner: values.runner });
+  const { runner, changes } = await init(repoRoot(process.cwd()));
   for (const change of changes) console.log(change);
   console.log(
     changes.length
-      ? `The pro-tour skill is installed; agents will run it as \`${runner ? `${runner} ` : ''}pro-tour\`.`
+      ? `The pro-tour skill is installed; agents will run it as \`${runner} pro-tour\`.`
       : 'The pro-tour skill is already up to date.',
   );
   return 0;
@@ -225,7 +226,7 @@ async function apiCommand(): Promise<number> {
 async function doctorCommand(argv: string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv,
-    options: { channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' }, help: { type: 'boolean', short: 'h' } },
+    options: { channel: { type: 'string', default: 'chromium' }, help: { type: 'boolean', short: 'h' } },
   });
   if (values.help) return usage(true);
   const checks = await doctor({ channel: values.channel });

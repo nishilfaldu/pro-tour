@@ -65,10 +65,11 @@ deleted from `.videos/` once they are on the PR.
 Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable,
 browser or encoder).
 
-`publish` refuses a failed recording (unless `--allow-failed`) and a recording made from an older
-version of the tour file. It is retry-safe: before uploading it looks for an earlier comment carrying
-the same recording's marker, and after an upload whose outcome is unknown it will not upload again
-until you check the PR and pass `--retry-upload`. `--keep` keeps the local recording.
+`publish` posts a recording only if it passed and shows the code at the head of the PR: the branch is
+pushed, and neither the app nor the tour has changed since the recording. After any later commit
+outside `.tours/`, record again. The comment names the commit the video shows. Rerunning `publish` is
+safe: each comment carries a marker for its recording, so a comment already on the PR is reused, not
+posted twice.
 
 ## A tour
 

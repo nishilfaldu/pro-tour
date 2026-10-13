@@ -1,9 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, type BrowserContext, chromium, type Locator, type Page } from 'playwright';
+import { message, sha } from './repo.ts';
 import type { Check, CheckKind, Coverage, Report, StepOptions, StepResult, TourModule } from './types.ts';
 
 // The overlay is plain JavaScript injected into the page as is, so it ships beside this module.
@@ -35,20 +35,7 @@ declare global {
 
 class TourCheckError extends Error {}
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const firstLine = (error: unknown) => message(error).split('\n')[0];
-
-// TOUR_TRACE=1 logs slow actions and checks to stderr.
-async function traced<T>(name: string, run: () => Promise<T>): Promise<T> {
-  if (!process.env.TOUR_TRACE) return run();
-  const started = Date.now();
-  try {
-    return await run();
-  } finally {
-    const ms = Date.now() - started;
-    if (ms > 2000) process.stderr.write(`[tour] slow ${name}: ${ms}ms\n`);
-  }
-}
 
 // Resolves to null if the promise takes longer than ms.
 const within = <T>(ms: number, promise: Promise<T>) => Promise.race([promise, new Promise<null>(resolve => setTimeout(resolve, ms, null))]);
@@ -130,7 +117,7 @@ export class Tour {
       this.sampling = null;
       // All checks are polled at once, right after the last action: transient feedback such as a toast or a
       // "Copied!" tooltip must not expire while earlier chips animate. Chips are then shown in order.
-      const outcomes = await traced('checks', () => Promise.all(sampled.map(({ check }) => this.poll(check))));
+      const outcomes = await Promise.all(sampled.map(({ check }) => this.poll(check)));
       for (const [i, { check, sawFalse }] of sampled.entries()) await this.report(step, check, sawFalse, outcomes[i]);
       const stale = step.checks.filter(check => check.kind === 'hidden' && !check.changed);
       if (stale.length) {
@@ -238,25 +225,23 @@ export class Tour {
 
   private async point(locator: Locator): Promise<Box> {
     this.lastTarget = locator;
-    await traced(`  waitFor ${locator}`, () => locator.waitFor({ state: 'visible' }));
-    await traced(`  scrollIntoView ${locator}`, () => locator.scrollIntoViewIfNeeded());
+    await locator.waitFor({ state: 'visible' });
+    await locator.scrollIntoViewIfNeeded();
     const box = await locator.boundingBox();
     if (!box) throw new Error(`No bounding box for ${locator}`);
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
     await this.ui('ring', box);
-    await traced('  moveTo', () => this.ui('moveTo', x, y, this.pace.move));
+    await this.ui('moveTo', x, y, this.pace.move);
     await this.ui('press', x, y);
     return box;
   }
 
   /** Move the cursor to the element and click it. */
-  click(locator: Locator): Promise<void> {
-    return traced(`click ${locator}`, async () => {
-      await this.point(locator);
-      await traced(`  locator.click ${locator}`, () => locator.click());
-      await this.settle();
-    });
+  async click(locator: Locator): Promise<void> {
+    await this.point(locator);
+    await locator.click();
+    await this.settle();
   }
 
   /** Type text visibly into an input, replacing what it held. */
@@ -566,9 +551,7 @@ export async function recordTour(
 
     const files = recordingFiles(outDir, name);
     report.video = files.video;
-    report.videoSha = createHash('sha256')
-      .update(await readFile(encoded))
-      .digest('hex');
+    report.videoSha = sha(await readFile(encoded));
     if (failure) {
       report.failureFile = files.failure;
       await writeFile(files.failure, failureText(tour.meta.title, failure));
