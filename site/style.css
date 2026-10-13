@@ -63,11 +63,6 @@ p {
   margin: 0 0 14px;
 }
 
-.aside {
-  color: var(--muted);
-  margin-top: 28px;
-}
-
 ol {
   margin: 0 0 14px;
   padding-left: 22px;
@@ -98,6 +93,7 @@ pre {
 
 /* The pull request comment */
 .comment {
+  margin: 28px 0 0;
   border: 1px solid var(--gh-line);
   border-radius: 6px;
   font: 14px / 1.5 var(--gh-sans);
