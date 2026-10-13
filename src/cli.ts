@@ -120,10 +120,15 @@ async function run(argv: string[]): Promise<number> {
     else console.log(`Type errors, nothing recorded:\n${checked.output}`);
     return 1;
   }
-  const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
+  // Setup problems (not in a git repository, a symlinked .videos) stop the run before any tour records.
+  const repos = new Map<string, { repo: string; outDir: string }>();
   for (const file of files) {
     const repo = repoRoot(dirname(file));
-    const outDir = await videosDir(repo);
+    repos.set(file, { repo, outDir: await videosDir(repo) });
+  }
+  const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
+  for (const file of files) {
+    const { repo, outDir } = repos.get(file) ?? { repo: '', outDir: '' };
     const { tour, error } = await loadTour(file);
     if (!tour) {
       results.push({ tour: file, status: 'failed', error: error ?? null });

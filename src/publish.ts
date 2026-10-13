@@ -72,20 +72,25 @@ export async function resolvePr(
     } catch {
       throw new TourError('GitHub returned invalid PR data; no PR was guessed');
     }
-    const owner = git(['remote', 'get-url', 'origin'], repo).match(/github\.com[:/]([^/]+)\//)?.[1];
+    let owner: string | undefined;
+    try {
+      owner = git(['remote', 'get-url', 'origin'], repo).match(/github\.com[:/]([^/]+)\//)?.[1];
+    } catch {}
     if (owner) entries = entries.filter(entry => entry.headRepositoryOwner?.login?.toLowerCase() === owner.toLowerCase());
     if (entries.length > 1) throw new TourError('More than one open PR matches this branch; pass --pr');
     if (!entries.length) throw new TourError(`No open PR for branch ${branch}; pass --pr`);
     target = entries[0].url;
   }
   const view = target;
-  const data = JSON.parse(
-    await retryRead(() => exec('gh', ['pr', 'view', view, '--json', 'number,url,baseRefName,headRefOid'], { cwd: repo, env })),
-  );
+  const raw = await retryRead(() => exec('gh', ['pr', 'view', view, '--json', 'number,url,baseRefName,headRefOid'], { cwd: repo, env }));
+  let data: { number?: unknown; url?: string; baseRefName?: string; headRefOid?: unknown } = {};
+  try {
+    data = JSON.parse(raw);
+  } catch {}
   const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/([1-9]\d*)$/.exec(data.url ?? '');
   if (!match || typeof data.number !== 'number' || typeof data.headRefOid !== 'string')
     throw new TourError('GitHub returned invalid PR metadata; no PR was guessed');
-  return { number: data.number, url: data.url, repo: match[1], base: data.baseRefName, head: data.headRefOid };
+  return { number: data.number, url: match[0], repo: match[1], base: data.baseRefName ?? '', head: data.headRefOid };
 }
 
 interface Ready {
@@ -102,7 +107,12 @@ async function ready(repo: string, tour: string, headTree: string): Promise<Read
   const files = recordingFiles(join(repo, '.videos'), name);
   const saved = await readFile(files.report, 'utf8').catch(() => null);
   if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${path} --url <app url> first.`);
-  const report: Report = JSON.parse(saved);
+  let report: Report;
+  try {
+    report = JSON.parse(saved);
+  } catch {
+    throw new TourError(`The report of ${name} is unreadable; record it again.`);
+  }
   if (report.videoSha !== sha(await readFile(files.video).catch(() => '')))
     throw new TourError(`The recording of ${name} is incomplete; record it again.`);
   if (report.status !== 'passed')

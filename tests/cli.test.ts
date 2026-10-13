@@ -171,6 +171,11 @@ test('publish posts the tours the PR changed, and refuses failed or incomplete r
   assert.match((await cli(dir, ['publish'], env)).out, /latest recording of assignee-filter failed/);
 
   const report = join(dir, '.videos', 'assignee-filter.json');
+  const passing = await readFile(report, 'utf8');
+  await writeFile(report, '{ not json');
+  const unreadable = await cli(dir, ['publish'], env);
+  assert.deepEqual([unreadable.code, unreadable.out], [2, 'pro-tour: The report of assignee-filter is unreadable; record it again.']);
+  await writeFile(report, passing);
   await writeFile(report, JSON.stringify({ ...JSON.parse(await readFile(report, 'utf8')), status: 'passed', videoSha: 'another video' }));
   assert.match((await cli(dir, ['publish'], env)).out, /recording of assignee-filter is incomplete/);
 
