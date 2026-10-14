@@ -239,8 +239,9 @@ test('in a monorepo, each package keeps its tours in its own .tours/', async () 
   const changed = await cli(dir, ['publish', '--dry-run'], env);
   assert.equal(changed.code, 0, changed.out);
   assert.match(changed.out, /^--- apps\/web\/status-filter: comment that would be posted to /m);
-  const named = await cli(dir, ['publish', 'apps/web/status-filter', '--dry-run'], env);
-  assert.equal(named.code, 0, named.out);
+  const named = await cli(dir, ['publish', 'apps/web/status-filter'], env);
+  assert.match(named.out, /^Published apps\/web\/status-filter: /, named.out);
+  assert.deepEqual(await readdir(join(dir, '.videos')), []);
 });
 
 test('check and run report type errors in a tour without recording anything', async () => {

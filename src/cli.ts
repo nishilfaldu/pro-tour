@@ -289,7 +289,7 @@ async function publishCommand(argv: string[]): Promise<number> {
     tours = changedTours(repo, pr.base);
     if (!tours.length)
       throw new TourError(
-        'This pull request adds or changes no tours in .tours/. Record one with pro-tour run, commit it, or name the tours to publish.',
+        'This pull request adds or changes no tours in a .tours/ directory. Record one with pro-tour run, commit it, or name the tours to publish.',
       );
   }
 

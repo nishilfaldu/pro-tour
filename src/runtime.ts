@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rename, rm, rmdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, type BrowserContext, chromium, type Locator, type Page } from 'playwright';
@@ -417,6 +417,15 @@ export function recordingFiles(outDir: string, name: string) {
 
 export async function removeRecording(outDir: string, name: string): Promise<void> {
   await Promise.all(Object.values(recordingFiles(outDir, name)).map(file => rm(file, { force: true })));
+  // A monorepo tour's recording sits in folders of its own, such as .videos/apps/web/; drop them once empty.
+  for (let dir = dirname(join(outDir, name)); dir.startsWith(`${outDir}/`); dir = dirname(dir))
+    if (
+      !(await rmdir(dir).then(
+        () => true,
+        () => false,
+      ))
+    )
+      break;
 }
 
 function failureText(title: string, failure: { message: string; dom: string | null }): string {
