@@ -19,7 +19,7 @@ every listed behavior has to be shown, and a tour that fails is not published.
 In your app repository:
 
 ```sh
-pnpm add -D github:nishilfaldu/pro-tour
+pnpm add -D --allow-build=pro-tour github:nishilfaldu/pro-tour
 pnpm exec pro-tour install-browser   # on Linux: --with-deps, for Chromium's system libraries
 pnpm exec pro-tour init
 pnpm exec pro-tour doctor
@@ -27,7 +27,9 @@ pnpm exec pro-tour doctor
 
 `init` installs the `pro-tour` skill where agents look for skills (`.agents/skills/` for Codex and
 Cursor, `.claude/skills/` for Claude Code) and adds a short "Feature tours" section to `AGENTS.md` and
-`CLAUDE.md`, so agents use it reliably. Commit those files. `install-browser` downloads the Chromium
+`CLAUDE.md`, so agents use it reliably. Commit those files, and `pnpm-workspace.yaml`: pnpm builds a
+package installed from GitHub only if it is listed there, which `--allow-build` does. With npm, the same
+steps are `npm i -D github:nishilfaldu/pro-tour` and `npx pro-tour ...`. `install-browser` downloads the Chromium
 build that pro-tour's own Playwright needs, whatever Playwright version the app uses. `doctor` checks the
 rest:
 
