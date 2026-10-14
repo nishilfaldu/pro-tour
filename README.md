@@ -136,3 +136,7 @@ into the page as is.
 
 `site/` is the website, deployed by Vercel on every push to `main`. The experiments that chose the
 tour rules, and the harder test apps they ran against, are at the `research-archive` tag.
+
+## License
+
+[MIT](LICENSE)

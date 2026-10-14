@@ -2,6 +2,7 @@
   "name": "pro-tour",
   "version": "0.1.0",
   "description": "Record captioned feature tours of a pull request with Playwright, for coding agents and their reviewers",
+  "license": "MIT",
   "keywords": [
     "pull-request",
     "code-review",
