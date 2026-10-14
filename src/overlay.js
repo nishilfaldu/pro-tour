@@ -15,22 +15,17 @@
     .menu div.on { background: #5b8cff; color: #fff; }
     .ring { position: fixed; border: 2px solid #5b8cff; border-radius: 8px; z-index: 2; opacity: 0;
       box-shadow: 0 0 0 5px rgba(91,140,255,.18); transition: opacity .25s, left .4s, top .4s, width .4s, height .4s; }
-    .caption { position: fixed; left: 50%; bottom: 28px; z-index: 5; max-width: 82%; display: flex; gap: 14px; align-items: center;
-      padding: 13px 22px; border-radius: 14px; background: rgba(15,18,26,.9); color: #fff;
-      font: 500 21px/1.3 system-ui, -apple-system, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      transform: translate(-50%, 16px); opacity: 0; transition: opacity .3s, transform .3s; }
-    .caption.on { opacity: 1; transform: translate(-50%, 0); }
-    .badge { flex: none; font: 700 12px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: .1em;
+    .notices { position: fixed; top: 20px; right: 20px; z-index: 5; width: min(440px, 46vw); display: flex; flex-direction: column;
+      gap: 8px; align-items: stretch; }
+    .notice { padding: 10px 15px; border-radius: 12px; background: rgba(15,18,26,.92); color: #fff;
+      font: 500 15px/1.35 system-ui, -apple-system, sans-serif; box-shadow: 0 8px 22px rgba(0,0,0,.22); }
+    .notice b { margin-right: 8px; }
+    .notice.step { display: flex; gap: 12px; align-items: center; padding: 12px 16px; font: 600 18px/1.3 system-ui, -apple-system, sans-serif; }
+    .notice.step .badge { flex: none; font: 700 11px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: .1em;
       padding: 6px 8px; border-radius: 6px; background: #5b8cff; }
-    .checks { position: fixed; top: 20px; right: 20px; z-index: 5; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-    .check { padding: 9px 15px; border-radius: 10px; background: rgba(15,18,26,.9); color: #fff;
-      font: 500 15px/1.3 system-ui, -apple-system, sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
-    .check b { margin-right: 8px; }
-    .check.pass b { color: #4ade80; }
-    .check.fail { background: rgba(127,29,29,.92); }
-    .check.fail b { color: #fecaca; }
-    .check.same { color: #c8cede; }
-    .check.same b { color: #8b93a7; }
+    .notice.pass b { color: #4ade80; }
+    .notice.fail { background: rgba(127,29,29,.94); }
+    .notice.fail b { color: #fecaca; }
     .card { position: fixed; inset: 0; z-index: 6; display: grid; place-content: center; gap: 16px; padding: 0 14%;
       text-align: center; background: rgba(11,13,19,.94); color: #fff; font-family: system-ui, -apple-system, sans-serif;
       opacity: 0; transition: opacity .4s; }
@@ -58,12 +53,13 @@
     host.setAttribute('popover', 'manual');
     host.style.cssText =
       'display:block;position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none;';
-    const shadow = host.attachShadow({ mode: 'open' });
+    // Closed, so the tour's locators (which pierce open shadow roots) cannot match a notice.
+    const shadow = host.attachShadow({ mode: 'closed' });
     shadow.innerHTML = `<style>${STYLE}</style><div class="ring"></div><div class="menu"></div><div class="cursor">${ARROW}</div>
-      <div class="caption"><span class="badge"></span><span class="text"></span></div><div class="checks"></div>
+      <div class="notices"></div>
       <div class="card"><div class="eyebrow"></div><h1></h1><p></p></div>`;
     const $ = selector => shadow.querySelector(selector);
-    ui = { ring: $('.ring'), menu: $('.menu'), cursor: $('.cursor'), caption: $('.caption'), checks: $('.checks'), card: $('.card') };
+    ui = { ring: $('.ring'), menu: $('.menu'), cursor: $('.cursor'), notices: $('.notices'), card: $('.card') };
     place(0);
     document.documentElement.append(host);
     raise();
@@ -78,6 +74,14 @@
   }
 
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const appear = item =>
+    item.animate(
+      [
+        { opacity: 0, transform: 'translateX(20px)' },
+        { opacity: 1, transform: 'none' },
+      ],
+      { duration: 280, easing: 'ease-out' },
+    );
 
   window.__tour = {
     async moveTo(x, y, ms) {
@@ -147,36 +151,30 @@
       mount();
       ui.menu.style.display = 'none';
     },
-    caption(badge, text) {
+    // One stack of notices: each step starts it afresh with its title, and its checks follow below.
+    step(index, title) {
       mount();
-      ui.caption.querySelector('.badge').textContent = badge;
-      ui.caption.querySelector('.text').textContent = text;
-      ui.caption.classList.add('on');
+      const item = document.createElement('div');
+      item.className = 'notice step';
+      const badge = Object.assign(document.createElement('span'), { className: 'badge', textContent: `STEP ${index}` });
+      item.append(badge, title);
+      ui.notices.replaceChildren(item);
+      appear(item);
     },
-    clearCaption() {
-      mount();
-      ui.caption.classList.remove('on');
-    },
-    // state: 'pass' (became true in this step), 'same' (was already true), or 'fail'.
+    // state: 'pass' or 'fail'.
     check(text, state) {
       mount();
       const item = document.createElement('div');
-      item.className = `check ${state}`;
-      item.innerHTML = `<b>${state === 'fail' ? '✗' : '✓'}</b>`;
-      item.append(text);
-      ui.checks.append(item);
-      item.animate(
-        [
-          { opacity: 0, transform: 'translateX(20px)' },
-          { opacity: 1, transform: 'none' },
-        ],
-        { duration: 280, easing: 'ease-out' },
-      );
-      while (ui.checks.children.length > 4) ui.checks.firstElementChild.remove();
+      item.className = `notice ${state}`;
+      item.append(Object.assign(document.createElement('b'), { textContent: state === 'fail' ? '✗' : '✓' }), text);
+      ui.notices.append(item);
+      appear(item);
+      // The step's title stays; the oldest checks give way.
+      while (ui.notices.children.length > 5) ui.notices.children[ui.notices.firstElementChild.classList.contains('step') ? 1 : 0].remove();
     },
-    clearChecks() {
+    clearNotices() {
       mount();
-      ui.checks.replaceChildren();
+      ui.notices.replaceChildren();
     },
     card(eyebrow, title, text) {
       mount();

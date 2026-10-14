@@ -1,56 +1,57 @@
-// `pro-tour init`: install the pro-tour skill for coding agents in an app repository.
-import { access, appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { videosDir } from './repo.ts';
+// `pro-tour init`: point the app repository's agent instructions at pro-tour's docs.
+import { existsSync } from 'node:fs';
+import { readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// skill/ sits beside src/ and dist/ at the package root.
-const TEMPLATE = new URL('../skill/SKILL.md', import.meta.url);
+const DOCS = join('docs', 'feature-tours.md');
+// docs/ sits beside src/ and dist/ at the package root.
+const PACKAGE = fileURLToPath(new URL('..', import.meta.url));
+// Earlier versions installed a skill; its copies would teach the old tour API.
+const OLD_SKILLS = ['.agents/skills/pro-tour', '.claude/skills/pro-tour'];
 
-// Codex and Cursor read .agents/skills; Claude Code reads .claude/skills (and Cursor reads both).
-export const SKILL_DIRS = ['.agents/skills/pro-tour', '.claude/skills/pro-tour'];
-
-// Skills load when the agent judges them relevant; this line in the instruction files makes it reliable.
-export const POINTER = `## Feature tours
-
-After a change that users can see or do in the app, before opening or updating its pull request, use the
-\`pro-tour\` skill to record a feature tour and attach it to the pull request.
-`;
-
-const exists = (path: string) =>
-  access(path).then(
-    () => true,
-    () => false,
-  );
-
-export async function packageRunner(repo: string): Promise<string> {
-  if (await exists(join(repo, 'pnpm-lock.yaml'))) return 'pnpm exec';
-  if (await exists(join(repo, 'yarn.lock'))) return 'yarn';
-  if ((await exists(join(repo, 'bun.lockb'))) || (await exists(join(repo, 'bun.lock')))) return 'bunx';
-  return 'npx';
+// The docs as the agent finds them: through node_modules (a symlink under pnpm), so the path survives upgrades.
+function docsPath(repo: string, cwd: string): string {
+  for (let dir = cwd; dir.startsWith(repo); dir = dirname(dir)) {
+    const installed = join(dir, 'node_modules', 'pro-tour', DOCS);
+    if (existsSync(installed)) return relative(repo, installed).split(sep).join('/');
+    if (dir === repo) break;
+  }
+  const own = join(PACKAGE, DOCS);
+  return own.startsWith(`${repo}${sep}`) ? relative(repo, own).split(sep).join('/') : own;
 }
 
-// Idempotent: rewrites the skill copies (so upgrades refresh them) and adds the pointer only once.
-export async function init(repo: string, { runner }: { runner?: string } = {}): Promise<{ runner: string; changes: string[] }> {
-  runner ??= await packageRunner(repo);
-  // An empty runner means pro-tour is on PATH (a global install).
-  const skill = (await readFile(TEMPLATE, 'utf8')).replaceAll('{{run}} ', runner ? `${runner} ` : '');
+const section = (docs: string) => `## Feature tours
+
+After changing something users can see in the app, or when asked for a feature tour, read \`${docs}\` and follow it.
+`;
+
+// Replaces the "## Feature tours" section, up to the next heading of its level, or adds it at the end.
+function withSection(text: string | null, body: string): string {
+  if (text === null) return body;
+  const start = text.search(/^## Feature tours\s*$/m);
+  if (start < 0) return `${text}${text.endsWith('\n') ? '' : '\n'}\n${body}`;
+  const next = text.slice(start + 1).search(/^## /m);
+  const end = next < 0 ? text.length : start + 1 + next;
+  return `${text.slice(0, start)}${body}${next < 0 ? '' : '\n'}${text.slice(end)}`;
+}
+
+// Idempotent: run it again after an upgrade and only what changed is rewritten.
+export async function init(repo: string, cwd = repo): Promise<string[]> {
+  const body = section(docsPath(repo, cwd));
   const changes: string[] = [];
-  for (const dir of SKILL_DIRS) {
-    const file = join(repo, dir, 'SKILL.md');
-    const before = await readFile(file, 'utf8').catch(() => null);
-    if (before === skill) continue;
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, skill);
-    changes.push(`${before === null ? 'wrote' : 'updated'} ${join(dir, 'SKILL.md')}`);
-  }
   for (const name of ['AGENTS.md', 'CLAUDE.md']) {
     const file = join(repo, name);
     const text = await readFile(file, 'utf8').catch(() => null);
-    if (text?.includes('`pro-tour` skill')) continue;
-    if (text === null) await writeFile(file, POINTER);
-    else await appendFile(file, `${text.endsWith('\n') ? '' : '\n'}\n${POINTER}`);
-    changes.push(`${text === null ? 'created' : 'added a Feature tours section to'} ${name}`);
+    const next = withSection(text, body);
+    if (next === text) continue;
+    await writeFile(file, next);
+    changes.push(`${text === null ? 'created' : 'updated'} ${name}`);
   }
-  await videosDir(repo);
-  return { runner, changes };
+  for (const dir of OLD_SKILLS) {
+    if (!existsSync(join(repo, dir))) continue;
+    await rm(join(repo, dir), { recursive: true, force: true });
+    changes.push(`removed the old skill in ${dir}`);
+  }
+  return changes;
 }

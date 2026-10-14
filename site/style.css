@@ -91,6 +91,37 @@ pre {
   color: var(--muted);
 }
 
+/* The setup prompt: prose, so it wraps, with a copy button in its corner. */
+.prompt {
+  position: relative;
+}
+
+.prompt pre {
+  white-space: pre-wrap;
+  padding-right: 84px;
+}
+
+.prompt .nowrap {
+  white-space: nowrap;
+}
+
+.copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+  font: 13px / 1.5 var(--mono);
+  cursor: pointer;
+}
+
+.copy:hover {
+  border-color: var(--muted);
+}
+
 /* The pull request comment */
 .comment {
   margin: 28px 0 0;
@@ -129,6 +160,7 @@ pre {
 .comment video {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 10;
   margin: 4px 0 16px;
   background: #000;

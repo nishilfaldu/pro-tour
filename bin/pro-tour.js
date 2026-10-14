@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-// The built CLI, or the TypeScript source in a checkout that has not been built (Node strips the types).
-let cli;
-try {
-  cli = await import('../dist/cli.js');
-} catch (error) {
-  if (error?.code !== 'ERR_MODULE_NOT_FOUND' || !String(error.message).includes('dist/cli.js')) throw error;
-  cli = await import('../src/cli.ts');
-}
+// A checkout runs the TypeScript source (Node strips the types), so it is never behind an old build.
+// An installed package has only dist/: Node does not strip types under node_modules.
+import { existsSync } from 'node:fs';
+
+const source = new URL('../src/cli.ts', import.meta.url);
+const cli = await import(existsSync(source) ? source.href : '../dist/cli.js');
 process.exitCode = await cli.main();

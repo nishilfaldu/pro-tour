@@ -1,47 +1,46 @@
-import { createHash } from 'node:crypto';
-import { access, readdir, readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { realpath } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { constants } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
-import { publish, resolvePr } from './publish.ts';
-import { changedTours, currentBranch, isTourFile, repoRoot, TourError, tourName, videosDir } from './repo.ts';
-import { recordings, recordTour } from './runtime.ts';
-import type { Report, TourModule } from './types.ts';
-
-// docs/ sits beside src/ and dist/ at the package root.
-const API = new URL('../docs/tour-api.md', import.meta.url);
+import { publishTours, resolvePr } from './publish.ts';
+import { type Recording, RecordingError, recordTour } from './record.ts';
+import {
+  allTours,
+  currentBranch,
+  exists,
+  hasChanges,
+  headCommit,
+  isTourFile,
+  message,
+  recordings,
+  removeVideosDirIfEmpty,
+  repoRoot,
+  TourError,
+  tourName,
+  videosDir,
+} from './repo.ts';
 
 const USAGE = `Usage:
+  pro-tour run <file.tour.ts>... --url <app url> [--json] [--channel chromium|chrome]
+      Record each tour into .videos/<name>.mp4. A failure prints the error and the page's visible DOM.
   pro-tour check [<file.tour.ts>...]
-      Type-check tours (default: every tour in .tours/) without recording.
-  pro-tour run <file.tour.ts>... --url <app url> [--json] [--keep] [--out <dir>] [--channel chromium|chrome]
-      Type-check, then record tours into .videos/. On failure, prints the file with the error and the page's
-      visible DOM.
-  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run] [--keep] [--allow-failed] [--retry-upload]
-      Comment on the pull request with each tour's latest video and behavior checklist. Without tour names,
-      publishes the tours the pull request adds or changes. Deletes the local video once it is on the PR.
+      Type-check tours (default: every tour in a .tours/ directory) without recording.
+  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run]
+      Post each recording in .videos/ (or the named tours) to the pull request, then delete it.
   pro-tour init
-      Install the pro-tour skill for coding agents (.agents/skills, .claude/skills) and point AGENTS.md
-      and CLAUDE.md at it.
-  pro-tour api
-      Print the tour API.
-  pro-tour doctor
+      Point AGENTS.md and CLAUDE.md at pro-tour's docs.
+  pro-tour install-browser [--with-deps]
+      Download the Chromium build pro-tour records with (--with-deps also installs its system libraries on Linux).
+  pro-tour doctor [--channel chromium|chrome]
       Check the browser, ffmpeg and GitHub CLI, printing the command that fixes each problem.
 
-Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser or encoder).`;
-
-const exists = (path: string) =>
-  access(path).then(
-    () => true,
-    () => false,
-  );
-const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
-class RecordingError extends TourError {}
+Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable, browser or
+encoder), 130 interrupted.`;
 
 function appUrl(value: string): string {
   let url: URL;
@@ -55,37 +54,52 @@ function appUrl(value: string): string {
   return url.href;
 }
 
-// Fresh import every time: a tour edited between runs in one process must not come from the module cache.
-async function loadTour(file: string): Promise<{ tour?: TourModule; error?: string }> {
-  let tour: Partial<TourModule>;
-  try {
-    tour = await import(`${pathToFileURL(file)}?v=${Date.now()}-${Math.random()}`);
-  } catch (error) {
-    return { error: `The tour failed to load: ${message(error).split('\n')[0]}` };
+const indent = (text: string, by: string) =>
+  text
+    .split('\n')
+    .map(line => (line ? `${by}${line}` : line))
+    .join('\n');
+
+function printRecording({ result, video, error, dom }: Recording, shown: string): void {
+  const where = video ? `${relative(process.cwd(), video)} (${result.seconds}s)` : `${shown}, nothing recorded`;
+  console.log(`${result.status.toUpperCase()}: ${result.title} · ${where}`);
+  for (const step of result.steps) {
+    console.log(`  ${step.status === 'passed' ? '✓' : '✗'} ${step.title}`);
+    for (const check of step.checks) console.log(`      ${check.passed ? '✓' : '✗'} ${check.label}`);
   }
-  if (!tour.meta?.title || typeof tour.run !== 'function') return { error: 'A tour must export meta (with a title) and an async run(t).' };
-  return { tour: tour as TourModule };
+  if (error) console.log(`\n${indent(error, '  ')}`);
+  if (dom) console.log(`\n  Visible DOM where the tour stopped:\n${indent(dom, '    ')}`);
 }
 
-function printReport(report: Report, cwd: string): void {
-  const shown = (path: string) => relative(cwd, path) || path;
-  console.log(`${report.status.toUpperCase()}: ${report.title} · ${shown(report.video ?? '')} (${report.seconds}s)`);
-  for (const step of report.steps) console.log(`  ${step.status === 'passed' ? '✓' : '✗'} ${step.title}`);
-  for (const behavior of report.coverage ?? []) if (!behavior.steps.length) console.log(`  ✗ not shown: ${behavior.description}`);
-  if (report.error) console.log(`  ${report.error}`);
-  if (report.failureFile) console.log(`  Failure details: ${shown(report.failureFile)}`);
-}
-
-// The tours in .tours/ at the repository root, for commands given no tour files.
-async function repoTours(): Promise<string[]> {
-  const repo = repoRoot(process.cwd());
-  return (await readdir(join(repo, '.tours')).catch(() => [] as string[])).filter(isTourFile).map(file => join(repo, '.tours', file));
+// Ctrl-C (or SIGTERM) during run aborts the signal: the recording in progress stops, its browser closes and the
+// tour keeps its previous recording. A second Ctrl-C quits at once.
+function interruptible() {
+  const controller = new AbortController();
+  let code = 0;
+  const stop = (name: NodeJS.Signals) => {
+    if (code) process.exit(code);
+    code = 128 + constants.signals[name];
+    controller.abort();
+  };
+  for (const name of ['SIGINT', 'SIGTERM'] as const) process.on(name, stop);
+  return {
+    signal: controller.signal,
+    // The exit code if interrupted, else 0. A child process such as git gets the same Ctrl-C and its error can
+    // be caught before the signal handler has run, so this lets pending events run first.
+    async interrupted(): Promise<number> {
+      await new Promise(done => setTimeout(done, 50));
+      return code;
+    },
+    dispose: () => {
+      for (const name of ['SIGINT', 'SIGTERM'] as const) process.off(name, stop);
+    },
+  };
 }
 
 async function check(argv: string[]): Promise<number> {
   const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: { help: { type: 'boolean', short: 'h' } } });
   if (values.help) return usage(true);
-  const files = positionals.length ? positionals.map(path => resolve(path)) : await repoTours();
+  const files = positionals.length ? positionals.map(path => resolve(path)) : allTours(repoRoot(process.cwd()));
   for (const file of files) if (!(await exists(file))) throw new TourError(`Tour file not found: ${file}`);
   const result = await checkTours(files);
   if (!result.checked.length) {
@@ -102,65 +116,106 @@ async function run(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       url: { type: 'string' },
-      out: { type: 'string' },
       json: { type: 'boolean', default: false },
-      keep: { type: 'boolean', default: false },
-      'skip-check': { type: 'boolean', default: false },
-      channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' },
+      channel: { type: 'string', default: 'chromium' },
       help: { type: 'boolean', short: 'h' },
     },
   });
   if (values.help || !positionals.length || !values.url) return usage(values.help);
   const url = appUrl(values.url);
-  const files = positionals.map(path => resolve(path));
-  for (const file of files) if (!(await exists(file))) throw new TourError(`Tour file not found: ${file}`);
-  // Type errors are reported in a second, before any recording starts.
-  if (!values['skip-check']) {
-    const checked = await checkTours(files);
-    if (!checked.ok) {
-      if (values.json) console.log(JSON.stringify([{ status: 'type-error', output: checked.output }], null, 2));
-      else console.log(`Type errors, nothing recorded:\n${checked.output}`);
-      return 1;
-    }
+  const files: string[] = [];
+  for (const path of positionals) {
+    if (!(await exists(path))) throw new TourError(`Tour file not found: ${resolve(path)}`);
+    if (!isTourFile(path)) throw new TourError(`${path} is not a tour: tours are .tour.ts or .tour.js files`);
+    // Real paths, as git prints them, even when named through a symlink such as /tmp on macOS.
+    files.push(await realpath(path));
   }
-  const results: { tour: string; status: string; video?: string; report?: string; failure?: string | null; error?: string | null }[] = [];
+  const stop = interruptible();
+  try {
+    return await record(files, url, values.channel, values.json, stop);
+  } catch (error) {
+    // A git command that got the same Ctrl-C failed first.
+    const code = await stop.interrupted();
+    if (!code) throw error;
+    console.error('Interrupted.');
+    return code;
+  } finally {
+    stop.dispose();
+  }
+}
+
+type RunOutput = Omit<Partial<Recording['result']>, 'status' | 'error'> & {
+  tour: string;
+  status: string;
+  video?: string | null;
+  error?: string;
+  dom?: string;
+};
+
+async function record(
+  files: string[],
+  url: string,
+  channel: string,
+  json: boolean,
+  stop: ReturnType<typeof interruptible>,
+): Promise<number> {
+  const results: RunOutput[] = [];
+  const repos = new Set<string>();
+  const finish = async (code: number) => {
+    // A run that recorded nothing leaves nothing behind.
+    for (const repo of repos) await removeVideosDirIfEmpty(repo);
+    if (json) console.log(JSON.stringify(results, null, 2));
+    return code;
+  };
+  // Type errors are reported in a second, before any recording starts.
+  const checked = await checkTours(files);
+  if (!checked.ok) {
+    // Ctrl-C reaches the type checker too.
+    const code = await stop.interrupted();
+    if (code) {
+      console.error('Interrupted.');
+      return code;
+    }
+    if (json) console.log(JSON.stringify([{ status: 'type-error', output: checked.output }], null, 2));
+    else console.log(`Type errors, nothing recorded:\n${checked.output}`);
+    return 1;
+  }
   for (const file of files) {
-    const outDir = values.out ? resolve(values.out) : await videosDir(repoRoot(dirname(file)));
-    const { tour, error } = await loadTour(file);
-    if (!tour) {
-      results.push({ tour: file, status: 'failed', error: error ?? null });
-      if (!values.json) console.log(`FAILED: ${relative(process.cwd(), file)}\n  ${error}`);
+    const shown = relative(process.cwd(), file);
+    const repo = repoRoot(dirname(file));
+    repos.add(repo);
+    let recording: Recording;
+    try {
+      recording = await recordTour(file, {
+        repo,
+        url,
+        outDir: await videosDir(repo),
+        name: tourName(repo, file),
+        channel,
+        commit: headCommit(repo),
+        dirty: hasChanges(repo),
+        signal: stop.signal,
+      });
+    } catch (cause) {
+      const code = await stop.interrupted();
+      if (code) {
+        results.push({ tour: file, status: 'interrupted', error: 'Interrupted; the previous recording is unchanged.' });
+        if (!json) console.log(`INTERRUPTED: ${shown}\n  Nothing was recorded; the previous recording is unchanged.`);
+        return finish(code);
+      }
+      if (cause instanceof TourError) throw cause;
+      // The app, the browser or the encoder failed, not the tour. A RecordingError says which, and what to do.
+      const lines = message(cause).split('\n');
+      const error = `Recording failed: ${cause instanceof RecordingError ? lines.join('\n  ') : `${lines[0]}\n  If it happens again, run pro-tour doctor.`}`;
+      results.push({ tour: file, status: 'error', error });
+      if (!json) console.log(`ERROR: ${shown}\n  ${error}\n  This is not a tour failure.`);
       continue;
     }
-    const options = { url, outDir, name: tourName(file), channel: values.channel, keep: values.keep, sourceSha: sha(await readFile(file)) };
-    let report: Report | undefined;
-    // A browser or encoder failure is retried once; it says nothing about the tour.
-    for (let attempt = 1; !report; attempt++) {
-      try {
-        report = await recordTour(tour, options);
-      } catch (cause) {
-        if (attempt < 2) continue;
-        const browser = /browserType\.launch/.test(message(cause));
-        throw new RecordingError(
-          `Recording ${tourName(file)} failed twice: ${message(cause).split('\n')[0]}` +
-            (browser
-              ? "\nThe browser could not start. Inside a coding agent's sandbox (such as Codex on macOS), a browser cannot run: run pro-tour outside the sandbox."
-              : ''),
-        );
-      }
-    }
-    results.push({
-      tour: file,
-      status: report.status,
-      video: report.video,
-      report: report.video?.replace(/\.mp4$/, '.md'),
-      failure: report.failureFile ?? null,
-      error: report.error ?? null,
-    });
-    if (!values.json) printReport(report, process.cwd());
+    results.push({ tour: file, ...recording.result, video: recording.video, error: recording.error, dom: recording.dom });
+    if (!json) printRecording(recording, shown);
   }
-  if (values.json) console.log(JSON.stringify(results, null, 2));
-  return results.every(result => result.status === 'passed') ? 0 : 1;
+  if (results.some(result => result.status === 'error')) return finish(3);
+  return finish(results.every(result => result.status === 'passed') ? 0 : 1);
 }
 
 async function publishCommand(argv: string[]): Promise<number> {
@@ -169,93 +224,52 @@ async function publishCommand(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       pr: { type: 'string' },
-      out: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
-      keep: { type: 'boolean', default: false },
-      'allow-failed': { type: 'boolean', default: false },
-      'retry-upload': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
   if (values.help) return usage(true);
   const repo = repoRoot(process.cwd());
+  // A tour is named by its file or by its name, such as login or apps/web/login (see tourName).
+  const names = positionals.length
+    ? positionals.map(tour => (isTourFile(tour) ? tourName(repo, resolve(tour)) : tour.replace(/\.mp4$/, '')))
+    : await recordings(repo);
+  if (!names.length) throw new TourError('There are no recordings in .videos/ to publish. Record a tour with pro-tour run first.');
   const env = process.env;
   const pr = await resolvePr(repo, { target: values.pr, branch: values.pr ? undefined : currentBranch(repo), env });
-  const outDir = values.out ? resolve(values.out) : join(repo, '.videos');
-
-  // A tour named without a path is .tours/<name>.tour.ts, or .tour.js if that is what exists.
-  const named = async (name: string) => {
-    if (isTourFile(name)) return resolve(name);
-    const ts = join(repo, '.tours', `${name}.tour.ts`);
-    return (await exists(ts)) ? ts : join(repo, '.tours', `${name}.tour.js`);
-  };
-  let tours = await Promise.all(positionals.map(named));
-  if (!tours.length) {
-    const changed = changedTours(repo, pr.base);
-    if (changed.uncommitted.length)
-      console.warn(`pro-tour: uncommitted tour changes are not published until committed: ${changed.uncommitted.join(', ')}`);
-    tours = changed.tours;
-    if (!tours.length)
-      throw new TourError(
-        'This pull request adds or changes no tours in .tours/. Record one with pro-tour run, commit it, or name the tours to publish.',
-      );
-  }
-
-  // Check every tour before posting anything, so a problem does not leave the PR half published.
-  const ready: { name: string; video: string }[] = [];
-  for (const file of tours) {
-    const name = tourName(file);
-    const video = (await recordings(outDir, name)).at(-1);
-    if (!video)
-      throw new TourError(
-        `No recording of ${name} in ${relative(repo, outDir) || outDir}; run pro-tour run ${relative(repo, file)} --url <app url> first.`,
-      );
-    const report: Report = JSON.parse(await readFile(video.replace(/\.mp4$/, '.json'), 'utf8'));
-    if (report.status !== 'passed' && !values['allow-failed'])
-      throw new TourError(
-        `The latest recording of ${name} failed; fix the tour or the change and record it again (or pass --allow-failed).`,
-      );
-    if (report.tourSha && (await exists(file)) && report.tourSha !== sha(await readFile(file))) {
-      throw new TourError(`${relative(repo, file)} changed after its latest recording; record it again before publishing.`);
-    }
-    ready.push({ name, video });
-  }
-
-  for (const { name, video } of ready) {
-    const result = await publish(video, pr, { env, retryUpload: values['retry-upload'], keep: values.keep, dryRun: values['dry-run'] });
-    if (result.status === 'dry-run') console.log(`--- ${name}: comment that would be posted to ${pr.url} ---\n${result.body}`);
-    else
-      console.log(
-        `${result.reused ? 'Already published' : 'Published'} ${name}: ${result.commentUrl}` +
-          `${result.hidden ? ` (hid ${result.hidden} older recording${result.hidden > 1 ? 's' : ''})` : ''}`,
-      );
+  for (const result of await publishTours(repo, pr, names, { env, dryRun: values['dry-run'] })) {
+    if ('body' in result) console.log(`--- ${result.name}: comment that would be posted to ${pr.url} ---\n${result.body}`);
+    else console.log(`${result.reused ? 'Already published' : 'Published'} ${result.name}: ${result.url}`);
   }
   return 0;
 }
 
 async function initCommand(argv: string[]): Promise<number> {
-  const { values } = parseArgs({ args: argv, options: { runner: { type: 'string' }, help: { type: 'boolean', short: 'h' } } });
+  const { values } = parseArgs({ args: argv, options: { help: { type: 'boolean', short: 'h' } } });
   if (values.help) return usage(true);
-  const repo = repoRoot(process.cwd());
-  const { runner, changes } = await init(repo, { runner: values.runner });
+  const changes = await init(repoRoot(process.cwd()), await realpath(process.cwd()));
   for (const change of changes) console.log(change);
-  console.log(
-    changes.length
-      ? `The pro-tour skill is installed; agents will run it as \`${runner ? `${runner} ` : ''}pro-tour\`.`
-      : 'The pro-tour skill is already up to date.',
-  );
+  console.log(changes.length ? 'Agents will now find the feature tour docs.' : 'Already set up.');
   return 0;
 }
 
-async function apiCommand(): Promise<number> {
-  console.log((await readFile(API, 'utf8')).trimEnd());
-  return 0;
+// Installs the browser with pro-tour's own Playwright: the app's package manager may not expose Playwright's
+// command (pnpm does not), and the app's own Playwright, if any, may be a version that needs another build.
+async function installBrowser(argv: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args: argv,
+    options: { 'with-deps': { type: 'boolean', default: false }, help: { type: 'boolean', short: 'h' } },
+  });
+  if (values.help) return usage(true);
+  const playwright = join(dirname(createRequire(import.meta.url).resolve('playwright/package.json')), 'cli.js');
+  const args = [playwright, 'install', ...(values['with-deps'] ? ['--with-deps'] : []), 'chromium'];
+  return spawnSync(process.execPath, args, { stdio: 'inherit' }).status === 0 ? 0 : 2;
 }
 
 async function doctorCommand(argv: string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv,
-    options: { channel: { type: 'string', default: process.env.PRO_TOUR_BROWSER || 'chromium' }, help: { type: 'boolean', short: 'h' } },
+    options: { channel: { type: 'string', default: 'chromium' }, help: { type: 'boolean', short: 'h' } },
   });
   if (values.help) return usage(true);
   const checks = await doctor({ channel: values.channel });
@@ -273,7 +287,7 @@ const COMMANDS: Record<string, (argv: string[]) => Promise<number>> = {
   run,
   publish: publishCommand,
   init: initCommand,
-  api: apiCommand,
+  'install-browser': installBrowser,
   doctor: doctorCommand,
 };
 
@@ -283,12 +297,6 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   try {
     return await COMMANDS[command](rest);
   } catch (error) {
-    if (error instanceof RecordingError) {
-      console.error(
-        `pro-tour: ${error.message}\n(This is not a tour failure. Check that the app is reachable at --url and that pro-tour doctor passes.)`,
-      );
-      return 3;
-    }
     if (!(error instanceof TourError) && !String((error as NodeJS.ErrnoException)?.code).startsWith('ERR_PARSE_ARGS')) throw error;
     console.error(`pro-tour: ${message(error)}`);
     return 2;

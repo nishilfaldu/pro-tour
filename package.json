@@ -2,10 +2,27 @@
   "name": "pro-tour",
   "version": "0.1.0",
   "description": "Record captioned feature tours of a pull request with Playwright, for coding agents and their reviewers",
+  "license": "MIT",
+  "keywords": [
+    "pull-request",
+    "code-review",
+    "playwright",
+    "video",
+    "coding-agent",
+    "claude-code",
+    "codex",
+    "cursor"
+  ],
+  "homepage": "https://pro-tour.nishilfaldu.site",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nishilfaldu/pro-tour.git"
+  },
+  "bugs": "https://github.com/nishilfaldu/pro-tour/issues",
   "scripts": {
-    "test": "pnpm lint && pnpm typecheck && node --test 'tests/*.test.ts' 'sample-app/tests/*.test.js'",
+    "test": "pnpm lint && pnpm typecheck && node --test 'tests/*.test.ts'",
     "build": "node scripts/build.js",
-    "prepare": "pnpm build",
+    "prepare": "node scripts/build.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.check.json",
     "lint": "biome check",
     "format": "biome check --write"
@@ -27,8 +44,7 @@
   "files": [
     "bin",
     "dist",
-    "docs",
-    "skill"
+    "docs"
   ],
   "dependencies": {
     "playwright": "^1.64.0",

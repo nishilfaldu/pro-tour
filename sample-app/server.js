@@ -10,8 +10,17 @@ const files = new Map([
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
 ]);
 
+const people = ['Ana Lima', 'Ben Okafor', 'Chen Wei', 'Dana Kim'];
+
 export function createAppServer() {
   return createServer(async (request, response) => {
+    if (request.url === '/api/people' && request.method === 'GET') {
+      // The directory service is slow.
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+      response.end(JSON.stringify(people));
+      return;
+    }
     let item;
     try {
       item = files.get(new URL(request.url, 'http://localhost').pathname);

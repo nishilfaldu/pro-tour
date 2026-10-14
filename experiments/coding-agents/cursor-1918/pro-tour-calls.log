@@ -1,4 +1,0 @@
-10:59:01 exit=0 pro-tour api
-10:59:03 exit=0 pro-tour doctor
-11:05:31 exit=0 pro-tour run .tours/rename-history.tour.js --url http://127.0.0.1:5311/
-11:06:37 exit=0 pro-tour publish
