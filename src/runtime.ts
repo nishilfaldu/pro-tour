@@ -1,6 +1,6 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Browser, type BrowserContext, chromium, type Locator, type Page } from 'playwright';
 import { message, sha } from './repo.ts';
@@ -443,22 +443,87 @@ export interface RecordOptions {
   /** The tour's blob id and the app's tree id, so publish can tell a video made from other code. */
   tourBlob: string;
   appTree: string;
+  changedSubmodules?: string[];
+  /** Aborting it closes the browser and stops the recording, leaving the previous one as it was. */
+  signal?: AbortSignal;
+}
+
+/** A recording that failed for a known reason: the first line says what happened, the second what to do. */
+export class RecordingError extends Error {}
+
+/** What to do about a browser that did not start; shared with doctor. */
+export function browserFix(error: unknown, channel: string): string {
+  if (/missing dependencies|install-deps|shared libraries/i.test(message(error)))
+    return "Chromium's system libraries are missing: run pro-tour install-browser --with-deps.";
+  if (/Executable doesn't exist|playwright install/i.test(message(error)))
+    return channel === 'chromium'
+      ? 'The browser is not installed: run pro-tour install-browser.'
+      : `${channel} is not installed: install it, or use --channel chromium.`;
+  return "The browser is installed but could not start. Inside a coding agent's sandbox (such as Codex on macOS) a browser cannot run: run pro-tour outside the sandbox.";
+}
+
+// ffmpeg runs in its own process group: Ctrl-C reaches pro-tour, which stops it through the signal, and not
+// ffmpeg directly, so an encoder that fails always means the encoder failed.
+function tool(command: string, args: string[], signal?: AbortSignal): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return new Promise((done, fail) => {
+    const child = spawn(command, args, { detached: true, signal, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', data => {
+      stdout += data;
+    });
+    child.stderr.on('data', data => {
+      stderr += data;
+    });
+    child.on('error', fail);
+    child.on('close', status => done({ status, stdout, stderr }));
+  });
 }
 
 /** Record the tour, replacing its previous recording in outDir. */
 export async function recordTour(
   tour: TourModule,
-  { url, outDir, name, channel = 'chromium', tourBlob, appTree }: RecordOptions,
+  { url, outDir, name, channel = 'chromium', tourBlob, appTree, changedSubmodules, signal }: RecordOptions,
 ): Promise<Report> {
-  await mkdir(outDir, { recursive: true });
+  signal?.throwIfAborted();
+  // Found now rather than after a 30-second recording.
+  for (const encoder of ['ffmpeg', 'ffprobe'])
+    if ((spawnSync(encoder, ['-version']).error as NodeJS.ErrnoException)?.code === 'ENOENT')
+      throw new RecordingError(
+        `${encoder} is not installed.\nInstall ffmpeg (macOS: brew install ffmpeg; Debian/Ubuntu: sudo apt-get install ffmpeg).`,
+      );
+  const files = recordingFiles(outDir, name);
+  await mkdir(dirname(files.video), { recursive: true });
   // Work beside the destination, so the finished files are renamed into place on the same file system.
   const work = await mkdtemp(join(outDir, '.recording-'));
   try {
-    const report: Report = { title: tour.meta.title, summary: tour.meta.summary, url, tourBlob, appTree, status: 'failed', steps: [] };
+    const report: Report = {
+      title: tour.meta.title,
+      summary: tour.meta.summary,
+      url,
+      tourBlob,
+      appTree,
+      ...(changedSubmodules?.length ? { changedSubmodules } : {}),
+      status: 'failed',
+      steps: [],
+    };
     let failure: { message: string; dom: string | null } | undefined;
     let page: Page | undefined;
     let trimSeconds = 0;
-    const browser: Browser = await chromium.launch({ ...(channel === 'chromium' ? {} : { channel }), headless: true });
+    // pro-tour handles Ctrl-C itself (see signal), so Playwright must not exit the process on it.
+    const browser: Browser = await chromium
+      .launch({
+        ...(channel === 'chromium' ? {} : { channel }),
+        headless: true,
+        handleSIGINT: false,
+        handleSIGTERM: false,
+        handleSIGHUP: false,
+      })
+      .catch(error => {
+        throw new RecordingError(`${firstLine(error)}\n${browserFix(error, channel)}`);
+      });
+    const close = () => void browser.close().catch(() => {});
+    signal?.addEventListener('abort', close, { once: true });
     let context: BrowserContext | undefined;
     try {
       context = await browser.newContext({
@@ -471,7 +536,13 @@ export async function recordTour(
       await context.addInitScript({ path: OVERLAY });
       page = await context.newPage();
       const opened = Date.now();
-      await page.goto(url, { waitUntil: 'networkidle' });
+      await page.goto(url).catch(error => {
+        throw new RecordingError(
+          `The app did not open at ${url}: ${firstLine(error)}\nStart the app, or pass the URL it runs at with --url.`,
+        );
+      });
+      // Most apps fetch their data right after the load event. One that polls never goes quiet, so this wait is capped.
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       const t = new Tour(page, { behaviors: tour.meta.behaviors });
       await t.ui('card', 'Feature tour', tour.meta.title, tour.meta.summary);
       trimSeconds = (Date.now() - opened) / 1000;
@@ -511,14 +582,19 @@ export async function recordTour(
       );
       await t.pause(2200);
     } finally {
-      await context?.close();
+      signal?.removeEventListener('abort', close);
+      // After an interruption the browser is already closed, and the error that matters is the interruption.
+      await context?.close().catch(error => {
+        if (!signal?.aborted) throw error;
+      });
       await browser.close();
     }
+    signal?.throwIfAborted();
 
     const raw = await page?.video()?.path();
     if (!raw) throw new Error('Playwright did not record a video');
     const encoded = join(work, 'tour.mp4');
-    const encode = spawnSync(
+    const encode = await tool(
       'ffmpeg',
       [
         '-hide_banner',
@@ -542,15 +618,13 @@ export async function recordTour(
         '+faststart',
         encoded,
       ],
-      { encoding: 'utf8' },
+      signal,
     );
-    if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr}`);
-    const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', encoded], {
-      encoding: 'utf8',
-    });
+    if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr.trim()}`);
+    const probe = await tool('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', encoded], signal);
     report.seconds = Math.round(Number(probe.stdout) * 10) / 10;
+    signal?.throwIfAborted();
 
-    const files = recordingFiles(outDir, name);
     report.video = files.video;
     report.videoSha = sha(await readFile(encoded));
     if (failure) {

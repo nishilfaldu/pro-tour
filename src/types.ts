@@ -65,6 +65,8 @@ export interface Report {
   tourBlob: string;
   /** Git tree id of the app's code it was recorded from, without .tours/ (see appTree in repo.ts). */
   appTree: string;
+  /** Submodules that had uncommitted changes, which appTree cannot show; publish refuses the recording. */
+  changedSubmodules?: string[];
   status: 'passed' | 'failed';
   steps: StepResult[];
   coverage?: Coverage[];

@@ -2,8 +2,9 @@
 
 A tour is a TypeScript module in `.tours/<feature>.tour.ts` that records a short, captioned video of one
 feature for PR reviewers. The runner opens the `--url` you pass in a fresh browser (no cookies or
-local storage) with a 1280×800 viewport. Data on the app's server persists between runs, so a tour must
-not depend on what an earlier run created.
+local storage) with a 1280×800 viewport, and starts the tour once the page has loaded and its network
+has gone quiet, or 5 seconds after load for an app that keeps polling. Data on the app's server persists
+between runs, so a tour must not depend on what an earlier run created.
 
 ```ts
 import type { Tour, TourMeta } from 'pro-tour';

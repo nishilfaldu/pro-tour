@@ -3,7 +3,7 @@ import { access, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { type PullRequest, publishTours } from '../src/publish.ts';
-import { appTree } from '../src/repo.ts';
+import { appTree, changedSubmodules } from '../src/repo.ts';
 import { fakeGh, git, PR, recordedTour, recording, repo } from './helpers.ts';
 
 // A repository on a pushed PR branch with a passing recording of each tour.
@@ -160,4 +160,51 @@ test('a tour with CRLF line endings matches its committed copy', async () => {
   await recording(join(dir, '.videos', 'feature.mp4'), { tourBlob: git(dir, 'hash-object', tour).trim(), appTree: appTree(dir) });
   const [result] = await publishTours(dir, { ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() }, [tour], { env, dryRun: true });
   assert.ok('body' in result);
+});
+
+test('the app tree sees edits git add would skip, and leaves out every .tours/', async () => {
+  const dir = await repo({ 'config.json': '{}\n', 'apps/web/page.js': 'page\n', 'apps/web/.tours/login.tour.js': 'tour\n' });
+  const clean = appTree(dir);
+  assert.equal(clean, appTree(dir, 'HEAD'));
+  await writeFile(join(dir, 'apps', 'web', '.tours', 'login.tour.js'), 'edited tour\n');
+  assert.equal(appTree(dir), clean);
+
+  git(dir, 'update-index', '--assume-unchanged', 'config.json');
+  await writeFile(join(dir, 'config.json'), '{ "assumed": true }\n');
+  assert.notEqual(appTree(dir), clean);
+  git(dir, 'update-index', '--no-assume-unchanged', 'config.json');
+  git(dir, 'checkout', '--', 'config.json');
+  git(dir, 'update-index', '--skip-worktree', 'config.json');
+  await writeFile(join(dir, 'config.json'), '{ "skipped": true }\n');
+  assert.notEqual(appTree(dir), clean);
+  git(dir, 'update-index', '--no-skip-worktree', 'config.json');
+  git(dir, 'checkout', '--', 'config.json');
+
+  // Files a sparse checkout leaves off disk are unchanged, not deleted; one put back and edited is a change.
+  git(dir, 'sparse-checkout', 'set', '--no-cone', '/*', '!/apps/');
+  await assert.rejects(access(join(dir, 'apps', 'web', 'page.js')), { code: 'ENOENT' });
+  assert.equal(appTree(dir), clean);
+  await mkdir(join(dir, 'apps', 'web'), { recursive: true });
+  await writeFile(join(dir, 'apps', 'web', 'page.js'), 'edited outside the sparse checkout\n');
+  assert.notEqual(appTree(dir), clean);
+});
+
+test('a recording made while a submodule had uncommitted changes is refused', async () => {
+  const library = await repo({ 'lib.js': 'one\n' });
+  const dir = await repo();
+  git(dir, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', library, 'lib');
+  git(dir, 'commit', '-qm', 'add the library');
+  assert.deepEqual(changedSubmodules(dir), []);
+  await writeFile(join(dir, 'lib', 'lib.js'), 'two\n');
+  assert.deepEqual(changedSubmodules(dir), ['lib']);
+  await writeFile(join(dir, 'lib', 'lib.js'), 'one\n');
+  await writeFile(join(dir, 'lib', 'new.js'), 'untracked\n');
+  assert.deepEqual(changedSubmodules(dir), ['lib']);
+
+  const tour = await recordedTour(dir, 'feature', { changedSubmodules: ['lib'] });
+  const { env } = await fakeGh();
+  await assert.rejects(
+    publishTours(dir, { ...PR, head: git(dir, 'rev-parse', 'HEAD').trim() }, [tour], { env, dryRun: true }),
+    /feature was recorded while submodule lib had uncommitted changes/,
+  );
 });

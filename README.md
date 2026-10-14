@@ -20,14 +20,16 @@ In your app repository:
 
 ```sh
 pnpm add -D github:nishilfaldu/pro-tour
-pnpm exec playwright install --with-deps chromium
+pnpm exec pro-tour install-browser   # on Linux: --with-deps, for Chromium's system libraries
 pnpm exec pro-tour init
 pnpm exec pro-tour doctor
 ```
 
 `init` installs the `pro-tour` skill where agents look for skills (`.agents/skills/` for Codex and
 Cursor, `.claude/skills/` for Claude Code) and adds a short "Feature tours" section to `AGENTS.md` and
-`CLAUDE.md`, so agents use it reliably. Commit those files. `doctor` checks the rest:
+`CLAUDE.md`, so agents use it reliably. Commit those files. `install-browser` downloads the Chromium
+build that pro-tour's own Playwright needs, whatever Playwright version the app uses. `doctor` checks the
+rest:
 
 - Node.js 22.18 or newer (tours are TypeScript, run without a build step)
 - [ffmpeg](https://ffmpeg.org) and ffprobe (`brew install ffmpeg`, or `sudo apt-get install ffmpeg`)
@@ -51,6 +53,9 @@ When the PR changes again, the agent records the tour again and publishes; the o
 is hidden as outdated. Tours stay in `.tours/` as a current demo of each feature; recordings are
 deleted from `.videos/` once they are on the PR.
 
+In a monorepo, each app keeps its tours in its own package: `apps/web/.tours/login.tour.ts` is the
+tour `apps/web/login`, recorded to `.videos/apps/web/login.mp4` at the repository root.
+
 ## Commands
 
 | Command | What it does |
@@ -59,16 +64,19 @@ deleted from `.videos/` once they are on the PR.
 | `pro-tour run <file.tour.ts>... --url <url>` | Type-check, then record tours into `.videos/`; `--json` for agents; on failure, names the failure file |
 | `pro-tour publish [<tour>...]` | Post the latest recording of each tour the PR adds or changes, or of the named tours; `--dry-run` prints the comment instead |
 | `pro-tour init` | Install or refresh the skill for coding agents |
+| `pro-tour install-browser` | Download the Chromium build pro-tour records with; `--with-deps` on Linux |
 | `pro-tour api` | Print the tour API |
 | `pro-tour doctor` | Check the browser, ffmpeg and GitHub CLI |
 
 Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable,
-browser or encoder).
+browser or encoder), 130 interrupted. Ctrl-C during `run` stops the recording and keeps the tour's
+previous one.
 
 `publish` posts a recording only if it passed and shows the code at the head of the PR: the branch is
 pushed, and neither the app nor the tour has changed since the recording. Untracked files count as
-part of the app, so commit or delete them before recording. After any later commit outside `.tours/`,
-record again; publish names the files that differ. The comment names the commit the video shows. Rerunning `publish` is
+part of the app, so commit or delete them before recording; so do changes inside submodules, which must be
+committed in the submodule and in the app. After any later commit outside `.tours/`, record again;
+publish names the files that differ. The comment names the commit the video shows. Rerunning `publish` is
 safe: each comment carries a marker for its recording, so a comment already on the PR is reused, not
 posted twice.
 

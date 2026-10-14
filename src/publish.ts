@@ -4,8 +4,8 @@
 import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
-import { appTree, blobId, exists, git, sha, TourError, tourName } from './repo.ts';
+import { join } from 'node:path';
+import { appTree, blobId, exists, git, repoPath, sha, TourError, tourName } from './repo.ts';
 import { markdown } from './report.ts';
 import { recordingFiles, removeRecording } from './runtime.ts';
 import type { Report } from './types.ts';
@@ -102,8 +102,8 @@ interface Ready {
 // Every tour is checked before anything is posted, so a problem does not leave the PR half published.
 // A recording may be posted only if it passed and was made from the tour and the app code the PR's head holds.
 async function ready(repo: string, tour: string, headTree: string): Promise<Ready> {
-  const name = tourName(tour);
-  const path = relative(repo, tour);
+  const name = tourName(repo, tour);
+  const path = repoPath(repo, tour);
   const files = recordingFiles(join(repo, '.videos'), name);
   const saved = await readFile(files.report, 'utf8').catch(() => null);
   if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${path} --url <app url> first.`);
@@ -128,6 +128,10 @@ async function ready(repo: string, tour: string, headTree: string): Promise<Read
         : `${path} changed after its latest recording; record it again before publishing.`,
     );
   }
+  if (report.changedSubmodules?.length)
+    throw new TourError(
+      `${name} was recorded while submodule ${report.changedSubmodules.join(', ')} had uncommitted changes, which the pull request cannot hold. Commit them in the submodule, commit the submodule here, push, then record it again.`,
+    );
   if (report.appTree !== headTree) {
     let files = '';
     try {

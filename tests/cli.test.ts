@@ -1,10 +1,12 @@
 import { strict as assert } from 'node:assert';
+import { spawn } from 'node:child_process';
 import { access, chmod, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
-import type { Server } from 'node:http';
+import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { createAppServer } from '../sample-app/server.js';
 import { main } from '../src/cli.ts';
 import { sha } from '../src/repo.ts';
@@ -138,7 +140,107 @@ test('an unreachable app is a recording error, and --json still reports every to
     results.map((result: { status: string }) => result.status),
     ['error', 'error'],
   );
-  assert.match(results[0].error, /^Recording failed: page\.goto: net::ERR_/);
+  assert.match(results[0].error, /^Recording failed: The app did not open at http:\/\/127\.0\.0\.1:9\/: page\.goto: net::ERR_/);
+  assert.match(results[0].error, /Start the app, or pass the URL it runs at with --url\.$/);
+});
+
+test("a tour runs as an ES module whatever the app's package.json says", async () => {
+  const dir = await repo({ 'package.json': '{ "type": "commonjs" }\n' });
+  await mkdir(join(dir, '.tours'));
+  const tour = join(dir, '.tours', 'status-filter.tour.ts');
+  await writeFile(tour, FILTER_TOUR);
+  const run = await cli(dir, ['run', tour, '--url', appUrl]);
+  assert.equal(run.code, 0, run.out);
+});
+
+test('an app that never stops polling still records', async () => {
+  const polling = createServer((request, response) => {
+    if (request.url === '/poll') return void setTimeout(() => response.end('{}'), 300);
+    response.setHeader('content-type', 'text/html');
+    response.end(`<button>Go</button><p id="out">idle</p><script>
+      setInterval(() => fetch('/poll'), 100);
+      document.querySelector('button').onclick = () => { document.querySelector('#out').textContent = 'done'; };
+    </script>`);
+  });
+  await new Promise<void>(resolve => polling.listen(0, '127.0.0.1', resolve));
+  try {
+    const dir = await repo();
+    await mkdir(join(dir, '.tours'));
+    const tour = join(dir, '.tours', 'go.tour.ts');
+    await writeFile(
+      tour,
+      `import type { Tour, TourMeta } from 'pro-tour';
+export const meta = { title: 'Go', behaviors: { go: 'Go says done' } } satisfies TourMeta;
+export async function run(t: Tour): Promise<void> {
+  await t.step('Press Go', () => t.click(t.page.getByRole('button', { name: 'Go' })), [t.text('Says done', t.page.locator('#out'), 'done')], { covers: ['go'] });
+}
+`,
+    );
+    const started = Date.now();
+    const run = await cli(dir, ['run', tour, '--url', `http://127.0.0.1:${(polling.address() as AddressInfo).port}`]);
+    assert.equal(run.code, 0, run.out);
+    assert.ok(Date.now() - started < 25_000, 'the first page load must not wait for the network to go quiet');
+  } finally {
+    polling.closeAllConnections();
+    polling.close();
+  }
+});
+
+test('Ctrl-C stops the recording, keeps the previous one and exits 130', async () => {
+  const dir = await repo();
+  await mkdir(join(dir, '.tours'));
+  const tour = join(dir, '.tours', 'status-filter.tour.ts');
+  await writeFile(tour, FILTER_TOUR);
+  const videos = join(dir, '.videos');
+  await mkdir(videos);
+  await recording(join(videos, 'status-filter.mp4'));
+  const before = await readFile(join(videos, 'status-filter.json'), 'utf8');
+  // Its own process group, signalled as a whole, as a terminal does on Ctrl-C.
+  const bin = fileURLToPath(new URL('../bin/pro-tour.js', import.meta.url));
+  const child = spawn(process.execPath, [bin, 'run', tour, '--url', appUrl], {
+    cwd: dir,
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let out = '';
+  child.stdout.on('data', data => {
+    out += data;
+  });
+  child.stderr.on('data', data => {
+    out += data;
+  });
+  const exited = new Promise<number | null>(resolve => child.on('close', resolve));
+  // Wait for the browser to be recording: its temporary directory appears first.
+  for (let i = 0; i < 100 && !(await readdir(videos)).some(file => file.startsWith('.recording-')); i++)
+    await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  process.kill(-(child.pid ?? 0), 'SIGINT');
+  assert.equal(await exited, 130, out);
+  assert.match(out, /^INTERRUPTED: \.tours\/status-filter\.tour\.ts\n {2}Nothing was recorded; the previous recording is unchanged\.$/m);
+  assert.doesNotMatch(out, /reachable|Recording failed/);
+  assert.deepEqual((await readdir(videos)).sort(), ['status-filter.json', 'status-filter.mp4']);
+  assert.equal(await readFile(join(videos, 'status-filter.json'), 'utf8'), before);
+});
+
+test('in a monorepo, each package keeps its tours in its own .tours/', async () => {
+  const dir = await repo();
+  git(dir, 'remote', 'add', 'origin', 'https://github.com/owner/app.git');
+  const tours = join(dir, 'apps', 'web', '.tours');
+  await mkdir(tours, { recursive: true });
+  const tour = join(tours, 'status-filter.tour.ts');
+  await writeFile(tour, FILTER_TOUR);
+  assert.match((await cli(dir, ['check'])).out, /^Types OK: apps\/web\/\.tours\/status-filter\.tour\.ts$/);
+  const run = await cli(join(dir, 'apps', 'web'), ['run', '.tours/status-filter.tour.ts', '--url', appUrl, '--json']);
+  assert.equal(run.code, 0, run.out);
+  assert.ok(JSON.parse(run.out)[0].video.endsWith('/.videos/apps/web/status-filter.mp4'), run.out);
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'tour');
+  const { env } = await fakeGh();
+  const changed = await cli(dir, ['publish', '--dry-run'], env);
+  assert.equal(changed.code, 0, changed.out);
+  assert.match(changed.out, /^--- apps\/web\/status-filter: comment that would be posted to /m);
+  const named = await cli(dir, ['publish', 'apps/web/status-filter', '--dry-run'], env);
+  assert.equal(named.code, 0, named.out);
 });
 
 test('check and run report type errors in a tour without recording anything', async () => {
