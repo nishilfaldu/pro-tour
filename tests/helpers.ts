@@ -2,8 +2,8 @@
 import { execFileSync } from 'node:child_process';
 import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { appTree, sha } from '../src/repo.ts';
+import { dirname, join } from 'node:path';
+import type { TourResult } from '../src/types.ts';
 
 export const PR = { number: 1, url: 'https://github.com/owner/app/pull/1', repo: 'owner/app', base: 'main' };
 
@@ -15,7 +15,6 @@ export async function repo(files: Record<string, string> = {}): Promise<string> 
   const dir = await mkdtemp(join(tmpdir(), 'pro-tour-test-'));
   git(dir, 'init', '-q', '-b', 'main');
   await writeFile(join(dir, 'README.md'), 'app\n');
-  await writeFile(join(dir, '.gitignore'), '.videos/\n');
   for (const [path, body] of Object.entries(files)) {
     await mkdir(join(dir, path, '..'), { recursive: true });
     await writeFile(join(dir, path), body);
@@ -25,22 +24,6 @@ export async function repo(files: Record<string, string> = {}): Promise<string> 
   git(dir, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
   git(dir, 'checkout', '-qb', 'feature');
   return dir;
-}
-
-// A committed tour with a passing recording of it, as pro-tour run leaves it.
-export async function recordedTour(dir: string, name: string, report: Record<string, unknown> = {}): Promise<string> {
-  const tour = join(dir, '.tours', `${name}.tour.js`);
-  await mkdir(join(dir, '.tours'), { recursive: true });
-  await writeFile(tour, `export const meta = { title: '${name}' };\n`);
-  git(dir, 'add', '-A');
-  git(dir, 'commit', '-qm', `tour ${name}`);
-  await mkdir(join(dir, '.videos'), { recursive: true });
-  await recording(join(dir, '.videos', `${name}.mp4`), {
-    tourBlob: git(dir, 'hash-object', tour).trim(),
-    appTree: appTree(dir),
-    ...report,
-  });
-  return tour;
 }
 
 // Keeps PR comments in a JSON state file. `fail` makes post number `at` fail: with `lost`, the comment is
@@ -95,33 +78,21 @@ export async function fakeGh(fail: { at: number; lost?: boolean } | null = null)
   };
 }
 
-export const REPORT = {
+export const RESULT: TourResult = {
   title: 'Filter by assignee',
-  url: 'http://127.0.0.1:4173',
-  summary: 'Narrow the board.',
   status: 'passed',
+  steps: [{ title: 'Pick Priya', status: 'passed', checks: [{ label: '2 of 4 tasks', passed: true }] }],
   seconds: 1,
-  coverage: [{ id: 'filter', description: 'Picking a person shows their tasks', steps: [1] }],
-  steps: [{ title: 'Pick Priya', status: 'passed', seconds: 1, checks: [{ label: '2 of 4 tasks', passed: true, changed: true }] }],
+  commit: null,
+  dirty: false,
 };
 
-// A small real H.264 video with a report beside it, as pro-tour run leaves them.
-export async function recording(video: string, report: Record<string, unknown> = {}, seconds = 1): Promise<string> {
+// A small real H.264 video carrying a result in its metadata, as pro-tour run leaves it.
+export async function recording(video: string, result: Partial<TourResult> = {}, seconds = 1): Promise<string> {
+  await mkdir(dirname(video), { recursive: true });
   execFileSync('ffmpeg', [
-    '-v',
-    'error',
-    '-y',
-    '-f',
-    'lavfi',
-    '-i',
-    `testsrc=size=160x120:rate=5:duration=${seconds}`,
-    '-c:v',
-    'libx264',
-    '-pix_fmt',
-    'yuv420p',
-    video,
+    ...['-v', 'error', '-y', '-f', 'lavfi', '-i', `testsrc=size=160x120:rate=5:duration=${seconds}`],
+    ...['-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-metadata', `comment=${JSON.stringify({ ...RESULT, ...result })}`, video],
   ]);
-  const videoSha = sha(await readFile(video));
-  await writeFile(video.replace('.mp4', '.json'), JSON.stringify({ ...REPORT, videoSha, ...report }));
   return video;
 }

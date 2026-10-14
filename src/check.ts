@@ -1,11 +1,11 @@
 // `pro-tour check`: type-check .tour.ts files with the TypeScript compiler pro-tour ships, in about a
 // second and without recording, so a misused API is caught before a 30-second run.
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
@@ -21,6 +21,17 @@ function typesOptions(): Record<string, unknown> {
     typeRoots: [fileURLToPath(new URL('../node_modules/@types', import.meta.url))],
     paths: { 'pro-tour': [fileURLToPath(new URL('./index.ts', import.meta.url))] },
   };
+}
+
+// The compiler's "Expected 2 arguments" on an expect means its message is missing: say so.
+function explain(line: string, cwd: string): string {
+  const at = /^([^(]+)\((\d+),(\d+)\): error TS2554: Expected 2 arguments, but got 1\./.exec(line);
+  if (!at) return line;
+  const code = readFileSync(resolve(cwd, at[1]), 'utf8').split('\n')[Number(at[2]) - 1] ?? '';
+  // The column is where the called name starts: expect, or soft/poll after expect.
+  const [before, from] = [code.slice(0, Number(at[3]) - 1), code.slice(Number(at[3]) - 1)];
+  if (!(/^expect\s*\(/.test(from) || (/^(soft|poll)\s*\(/.test(from) && /\bexpect\.$/.test(before)))) return line;
+  return `${line}\n  expect needs a message as its second argument, such as expect(card, 'Card says Assigned to Ana'): it is shown in the video.`;
 }
 
 export interface TypeCheck {
@@ -58,7 +69,7 @@ export async function checkTours(files: string[], cwd = process.cwd()): Promise<
     const output = `${result.stdout}${result.stderr}`
       .trim()
       .split('\n')
-      .map(line => line.replace(/^(\/[^(]+)(\(\d+,\d+\))/, (_, path, at) => `${relative(cwd, path)}${at}`))
+      .map(line => explain(line, cwd).replace(/^(\/[^(]+)(\(\d+,\d+\))/, (_, path, at) => `${relative(cwd, path)}${at}`))
       .join('\n');
     return { ok: result.status === 0, output, checked };
   } finally {

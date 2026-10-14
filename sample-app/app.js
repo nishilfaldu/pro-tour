@@ -34,7 +34,10 @@ function render() {
       title.textContent = task.name;
       const details = document.createElement('p');
       details.textContent = task.details;
-      content.append(title, details);
+      const assignee = document.createElement('p');
+      assignee.className = 'assignee';
+      assignee.textContent = task.assignee ? `Assigned to ${task.assignee}` : 'Unassigned';
+      content.append(title, details, assignee);
       const controls = document.createElement('div');
       controls.className = 'task-controls';
       const status = document.createElement('select');
@@ -71,8 +74,19 @@ function openTask(task) {
     form.elements.details.value = task.details;
     form.elements.status.value = task.status;
   }
+  loadPeople(task?.assignee ?? '');
   dialog.showModal();
   form.elements.name.focus();
+}
+
+async function loadPeople(selected) {
+  const select = form.elements.assignee;
+  select.disabled = true;
+  select.replaceChildren(new Option('Loading teammates…', ''));
+  const people = await (await fetch('/api/people')).json();
+  select.replaceChildren(new Option('Unassigned', ''), ...people.map(name => new Option(name, name)));
+  select.value = selected;
+  select.disabled = false;
 }
 
 document.querySelector('#new-task').addEventListener('click', () => openTask());
@@ -90,7 +104,12 @@ form.addEventListener('submit', event => {
   const data = new FormData(form);
   const name = String(data.get('name')).trim();
   if (!name) return;
-  const value = { name, details: String(data.get('details')).trim(), status: String(data.get('status')) };
+  const value = {
+    name,
+    details: String(data.get('details')).trim(),
+    status: String(data.get('status')),
+    assignee: String(data.get('assignee') ?? ''),
+  };
   if (editingId)
     Object.assign(
       tasks.find(task => task.id === editingId),

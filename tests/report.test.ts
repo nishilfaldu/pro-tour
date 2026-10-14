@@ -1,66 +1,62 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { markdown } from '../src/report.ts';
-import type { Report } from '../src/types.ts';
+import type { TourResult } from '../src/types.ts';
 
-const report: Report = {
+const HEAD = '0123456789abcdef';
+const result: TourResult = {
   title: 'Filter <b>by</b> assignee',
-  summary: 'Narrow the board & focus.',
-  url: 'http://localhost:3000',
-  tourBlob: 'tour',
-  appTree: 'tree',
   status: 'failed',
-  error: 'Check failed: <Empty> state',
+  error: 'Card says <Empty> state',
   seconds: 12.5,
+  commit: HEAD,
+  dirty: false,
   steps: [
     {
-      index: 1,
       title: 'Pick Priya',
+      at: 3.4,
       status: 'passed',
-      covers: ['filter'],
-      seconds: 4,
       checks: [
-        { label: '2 of 4 tasks', kind: 'text', passed: true, changed: true },
-        { label: 'Header still shown', kind: 'visible', passed: true, changed: false },
+        { label: '2 of 4 tasks', passed: true },
+        { label: 'Header & toolbar still shown', passed: true },
       ],
     },
-    { index: 2, title: 'Clear the filter', status: 'failed', covers: [], seconds: 6, checks: [], error: 'locator.click: Timeout' },
-  ],
-  coverage: [
-    { id: 'filter', description: 'Picking a person shows their tasks', steps: [1] },
-    { id: 'empty', description: 'No match shows an empty state', steps: [] },
+    { title: 'Clear the filter', at: 71.9, status: 'failed', checks: [], error: 'locator.click: Timeout' },
   ],
 };
 
-test('the comment shows the result, the video, the behavior checklist and collapsed steps', () => {
-  const body = markdown(report, 'VIDEO', '0123456789abcdef');
+test('the comment shows the result, which code it shows, the video and collapsed steps', () => {
   assert.equal(
-    body,
+    markdown(result, 'VIDEO', HEAD),
     [
       '### Feature tour: Filter &lt;b&gt;by&lt;/b&gt; assignee',
       '',
-      'Narrow the board &amp; focus.',
+      "**✗ Failed** · 2 steps · 12.5s · recorded at `0123456`, this PR's head",
       '',
-      '**Failed**: 1/2 steps · 12.5s video of 0123456',
-      '',
-      '> ✗ Check failed: &lt;Empty&gt; state',
+      '> ✗ Card says &lt;Empty&gt; state',
       '',
       'VIDEO',
       '',
-      '**What this PR does**',
+      '<details><summary><b>Steps</b></summary>',
       '',
-      '- ✓ Picking a person shows their tasks (step 1)',
-      '- ✗ No match shows an empty state (not shown)',
-      '',
-      '<details><summary><b>Steps and checks</b></summary>\n',
-      '- ✓ **Pick Priya** (4s)',
+      '- ✓ **Pick Priya** · 0:03',
       '  - ✓ 2 of 4 tasks',
-      '  - ✓ Header still shown _(already true before)_',
-      '- ✗ **Clear the filter** (6s)',
+      '  - ✓ Header &amp; toolbar still shown',
+      '- ✗ **Clear the filter** · 1:11',
       '  - ✗ locator.click: Timeout',
       '',
       '</details>',
       '',
     ].join('\n'),
   );
+});
+
+test('the comment says plainly when the video is not of the PR head, or had uncommitted changes', () => {
+  const line = (change: Partial<TourResult>) => markdown({ ...result, status: 'passed', ...change }, 'VIDEO', HEAD).split('\n')[2];
+  assert.equal(
+    line({ commit: 'fedcba9876543210' }),
+    "**✓ Passed** · 2 steps · 12.5s · recorded at `fedcba9`, not this PR's head (`0123456`)",
+  );
+  assert.equal(line({ dirty: true }), "**✓ Passed** · 2 steps · 12.5s · recorded at `0123456`, this PR's head, plus uncommitted changes");
+  assert.equal(line({ commit: null, steps: [result.steps[0]] }), '**✓ Passed** · 1 step · 12.5s · recorded before the first commit');
 });

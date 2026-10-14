@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>pro-tour</title>
-  <meta name="description" content="Coding agents attach a video of the change to the pull request, with a checklist of what the video shows.">
+  <meta name="description" content="Coding agents record a video of the change they made and post it on the pull request.">
   <meta property="og:title" content="pro-tour">
-  <meta property="og:description" content="Coding agents attach a video of the change to the pull request, with a checklist of what the video shows.">
+  <meta property="og:description" content="Coding agents record a video of the change they made and post it on the pull request.">
   <meta property="og:image" content="https://pro-tour.nishilfaldu.site/media/poster.jpg">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23cf222e'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,23 +21,23 @@
       <a href="https://github.com/nishilfaldu/pro-tour">github</a>
     </header>
 
-    <p>Coding agents attach a video of the change to the PR, with a checklist of what it shows.</p>
+    <p>Coding agents record a video of the change they made and post it on the PR.</p>
 
     <article class="comment" aria-label="A pull request comment posted by pro-tour">
       <div class="comment-head"><b>pro-tour</b> commented</div>
       <div class="comment-body">
-        <h2>Feature tour: Assignee filter</h2>
-        <p><b>Passed</b>: 7/7 steps · 46s video</p>
-        <video id="tour" src="media/tour.mp4" poster="media/poster.jpg" controls muted playsinline autoplay loop preload="metadata" aria-label="Feature tour of an Assignee filter"></video>
-        <p><b>What this PR does</b></p>
+        <h2>Feature tour: Assign a task to a teammate</h2>
+        <p><b>✓ Passed</b> · 4 steps · 31s · recorded at the PR's head</p>
+        <video id="tour" src="media/tour.mp4" poster="media/poster.jpg" controls muted playsinline autoplay loop preload="metadata" aria-label="Feature tour of assigning a task to a teammate"></video>
+        <p><b>Steps</b></p>
         <ul class="checklist" id="checklist"></ul>
       </div>
     </article>
 
     <h3>How it works</h3>
     <ol>
-      <li>The agent writes <code>.tours/&lt;feature&gt;.tour.ts</code>.</li>
-      <li><code>pro-tour run</code> records it. A step fails unless the page changes.</li>
+      <li>The agent writes a Playwright test in <code>.tours/&lt;feature&gt;.tour.ts</code>.</li>
+      <li><code>pro-tour run</code> records it, with a cursor, real typing and a notice for each step and check.</li>
       <li><code>pro-tour publish</code> posts it on the PR.</li>
     </ol>
     <p>No API key, no CI.</p>

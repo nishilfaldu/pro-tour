@@ -2,142 +2,60 @@
 
 **[pro-tour.nishilfaldu.site](https://pro-tour.nishilfaldu.site)**
 
-Pro Tour lets your coding agent attach a short, captioned video of what a change does to its pull
-request, so you can review the change by watching it instead of running the app.
+Your coding agent records a short video of the change it made and posts it on the pull request, so you can
+watch the change working instead of running the app.
 
-After a user-visible change, the agent (Claude Code, Codex, Cursor, or any agent that can run shell
-commands) writes a *tour*: a small, typed Playwright script that lists the behaviors the change adds and
-demonstrates each one. Pro Tour records it with a visible cursor, step captions and on-screen checks,
-and posts one comment on the PR: the video, then a "What this PR does" checklist with the step that
-shows each behavior. You read the checklist, then watch the video.
-
-The checks are what make the video trustworthy: a step passes only if it changed something on screen,
-every listed behavior has to be shown, and a tour that fails is not published.
+A tour is a Playwright test the agent writes in `.tours/`. Pro Tour records it with a visible cursor, typing
+you can follow, and a notice for each step and check. No API key: the agent you already use writes the tour.
 
 ## Setup
 
-In your app repository:
+In your app's repository:
 
 ```sh
 pnpm add -D --allow-build=pro-tour github:nishilfaldu/pro-tour
-pnpm exec pro-tour install-browser   # on Linux: --with-deps, for Chromium's system libraries
+pnpm exec pro-tour install-browser
 pnpm exec pro-tour init
-pnpm exec pro-tour doctor
 ```
 
-`init` installs the `pro-tour` skill where agents look for skills (`.agents/skills/` for Codex and
-Cursor, `.claude/skills/` for Claude Code) and adds a short "Feature tours" section to `AGENTS.md` and
-`CLAUDE.md`, so agents use it reliably. Commit those files, and `pnpm-workspace.yaml`: pnpm builds a
-package installed from GitHub only if it is listed there, which `--allow-build` does. With npm, the same
-steps are `npm i -D github:nishilfaldu/pro-tour` and `npx pro-tour ...`. `install-browser` downloads the Chromium
-build that pro-tour's own Playwright needs, whatever Playwright version the app uses. `doctor` checks the
-rest:
+`init` adds a short "Feature tours" section to `AGENTS.md` and `CLAUDE.md` that points agents at
+[the docs](docs/feature-tours.md); commit it. Pro Tour also needs Node.js 22.18+, ffmpeg and the
+[GitHub CLI](https://cli.github.com), logged in. `pro-tour doctor` checks them all.
 
-- Node.js 22.18 or newer (tours are TypeScript, run without a build step)
-- [ffmpeg](https://ffmpeg.org) and ffprobe (`brew install ffmpeg`, or `sudo apt-get install ffmpeg`)
-- the [GitHub CLI](https://cli.github.com), logged in (`gh auth login`), with `gh pr comment --attach`
+## Use
 
-No model API key is needed: the agent you already use does the writing.
+Ask your agent for a change as usual. Once it works, the agent writes a tour, records it and publishes it on
+the PR, or you ask it for one. A tour looks like this:
 
-## The workflow
+```ts
+import { expect, test } from 'pro-tour';
 
-1. You ask your agent for a change, as usual.
-2. When the change works, the agent creates or updates `.tours/<feature>.tour.ts`, one tour per
-   feature, named for the feature (`assignee-filter`, not the branch name), and type-checks it with
-   `pro-tour check` (about a second, no recording).
-3. It records the tour with `pro-tour run`. If the tour fails, it reads the failure file (the full
-   error and the visible DOM where it stopped) and fixes the tour, or fixes the change if the failure
-   is a real bug.
-4. It commits the tour, opens or updates the PR, and runs `pro-tour publish`.
-5. You open the PR, read the checklist and watch the video.
-
-When the PR changes again, the agent records the tour again and publishes; the older video's comment
-is hidden as outdated. Tours stay in `.tours/` as a current demo of each feature; recordings are
-deleted from `.videos/` once they are on the PR.
-
-In a monorepo, each app keeps its tours in its own package: `apps/web/.tours/login.tour.ts` is the
-tour `apps/web/login`, recorded to `.videos/apps/web/login.mp4` at the repository root.
-
-## Commands
+test('Filter tasks by status', async ({ page }) => {
+  await test.step('Filter the board to Done', async () => {
+    await page.getByRole('combobox', { name: 'Status', exact: true }).selectOption('Done');
+    await expect(page.locator('#visible-count'), '2 tasks in view').toHaveText('2');
+  });
+});
+```
 
 | Command | What it does |
 |---|---|
-| `pro-tour check [<file.tour.ts>...]` | Type-check tours without recording (default: all of `.tours/`) |
-| `pro-tour run <file.tour.ts>... --url <url>` | Type-check, then record tours into `.videos/`; `--json` for agents; on failure, names the failure file |
-| `pro-tour publish [<tour>...]` | Post the latest recording of each tour the PR adds or changes, or of the named tours; `--dry-run` prints the comment instead |
-| `pro-tour init` | Install or refresh the skill for coding agents |
-| `pro-tour install-browser` | Download the Chromium build pro-tour records with; `--with-deps` on Linux |
-| `pro-tour api` | Print the tour API |
-| `pro-tour doctor` | Check the browser, ffmpeg and GitHub CLI |
+| `pro-tour run <tour> --url <app url>` | Record the tour into `.videos/` |
+| `pro-tour publish` | Post each recording on the PR, then delete it |
+| `pro-tour check` | Type-check tours without recording |
 
-Exit codes: 0 passed, 1 a tour failed, 2 usage or setup error, 3 recording failed (app unreachable,
-browser or encoder), 130 interrupted. Ctrl-C during `run` stops the recording and keeps the tour's
-previous one.
-
-`publish` posts a recording only if it passed and shows the code at the head of the PR: the branch is
-pushed, and neither the app nor the tour has changed since the recording. Untracked files count as
-part of the app, so commit or delete them before recording; so do changes inside submodules, which must be
-committed in the submodule and in the app. After any later commit outside `.tours/`, record again;
-publish names the files that differ. The comment names the commit the video shows. Rerunning `publish` is
-safe: each comment carries a marker for its recording, so a comment already on the PR is reused, not
-posted twice.
-
-## A tour
-
-The full API is in [`docs/tour-api.md`](docs/tour-api.md) (`pro-tour api` prints it).
-
-```ts
-import type { Tour, TourMeta } from 'pro-tour';
-
-export const meta = {
-  title: 'Filter tasks by status',
-  summary: 'Pick a status to narrow the board.',
-  behaviors: { 'filter-done': 'The Done filter shows only finished tasks' },
-} satisfies TourMeta;
-
-export async function run(t: Tour): Promise<void> {
-  const { page } = t;
-  await t.step('Filter the board to Done', async () => {
-    await t.select(page.getByRole('combobox', { name: 'Status', exact: true }), 'Done');
-  }, [
-    t.text('2 tasks in view', page.locator('#visible-count'), '2'),
-    t.hidden('Draft release notes is hidden', page.getByRole('heading', { name: 'Draft release notes' })),
-  ], { covers: ['filter-done'] });
-}
-```
-
-Actions are `t.click`, `t.fill` (types visibly), `t.select` (draws the open menu, which headless
-Chromium does not paint), `t.press` and `t.goto`; checks are `t.visible`, `t.hidden`, `t.text`,
-`t.value` and `t.check`. Checks are sampled before the step's actions and after each one. A step fails
-unless at least one check went from false to true, and a `hidden` check must have been visible at some
-point in the step, so a step cannot pass by asserting what was already on screen.
-
-The `pro-tour` types resolve for `pro-tour check` even in a repository that does not use TypeScript.
-Plain `.tour.js` tours also run, without type checking.
-
-## Limitations
-
-- The video shows the app as it runs on the machine that recorded it, with that machine's data. It
-  demonstrates the change; it does not replace tests or CI.
-- Tour code runs with the permissions of the Node process, like any script in the repository.
-- Recording uses Playwright's video capture, which is soft at small text sizes.
+The video shows the app as it runs on your machine, with your data. It shows the change; it does not replace
+tests.
 
 ## Development
 
 ```sh
-pnpm install          # also builds dist/
-pnpm exec playwright install --with-deps chromium
-pnpm test             # lint, type-check src, tests and tours, then run the tests
-node sample-app/server.js &   # the sample app, http://127.0.0.1:4173
+pnpm install
+./bin/pro-tour.js install-browser
+pnpm test
+node sample-app/server.js &
 ./bin/pro-tour.js run sample-app/.tours/status-filter.tour.ts --url http://127.0.0.1:4173
 ```
-
-The source is TypeScript in `src/`, run directly by Node in a checkout and compiled to `dist/` by
-`pnpm build` for the published package. `src/overlay.js` is plain JavaScript because it is injected
-into the page as is.
-
-`site/` is the website, deployed by Vercel on every push to `main`. The experiments that chose the
-tour rules, and the harder test apps they ran against, are at the `research-archive` tag.
 
 ## License
 

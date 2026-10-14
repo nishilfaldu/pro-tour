@@ -1,7 +1,7 @@
 // Read-only setup checks with the command that fixes each problem. No app startup, nothing published.
 import { execFile } from 'node:child_process';
 import { chromium } from 'playwright';
-import { browserFix } from './runtime.ts';
+import { browserFix } from './record.ts';
 
 const run = (command: string, args: string[], env?: NodeJS.ProcessEnv) =>
   new Promise<{ ok: boolean; out: string }>(done => {

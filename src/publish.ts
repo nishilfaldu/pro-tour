@@ -1,14 +1,14 @@
-// Publish recorded tours to their pull request: one comment per tour with the video and the behavior checklist.
-// Retry-safe without local state: each comment carries a marker for its recording, and a rerun that finds the
-// marker on the PR reuses that comment instead of posting again.
+// Publish recorded tours to their pull request: one comment per tour with the video and its steps. Each video
+// is deleted once it is on the PR. Retry-safe without local state: each comment carries a marker for its
+// recording, and a rerun that finds the marker on the PR reuses that comment instead of posting again.
 import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { appTree, blobId, exists, git, repoPath, sha, TourError, tourName } from './repo.ts';
+import { readRecording, recordingFile, removeRecording } from './record.ts';
+import { exists, git, removeVideosDirIfEmpty, sha, TourError } from './repo.ts';
 import { markdown } from './report.ts';
-import { recordingFiles, removeRecording } from './runtime.ts';
-import type { Report } from './types.ts';
+import type { TourResult } from './types.ts';
 
 type Env = NodeJS.ProcessEnv;
 
@@ -96,54 +96,17 @@ export async function resolvePr(
 interface Ready {
   name: string;
   video: string;
-  report: Report;
+  videoSha: string;
+  result: TourResult;
 }
 
-// Every tour is checked before anything is posted, so a problem does not leave the PR half published.
-// A recording may be posted only if it passed and was made from the tour and the app code the PR's head holds.
-async function ready(repo: string, tour: string, headTree: string): Promise<Ready> {
-  const name = tourName(repo, tour);
-  const path = repoPath(repo, tour);
-  const files = recordingFiles(join(repo, '.videos'), name);
-  const saved = await readFile(files.report, 'utf8').catch(() => null);
-  if (!saved) throw new TourError(`No recording of ${name}; run pro-tour run ${path} --url <app url> first.`);
-  let report: Report;
-  try {
-    report = JSON.parse(saved);
-  } catch {
-    throw new TourError(`The report of ${name} is unreadable; record it again.`);
-  }
-  if (report.videoSha !== sha(await readFile(files.video).catch(() => '')))
-    throw new TourError(`The recording of ${name} is incomplete; record it again.`);
-  if (report.status !== 'passed')
-    throw new TourError(`The latest recording of ${name} failed; fix the tour or the change and record it again.`);
-  let committed: string | null = null;
-  try {
-    committed = git(['rev-parse', `HEAD:${path}`], repo).trim();
-  } catch {}
-  if (committed !== report.tourBlob) {
-    throw new TourError(
-      (await exists(tour)) && blobId(repo, tour) === report.tourBlob
-        ? `Commit ${path} and push it, then publish.`
-        : `${path} changed after its latest recording; record it again before publishing.`,
-    );
-  }
-  if (report.changedSubmodules?.length)
-    throw new TourError(
-      `${name} was recorded while submodule ${report.changedSubmodules.join(', ')} had uncommitted changes, which the pull request cannot hold. Commit them in the submodule, commit the submodule here, push, then record it again.`,
-    );
-  if (report.appTree !== headTree) {
-    let files = '';
-    try {
-      const paths = git(['diff-tree', '-r', '--name-only', headTree, report.appTree], repo).trim().split('\n');
-      files = `: ${paths.slice(0, 10).join(', ')}${paths.length > 10 ? ', …' : ''}`;
-    } catch {}
-    // Untracked files count: they were part of the app when it was recorded.
-    throw new TourError(
-      `${name} was recorded from app code that differs from the pull request's head${files}. Commit or delete what differs, then record it again.`,
-    );
-  }
-  return { name, video: files.video, report };
+// Every recording is read before anything is posted, so a missing one does not leave the PR half published.
+async function ready(repo: string, name: string): Promise<Ready> {
+  const video = recordingFile(join(repo, '.videos'), name);
+  if (!(await exists(video))) throw new TourError(`No recording of ${name}; record it with pro-tour run first.`);
+  const result = await readRecording(video);
+  if (!result) throw new TourError(`${video} is not a pro-tour recording; record ${name} again.`);
+  return { name, video, videoSha: sha(await readFile(video)), result };
 }
 
 async function comments(pr: PullRequest, env: Env): Promise<Comment[]> {
@@ -190,10 +153,11 @@ async function hideOlder(pr: PullRequest, tourMarker: string, current: string, e
 }
 
 // gh replaces the body's reference to the attached file with the uploaded video.
-const commentBody = (report: Report, video: string, commit: string) => markdown(report, `![](${video})`, commit);
+const commentBody = ({ result, video }: Ready, head: string) => markdown(result, `![](${video})`, head);
 
-async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): Promise<{ url: string; reused: boolean }> {
-  const marker = `<!-- pro-tour:${sha(`${name}:${report.videoSha}:${pr.url}`)} -->`;
+async function post(recording: Ready, pr: PullRequest, env: Env): Promise<{ url: string; reused: boolean }> {
+  const { name, video, videoSha } = recording;
+  const marker = `<!-- pro-tour:${sha(`${name}:${videoSha}:${pr.url}`)} -->`;
   // Names the tour, so a newer recording of it can hide the older comments.
   const tourMarker = `<!-- pro-tour-tour:${sha(`${name}:${pr.url}`).slice(0, 16)} -->`;
   let url = await findPosted(pr, marker, env);
@@ -202,7 +166,7 @@ async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): 
     const work = await mkdtemp(join(tmpdir(), 'pro-tour-publish-'));
     try {
       const body = join(work, 'comment.md');
-      await writeFile(body, `${commentBody(report, video, pr.head)}\n${marker}\n${tourMarker}\n`);
+      await writeFile(body, `${commentBody(recording, pr.head)}\n${marker}\n${tourMarker}\n`);
       url = (
         await exec('gh', ['pr', 'comment', String(pr.number), '--repo', pr.repo, '--body-file', body, '--attach', video], {
           env,
@@ -224,26 +188,23 @@ async function post({ name, video, report }: Ready, pr: PullRequest, env: Env): 
 export type PublishResult = { name: string; body: string } | { name: string; url: string; reused: boolean };
 
 /**
- * Post each tour's recording to the PR. A dry run returns the comment bodies instead. The local recordings
- * are deleted once every tour is on the PR; until then a rerun reuses the comments already posted.
+ * Post each named recording to the PR. A dry run returns the comment bodies instead. Each video is deleted
+ * once its comment is up, and .videos/ with it when it is empty.
  */
 export async function publishTours(
   repo: string,
   pr: PullRequest,
-  tours: string[],
+  names: string[],
   { env = process.env, dryRun = false }: { env?: Env; dryRun?: boolean } = {},
 ): Promise<PublishResult[]> {
-  const local = git(['rev-parse', 'HEAD'], repo).trim();
-  if (local !== pr.head)
-    throw new TourError(
-      `This checkout (${local.slice(0, 7)}) is not the head of ${pr.url} (${pr.head.slice(0, 7)}); push or pull, then publish.`,
-    );
-  const headTree = appTree(repo, 'HEAD');
   const recordings = [];
-  for (const tour of tours) recordings.push(await ready(repo, tour, headTree));
-  if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording.report, recording.video, pr.head) }));
+  for (const name of names) recordings.push(await ready(repo, name));
+  if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording, pr.head) }));
   const results = [];
-  for (const recording of recordings) results.push({ name: recording.name, ...(await post(recording, pr, env)) });
-  for (const { name } of recordings) await removeRecording(join(repo, '.videos'), name);
+  for (const recording of recordings) {
+    results.push({ name: recording.name, ...(await post(recording, pr, env)) });
+    await removeRecording(join(repo, '.videos'), recording.name);
+  }
+  await removeVideosDirIfEmpty(repo);
   return results;
 }

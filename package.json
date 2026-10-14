@@ -44,8 +44,7 @@
   "files": [
     "bin",
     "dist",
-    "docs",
-    "skill"
+    "docs"
   ],
   "dependencies": {
     "playwright": "^1.64.0",

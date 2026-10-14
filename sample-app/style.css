@@ -238,3 +238,11 @@ dialog form select {
     justify-content: space-between;
   }
 }
+
+.task p.assignee {
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}

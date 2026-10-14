@@ -1,10 +1,9 @@
 // Git and filesystem handling for the app repository a tour belongs to.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
-import { access, appendFile, lstat, mkdir, readFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { existsSync, realpathSync } from 'node:fs';
+import { access, lstat, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { isAbsolute, join, relative, sep } from 'node:path';
 
 export class TourError extends Error {}
 
@@ -71,65 +70,19 @@ export function currentBranch(repo: string): string {
   }
 }
 
-// The app's code as a git tree id, leaving out every .tours/: of a commit, or of the working tree (untracked
-// files included, ignored ones not). A recording shows the code it was made from only while this id is the same.
-export function appTree(repo: string, commit?: string): string {
-  const dir = mkdtempSync(join(tmpdir(), 'pro-tour-index-'));
-  const env = { ...process.env, GIT_INDEX_FILE: join(dir, 'index') };
-  // With sparse checkout on, git add skips files outside the sparse patterns even when they are on disk.
-  const index = (args: string[], input?: string) => git(['-c', 'core.sparseCheckout=false', ...args], repo, env, input);
+// HEAD, or null in a repository without commits.
+export function headCommit(repo: string): string | null {
   try {
-    if (commit) index(['read-tree', commit]);
-    else {
-      // A copy of the real index, so git add only rehashes the files that changed.
-      const real = resolve(repo, git(['rev-parse', '--git-path', 'index'], repo).trim());
-      if (existsSync(real)) {
-        copyFileSync(real, env.GIT_INDEX_FILE);
-        unmark(repo, index);
-      }
-      index(['add', '-A', '--', '.']);
-    }
-    index(['rm', '-r', '-q', '--cached', '--ignore-unmatch', '--', TOURS]);
-    return index(['write-tree']).trim();
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
+    return git(['rev-parse', '--verify', '--quiet', 'HEAD'], repo).trim();
+  } catch {
+    return null;
   }
 }
 
-// git add trusts an index entry marked assume-unchanged or skip-worktree and never reads the file, so an edit
-// to it would be missing from the tree. Clears both marks in the copy of the index, except skip-worktree on a
-// file that is not on disk (outside a sparse checkout), which would otherwise read as deleted.
-function unmark(repo: string, index: (args: string[], input?: string) => string): void {
-  const assumed: string[] = [];
-  const skipped: string[] = [];
-  for (const entry of index(['ls-files', '-v', '-z']).split('\0')) {
-    const [tag, path] = [entry[0], entry.slice(2)];
-    if (!path) continue;
-    if (/[a-z]/.test(tag)) assumed.push(path);
-    if (/^[Ss]$/.test(tag) && existsSync(join(repo, path))) skipped.push(path);
-  }
-  // update-index applies only one of these options per call.
-  if (assumed.length) index(['update-index', '-z', '--no-assume-unchanged', '--stdin'], assumed.join('\0'));
-  if (skipped.length) index(['update-index', '-z', '--no-skip-worktree', '--stdin'], skipped.join('\0'));
-}
-
-// Submodules with uncommitted or untracked files. The app's tree holds only each submodule's commit, so it
-// cannot show those changes, and publish refuses a recording made while there were any.
-export function changedSubmodules(repo: string): string[] {
-  const entries = git(['status', '--porcelain=v2', '-z', '--untracked-files=no', '--ignore-submodules=none'], repo).split('\0');
-  const changed: string[] = [];
-  for (let i = 0; i < entries.length; i++) {
-    const fields = entries[i].split(' ');
-    // A rename entry (2) is followed by its original path.
-    if (fields[0] === '2') i++;
-    if (['1', '2'].includes(fields[0]) && /^S.(M.|.U)$/.test(fields[2] ?? ''))
-      changed.push(fields.slice(fields[0] === '1' ? 8 : 9).join(' '));
-  }
-  return changed;
-}
-
-// A file's git blob id as git would commit it (line endings normalized), so it compares with HEAD:<path>.
-export const blobId = (repo: string, file: string) => git(['hash-object', '--', file], repo).trim();
+// Whether anything outside .tours/ differs from HEAD, untracked files included: a recording made then shows
+// code that is not committed.
+export const hasChanges = (repo: string) =>
+  git(['status', '--porcelain', '--untracked-files=all', '--', '.', ':(exclude,glob)**/.tours/**'], repo).trim().length > 0;
 
 // Every tour in the repository, committed or not (ignored files aside).
 export const allTours = (repo: string) =>
@@ -138,36 +91,35 @@ export const allTours = (repo: string) =>
     .filter(isTourFile)
     .map(file => join(repo, file));
 
-// Tours a pull request adds or changes: committed .tour.{ts,js} files in a .tours/ that differ from its base.
-export function changedTours(repo: string, base: string): string[] {
-  const ref = [`origin/${base}`, base].find(candidate => {
-    try {
-      git(['rev-parse', '--verify', '--quiet', `${candidate}^{commit}`], repo);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-  if (!ref)
-    throw new TourError(`The PR base ${base} is not available locally; run git fetch origin ${base}, or name the tours to publish.`);
-  return git(['diff', '-z', '--name-only', '--diff-filter=d', `${ref}...HEAD`, '--', TOURS], repo)
-    .split('\0')
-    .filter(isTourFile)
-    .map(file => join(repo, file));
+// Recordings go in .videos/ at the repository root, which ignores itself: git never sees it, the app's own
+// .gitignore is left alone, and deleting the folder removes every trace of pro-tour.
+export async function videosDir(repo: string): Promise<string> {
+  const dir = join(repo, '.videos');
+  const info = await lstat(dir).catch(() => null);
+  if (info?.isSymbolicLink()) throw new TourError(`${dir} must not be a symlink`);
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  await writeFile(join(dir, '.gitignore'), '*\n');
+  return dir;
 }
 
-// Recordings go in an ignored .videos/ directory at the repository root.
-export async function videosDir(repo: string): Promise<string> {
-  const ignore = join(repo, '.gitignore');
+// Every recording in .videos/, by tour name.
+export async function recordings(repo: string): Promise<string[]> {
   const dir = join(repo, '.videos');
-  for (const path of [ignore, dir]) {
-    const info = await lstat(path).catch(() => null);
-    if (info?.isSymbolicLink()) throw new TourError(`${path} must not be a symlink`);
-  }
-  const text = await readFile(ignore, 'utf8').catch(() => '');
-  if (!text.split('\n').some(line => ['.videos/', '/.videos/', '.videos', '/.videos'].includes(line.trim()))) {
-    await appendFile(ignore, `${text && !text.endsWith('\n') ? '\n' : ''}.videos/\n`);
-  }
-  await mkdir(dir, { recursive: true, mode: 0o700 });
-  return dir;
+  const entries = await readdir(dir, { recursive: true }).catch(() => [] as string[]);
+  return entries
+    .filter(entry => entry.endsWith('.mp4') && !entry.split(sep).some(part => part.startsWith('.')))
+    .map(entry =>
+      entry
+        .split(sep)
+        .join('/')
+        .replace(/\.mp4$/, ''),
+    )
+    .sort();
+}
+
+// Removes .videos/ once it holds nothing but its own .gitignore.
+export async function removeVideosDirIfEmpty(repo: string): Promise<void> {
+  const dir = join(repo, '.videos');
+  const entries = await readdir(dir).catch(() => null);
+  if (entries?.every(entry => entry === '.gitignore')) await rm(dir, { recursive: true, force: true });
 }

@@ -1,7 +1,8 @@
-// Types for writing tours:
+// What tours import:
 //
-//   import type { Tour, TourMeta } from 'pro-tour';
-//   export const meta = { title: '…', behaviors: { … } } satisfies TourMeta;
-//   export async function run(t: Tour): Promise<void> { … }
-export type { Tour } from './runtime.ts';
-export type { Check, StepOptions, TourMeta, TourModule } from './types.ts';
+//   import { expect, test } from 'pro-tour';
+//   test('Assign a task to a teammate', async ({ page }) => {
+//     await test.step('Open a new task', async () => { … });
+//   });
+export type { Locator, Page } from 'playwright/test';
+export { expect, type Message, type TourExpect, test } from './tour.ts';

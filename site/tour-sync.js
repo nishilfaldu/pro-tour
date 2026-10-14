@@ -1,21 +1,20 @@
-// The checklist from the demo tour's report. `at` is when the step that shows each behavior passes, in
-// seconds into the video; an item is ticked once the video has reached it.
-const behaviors = [
-  { text: 'The Assignee menu can be searched and shows task counts.', step: 1, at: 9.5 },
-  { text: 'Choosing a person with no tasks shows an empty state with a way to clear filters.', step: 2, at: 14.5 },
-  { text: 'Clear filters restores Anyone, All statuses, and the full board.', step: 3, at: 19 },
-  { text: 'Choosing a person shows only their tasks and updates the task count.', step: 4, at: 25.9 },
-  { text: 'Assignee and Status filters work together.', step: 5, at: 32.3 },
-  { text: 'Unassigned shows tasks with no assignee.', step: 6, at: 38.7 },
+// The demo tour's steps, from its recording: `at` is when each step starts, in seconds into the video. A step
+// is ticked once the video has reached the next one (or the end card).
+const steps = [
+  { title: 'Open a new task: teammates load from the directory', at: 3.9 },
+  { title: 'Assign the new task to Ana and save it', at: 9.1 },
+  { title: 'Edit it: Ana is still selected', at: 17.9 },
+  { title: 'Reassign it to Ben', at: 22.5 },
 ];
+const END = 28.6;
 
 const list = document.getElementById('checklist');
-const items = behaviors.map(({ text, step }) => {
+const items = steps.map(({ title, at }) => {
   const item = document.createElement('li');
   const where = document.createElement('span');
   where.className = 'step';
-  where.textContent = `(step ${step})`;
-  item.append(`${text} `, where);
+  where.textContent = `0:${String(Math.floor(at)).padStart(2, '0')}`;
+  item.append(`${title} `, where);
   list.append(item);
   return item;
 });
@@ -23,7 +22,7 @@ const items = behaviors.map(({ text, step }) => {
 const video = document.getElementById('tour');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sync = () => {
-  for (const [i, { at }] of behaviors.entries()) items[i].classList.toggle('done', reduced || video.currentTime >= at);
+  for (const [i] of steps.entries()) items[i].classList.toggle('done', reduced || video.currentTime >= (steps[i + 1]?.at ?? END));
 };
 for (const event of ['timeupdate', 'seeked', 'loadedmetadata']) video.addEventListener(event, sync);
 if (reduced) {
