@@ -6,7 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readRecording, recordingFile, removeRecording } from './record.ts';
-import { exists, git, removeVideosDirIfEmpty, sha, TourError } from './repo.ts';
+import { exists, git, hasCommit, headCommit, removeVideosDirIfEmpty, sameCode, sha, TourError } from './repo.ts';
 import { markdown } from './report.ts';
 import type { TourResult } from './types.ts';
 
@@ -98,15 +98,56 @@ interface Ready {
   video: string;
   videoSha: string;
   result: TourResult;
+  /** Whether the video shows the code at the PR's head. */
+  showsHead: boolean;
+}
+
+// Whether the recording shows the PR head's code. The code it was recorded with is compared, outside .tours/,
+// so a tour recorded before its change was committed still shows the head once that commit is pushed.
+// Recordings from before pro-tour kept that code compare commits.
+function showsHead(repo: string, { commit, dirty, tree }: TourResult, head: string): boolean {
+  if (tree) return sameCode(repo, tree, head) === true;
+  return commit === head && !dirty;
+}
+
+const short = (commit: string) => `\`${commit.slice(0, 7)}\``;
+const commits = (count: number) => `${count} ${count === 1 ? 'commit' : 'commits'}`;
+const isAncestor = (repo: string, commit: string, head: string) => {
+  try {
+    git(['merge-base', '--is-ancestor', commit, head], repo);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Why a recording does not show the PR head's code, in the terms of what to do about it.
+function staleReason(repo: string, { commit, dirty, tree }: TourResult, head: string): string {
+  const local = headCommit(repo);
+  if (!hasCommit(repo, head)) return `the PR's head (${short(head)}) is not in this checkout: pull it`;
+  if (local && local !== head && tree && sameCode(repo, tree, local))
+    return `it shows this checkout's HEAD (${short(local)}), which the PR does not have yet: push it`;
+  if (!commit) return 'it was recorded before the first commit';
+  const uncommitted = dirty ? ', with uncommitted changes' : '';
+  if (commit === head) return `it was recorded at the PR's head (${short(head)}) with uncommitted changes the PR does not have`;
+  if (!hasCommit(repo, commit) || !isAncestor(repo, commit, head))
+    return `it was recorded at ${short(commit)}${uncommitted}, which is not on the PR's branch (rebased or amended since?)`;
+  const after = Number(git(['rev-list', '--count', `${commit}..${head}`], repo).trim());
+  return `it was recorded at ${short(commit)}${uncommitted}, and the PR has ${commits(after)} after it`;
 }
 
 // Every recording is read before anything is posted, so a missing one does not leave the PR half published.
-async function ready(repo: string, name: string): Promise<Ready> {
+async function ready(repo: string, name: string, head: string, allowStale: boolean): Promise<Ready> {
   const video = recordingFile(join(repo, '.videos'), name);
   if (!(await exists(video))) throw new TourError(`No recording of ${name}; record it with pro-tour run first.`);
   const result = await readRecording(video);
   if (!result) throw new TourError(`${video} is not a pro-tour recording; record ${name} again.`);
-  return { name, video, videoSha: sha(await readFile(video)), result };
+  const shows = showsHead(repo, result, head);
+  if (!shows && !allowStale)
+    throw new TourError(
+      `The recording of ${name} does not show the PR's code: ${staleReason(repo, result, head)}. Record it again with pro-tour run, or pass --allow-stale to post it as it is (the comment says which commit it shows).`,
+    );
+  return { name, video, videoSha: sha(await readFile(video)), result, showsHead: shows };
 }
 
 async function comments(pr: PullRequest, env: Env): Promise<Comment[]> {
@@ -153,7 +194,7 @@ async function hideOlder(pr: PullRequest, tourMarker: string, current: string, e
 }
 
 // gh replaces the body's reference to the attached file with the uploaded video.
-const commentBody = ({ result, video }: Ready, head: string) => markdown(result, `![](${video})`, head);
+const commentBody = ({ result, video, showsHead }: Ready, head: string) => markdown(result, `![](${video})`, head, showsHead);
 
 async function post(recording: Ready, pr: PullRequest, env: Env): Promise<{ url: string; reused: boolean }> {
   const { name, video, videoSha } = recording;
@@ -189,16 +230,17 @@ export type PublishResult = { name: string; body: string } | { name: string; url
 
 /**
  * Post each named recording to the PR. A dry run returns the comment bodies instead. Each video is deleted
- * once its comment is up, and .videos/ with it when it is empty.
+ * once its comment is up, and .videos/ with it when it is empty. A recording that does not show the PR head's
+ * code is refused unless allowStale is set.
  */
 export async function publishTours(
   repo: string,
   pr: PullRequest,
   names: string[],
-  { env = process.env, dryRun = false }: { env?: Env; dryRun?: boolean } = {},
+  { env = process.env, dryRun = false, allowStale = false }: { env?: Env; dryRun?: boolean; allowStale?: boolean } = {},
 ): Promise<PublishResult[]> {
   const recordings = [];
-  for (const name of names) recordings.push(await ready(repo, name));
+  for (const name of names) recordings.push(await ready(repo, name, pr.head, allowStale));
   if (dryRun) return recordings.map(recording => ({ name: recording.name, body: commentBody(recording, pr.head) }));
   const results = [];
   for (const recording of recordings) {

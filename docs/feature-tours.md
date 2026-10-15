@@ -68,9 +68,40 @@ pnpm exec pro-tour run .tours/<feature>.tour.ts --url http://localhost:3000
 It type-checks the tour first (`pro-tour check` does only that, in about a second), records it and prints each
 step and check. The video is `.videos/<feature>.mp4`. Tell the user where it is.
 
-If the tour fails, the output has the error at the line of the tour where it happened and the page's visible
-DOM where it stopped. Fix the tour, or the change if the failure is a real bug, and run it again. After about
-three failed attempts, stop and tell the user what is failing.
+The video shows the whole viewport. If the app's dev server draws its own badge or toolbar over the page, hide
+it with `--hide <CSS selector>`, once per selector, such as `--hide astro-dev-toolbar`. The Next.js dev badge is
+hidden already, unless it shows an error. The step and check notices sit top right and move to the bottom
+when the element the cursor goes to is under them.
+
+### If the tour fails
+
+The output has the error at the line of the tour where it happened, then the page's visible DOM where it
+stopped. The DOM can be long, so the last line repeats the failure: the step, the error and the tour line.
+
+While you fix the tour, run it with `--fast`: the same checks and output, without pauses or a recording, so a
+run takes seconds and the last recording stays as it was. Fast runs do not wait between actions, so a check of
+a short-lived state (a spinner, "Saving…") can pass in one kind of run and fail in the other. Once it passes,
+run it without `--fast` to record the video.
+
+Fix the tour, or the change if the failure is a real bug, and run it again. After about three failed
+attempts, stop and tell the user what is failing.
+
+### Common locator mistakes
+
+- `getByText` also matches text that is hidden visually but kept for screen readers, such as an `aria-live`
+  status region, and then matches two elements. Pass `{ exact: true }`, or look inside a region:
+  `page.getByRole('main').getByText('Saved')`.
+- A link styled as a button often has `role="button"` (shadcn and Base UI do this with `render={<a />}`), so
+  `getByRole('link')` does not find it. Try `getByRole('button', { name: '…' })`, and check the DOM in the
+  failure output for the role.
+- Reading or writing the clipboard needs permission. The test also receives `context`:
+
+  ```ts
+  test('Copy the invite link', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    // …
+  });
+  ```
 
 Exit codes: 0 passed, 1 the tour failed, 2 usage or setup error, 3 the recording failed (the app is not
 reachable at `--url`, or the browser or encoder failed; the error says what to do). If the browser is not
@@ -89,3 +120,9 @@ It posts each recording in `.videos/` as a comment on the branch's pull request:
 checks, and the commit it was recorded at. Older comments of the same tour are hidden as outdated, and each
 video is deleted once it is posted. Give the user the comment's link. `--pr <number>` picks the pull request,
 naming tours publishes only those, and `--dry-run` prints the comment without posting it.
+
+A recording must show the code at the PR's head. Recording before you commit is fine, as long as what you then
+commit and push is the code you recorded (changes in `.tours/` do not count). If the code changed after the
+recording, such as after a rebase, new commits or commits you have not pushed, `publish` posts nothing and
+says why: push, or record the tour again. `--allow-stale` posts it anyway, and the comment then names the
+commit it shows.

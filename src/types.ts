@@ -37,4 +37,9 @@ export interface TourResult {
   /** HEAD when it was recorded, and whether the working tree had uncommitted changes outside .tours/. */
   commit: string | null;
   dirty: boolean;
+  /**
+   * The git tree of the code it was recorded with, uncommitted changes included, so publish can tell whether it
+   * shows the PR's code. Absent in recordings made before it was added.
+   */
+  tree?: string;
 }

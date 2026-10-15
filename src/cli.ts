@@ -1,9 +1,11 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { realpath } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { constants } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { chromium } from 'playwright';
 import { checkTours } from './check.ts';
 import { doctor } from './doctor.ts';
 import { init } from './init.ts';
@@ -23,17 +25,21 @@ import {
   TourError,
   tourName,
   videosDir,
+  workingTree,
 } from './repo.ts';
 
 const USAGE = `Usage:
-  pro-tour run <file.tour.ts>... --url <app url> [--json] [--channel chromium|chrome]
+  pro-tour run <file.tour.ts>... --url <app url> [--fast] [--hide <css selector>]... [--json] [--channel chromium|chrome]
       Record each tour into .videos/<name>.mp4. A failure prints the error and the page's visible DOM.
+      --fast runs the tour without recording it or pausing, to fix it quickly; it keeps the last recording.
+      --hide hides elements in the video, such as a dev server's toolbar.
   pro-tour check [<file.tour.ts>...]
       Type-check tours (default: every tour in a .tours/ directory) without recording.
-  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run]
-      Post each recording in .videos/ (or the named tours) to the pull request, then delete it.
+  pro-tour publish [<tour>...] [--pr <number|url>] [--dry-run] [--allow-stale]
+      Post each recording in .videos/ (or the named tours) to the pull request, then delete it. A recording that
+      does not show the code at the PR's head is refused, unless --allow-stale.
   pro-tour init
-      Point AGENTS.md and CLAUDE.md at pro-tour's docs.
+      Point AGENTS.md and CLAUDE.md at pro-tour's docs (only AGENTS.md when CLAUDE.md imports it).
   pro-tour install-browser [--with-deps]
       Download the Chromium build pro-tour records with (--with-deps also installs its system libraries on Linux).
   pro-tour doctor [--channel chromium|chrome]
@@ -60,15 +66,23 @@ const indent = (text: string, by: string) =>
     .map(line => (line ? `${by}${line}` : line))
     .join('\n');
 
-function printRecording({ result, video, error, dom }: Recording, shown: string): void {
-  const where = video ? `${relative(process.cwd(), video)} (${result.seconds}s)` : `${shown}, nothing recorded`;
+function printRecording({ result, video, error, dom, at }: Recording, shown: string, fast: boolean): void {
+  const where = video
+    ? `${relative(process.cwd(), video)} (${result.seconds}s)`
+    : fast
+      ? `${shown} (${result.seconds}s, not recorded: --fast)`
+      : `${shown}, nothing recorded`;
   console.log(`${result.status.toUpperCase()}: ${result.title} · ${where}`);
   for (const step of result.steps) {
     console.log(`  ${step.status === 'passed' ? '✓' : '✗'} ${step.title}`);
     for (const check of step.checks) console.log(`      ${check.passed ? '✓' : '✗'} ${check.label}`);
   }
   if (error) console.log(`\n${indent(error, '  ')}`);
-  if (dom) console.log(`\n  Visible DOM where the tour stopped:\n${indent(dom, '    ')}`);
+  if (!dom) return;
+  console.log(`\n  Visible DOM where the tour stopped:\n${indent(dom, '    ')}`);
+  // The DOM can be long, and the end of the output is what is often read: the failure again, in one line.
+  const step = result.steps.find(step => step.status === 'failed');
+  console.log(`\nFAILED: ${[step && `step "${step.title}"`, result.error, at].filter(Boolean).join(' · ')} (error above the DOM)`);
 }
 
 // Ctrl-C (or SIGTERM) during run aborts the signal: the recording in progress stops, its browser closes and the
@@ -117,6 +131,8 @@ async function run(argv: string[]): Promise<number> {
     options: {
       url: { type: 'string' },
       json: { type: 'boolean', default: false },
+      fast: { type: 'boolean', default: false },
+      hide: { type: 'string', multiple: true, default: [] },
       channel: { type: 'string', default: 'chromium' },
       help: { type: 'boolean', short: 'h' },
     },
@@ -132,7 +148,7 @@ async function run(argv: string[]): Promise<number> {
   }
   const stop = interruptible();
   try {
-    return await record(files, url, values.channel, values.json, stop);
+    return await record(files, url, { channel: values.channel, json: values.json, fast: values.fast, hide: values.hide }, stop);
   } catch (error) {
     // A git command that got the same Ctrl-C failed first.
     const code = await stop.interrupted();
@@ -150,13 +166,13 @@ type RunOutput = Omit<Partial<Recording['result']>, 'status' | 'error'> & {
   video?: string | null;
   error?: string;
   dom?: string;
+  at?: string;
 };
 
 async function record(
   files: string[],
   url: string,
-  channel: string,
-  json: boolean,
+  { channel, json, fast, hide }: { channel: string; json: boolean; fast: boolean; hide: string[] },
   stop: ReturnType<typeof interruptible>,
 ): Promise<number> {
   const results: RunOutput[] = [];
@@ -194,6 +210,9 @@ async function record(
         channel,
         commit: headCommit(repo),
         dirty: hasChanges(repo),
+        tree: fast ? null : workingTree(repo),
+        fast,
+        hide,
         signal: stop.signal,
       });
     } catch (cause) {
@@ -211,8 +230,9 @@ async function record(
       if (!json) console.log(`ERROR: ${shown}\n  ${error}\n  This is not a tour failure.`);
       continue;
     }
-    results.push({ tour: file, ...recording.result, video: recording.video, error: recording.error, dom: recording.dom });
-    if (!json) printRecording(recording, shown);
+    const { video, error, dom, at } = recording;
+    results.push({ tour: file, ...recording.result, video, error, dom, at });
+    if (!json) printRecording(recording, shown, fast);
   }
   if (results.some(result => result.status === 'error')) return finish(3);
   return finish(results.every(result => result.status === 'passed') ? 0 : 1);
@@ -225,6 +245,7 @@ async function publishCommand(argv: string[]): Promise<number> {
     options: {
       pr: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
+      'allow-stale': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -237,7 +258,8 @@ async function publishCommand(argv: string[]): Promise<number> {
   if (!names.length) throw new TourError('There are no recordings in .videos/ to publish. Record a tour with pro-tour run first.');
   const env = process.env;
   const pr = await resolvePr(repo, { target: values.pr, branch: values.pr ? undefined : currentBranch(repo), env });
-  for (const result of await publishTours(repo, pr, names, { env, dryRun: values['dry-run'] })) {
+  const options = { env, dryRun: values['dry-run'], allowStale: values['allow-stale'] };
+  for (const result of await publishTours(repo, pr, names, options)) {
     if ('body' in result) console.log(`--- ${result.name}: comment that would be posted to ${pr.url} ---\n${result.body}`);
     else console.log(`${result.reused ? 'Already published' : 'Published'} ${result.name}: ${result.url}`);
   }
@@ -247,8 +269,8 @@ async function publishCommand(argv: string[]): Promise<number> {
 async function initCommand(argv: string[]): Promise<number> {
   const { values } = parseArgs({ args: argv, options: { help: { type: 'boolean', short: 'h' } } });
   if (values.help) return usage(true);
-  const changes = await init(repoRoot(process.cwd()), await realpath(process.cwd()));
-  for (const change of changes) console.log(change);
+  const { changes, notes } = await init(repoRoot(process.cwd()), await realpath(process.cwd()));
+  for (const line of [...changes, ...notes]) console.log(line);
   console.log(changes.length ? 'Agents will now find the feature tour docs.' : 'Already set up.');
   return 0;
 }
@@ -263,7 +285,12 @@ async function installBrowser(argv: string[]): Promise<number> {
   if (values.help) return usage(true);
   const playwright = join(dirname(createRequire(import.meta.url).resolve('playwright/package.json')), 'cli.js');
   const args = [playwright, 'install', ...(values['with-deps'] ? ['--with-deps'] : []), 'chromium'];
-  return spawnSync(process.execPath, args, { stdio: 'inherit' }).status === 0 ? 0 : 2;
+  // Playwright prints nothing when the browser is already in its cache, so say what is there either way.
+  const browser = chromium.executablePath();
+  const had = existsSync(browser);
+  if (spawnSync(process.execPath, args, { stdio: 'inherit' }).status !== 0) return 2;
+  console.log(`Chromium is ready${had ? ', already installed' : ''}: ${browser}`);
+  return 0;
 }
 
 async function doctorCommand(argv: string[]): Promise<number> {

@@ -97,6 +97,19 @@ test('init points AGENTS.md and CLAUDE.md at the docs, replaces an older section
   assert.match((await cli(dir, ['init'])).out, /^Already set up\.$/);
 });
 
+test('init writes the section only to AGENTS.md when CLAUDE.md imports it, and removes an earlier copy', async () => {
+  const dir = await repo();
+  await writeFile(join(dir, 'AGENTS.md'), '# Agents\n');
+  await writeFile(join(dir, 'CLAUDE.md'), '@AGENTS.md\n\n## Feature tours\n\nold\n\n## Testing\n\nRun pnpm test.\n');
+  const first = await cli(dir, ['init']);
+  assert.equal(first.code, 0, first.out);
+  assert.match(first.out, /^updated AGENTS\.md\nremoved the Feature tours section from CLAUDE\.md\n/);
+  assert.match(first.out, /^CLAUDE\.md imports AGENTS\.md, so only AGENTS\.md has the Feature tours section\.$/m);
+  assert.match(await readFile(join(dir, 'AGENTS.md'), 'utf8'), /^# Agents\n\n## Feature tours\n/);
+  assert.equal(await readFile(join(dir, 'CLAUDE.md'), 'utf8'), '@AGENTS.md\n\n## Testing\n\nRun pnpm test.\n');
+  assert.match((await cli(dir, ['init'])).out, /only AGENTS\.md has the Feature tours section\.\nAlready set up\.$/);
+});
+
 test('run records the tour as one MP4 that carries its result, and touches nothing else', async () => {
   const { dir, tour, videos } = await withTour(FILTER_TOUR);
   const passed = await cli(dir, ['run', tour, '--url', appUrl, '--json']);
@@ -119,8 +132,12 @@ test('run records the tour as one MP4 that carries its result, and touches nothi
       seconds: 'number',
       commit: git(dir, 'rev-parse', 'HEAD').trim(),
       dirty: false,
+      tree: saved?.tree,
     },
   );
+  // The code it was recorded with, the uncommitted tour included, without touching the index (checked above).
+  git(dir, 'add', '-A');
+  assert.equal(saved?.tree, git(dir, 'write-tree').trim());
 });
 
 test('a failure prints the error at the tour line and the visible DOM, and the video records it failing', async () => {
@@ -134,8 +151,85 @@ test('a failure prints the error at the tour line and the visible DOM, and the v
   assert.match(failed.out, /^ {6}at \.tours\/status-filter\.tour\.ts:6:68$/m);
   assert.match(failed.out, /^ {2}> {4}6 \| {5}await expect\(page\.locator\('#visible-count'\)/m);
   assert.match(failed.out, /Visible DOM where the tour stopped:\n {4}Around the element the tour last acted on:/);
+  // The DOM is long, so the failure is repeated in one line at the end.
+  assert.match(
+    failed.out,
+    /\nFAILED: step "Filter to Done" · Error: 1 task in view · \.tours\/status-filter\.tour\.ts:6:68 \(error above the DOM\)$/,
+  );
   const saved = await readRecording(join(videos, 'status-filter.mp4'));
   assert.deepEqual([saved?.status, saved?.error, saved?.dirty], ['failed', 'Error: 1 task in view', true]);
+});
+
+test('--fast runs the tour with the same checks and output, and records nothing', async () => {
+  const { dir, tour, videos } = await withTour(FILTER_TOUR.replace("toHaveText('1')", "toHaveText('7')"));
+  await recording(join(videos, 'status-filter.mp4'));
+  const before = await readFile(join(videos, 'status-filter.mp4'));
+  // At full pace, as an agent would run it, and with no ffmpeg: a fast run does not need it.
+  const bin = await mkdtemp(join(tmpdir(), 'no-ffmpeg-'));
+  const env: NodeJS.ProcessEnv = { ...process.env, PATH: `${bin}:/usr/bin:/bin` };
+  delete env.PRO_TOUR_PACE;
+  const failed = await cli(dir, ['run', tour, '--url', appUrl, '--fast'], env);
+  assert.equal(failed.code, 1, failed.out);
+  assert.match(failed.out, /^FAILED: Filter to Done · \.tours\/status-filter\.tour\.ts \([\d.]+s, not recorded: --fast\)$/m);
+  assert.match(failed.out, /^ {6}✗ 1 task in view$/m);
+  assert.match(failed.out, /\nFAILED: step "Filter to Done" · Error: 1 task in view · \.tours\/status-filter\.tour\.ts:6:68/);
+  assert.deepEqual((await readdir(videos)).sort(), ['.gitignore', 'status-filter.mp4']);
+  assert.deepEqual(await readFile(join(videos, 'status-filter.mp4')), before);
+  await writeFile(tour, FILTER_TOUR);
+  const passed = await cli(dir, ['run', tour, '--url', appUrl, '--fast', '--json'], env);
+  assert.equal(passed.code, 0, passed.out);
+  assert.deepEqual(
+    JSON.parse(passed.out).map(({ status, video }: { status: string; video: string | null }) => [status, video]),
+    [['passed', null]],
+  );
+});
+
+test('the video hides --hide elements and the Next.js badge without an error, and notices move off the target', async () => {
+  const page = createServer((_request, response) => {
+    response.setHeader('content-type', 'text/html');
+    response.end(`<body style="margin:0"><header style="display:flex;justify-content:flex-end;padding:10px 24px">
+      <button onclick="this.textContent = 'Signed in'">Sign in</button></header>
+      <div class="dev-toolbar">toolbar</div>
+      <script>
+        // As Next.js 16 draws it: the badge in the open shadow root of <nextjs-portal>.
+        for (const error of ['false', 'true']) {
+          const portal = document.createElement('nextjs-portal');
+          portal.className = 'error-' + error;
+          portal.attachShadow({ mode: 'open' }).innerHTML =
+            '<div id="devtools-indicator"><div data-next-badge data-error="' + error + '">N</div></div>';
+          document.body.append(portal);
+        }
+      </script></body>`);
+  });
+  await new Promise<void>(resolve => page.listen(0, '127.0.0.1', resolve));
+  try {
+    const { dir, tour } = await withTour(`import { expect, test } from 'pro-tour';
+const shown = (portal: string) =>
+  document.querySelector(portal)!.shadowRoot!.querySelector<HTMLElement>('#devtools-indicator')!.checkVisibility();
+test('Overlays', async ({ page }) => {
+  await test.step('Sign in', async () => {
+    await expect(page.locator('.dev-toolbar'), 'The toolbar is hidden').toBeHidden();
+    expect(await page.evaluate(shown, '.error-false'), 'The badge is hidden').toBe(false);
+    expect(await page.evaluate(shown, '.error-true'), 'An error badge shows').toBe(true);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    const notices = await page.evaluate(() => sessionStorage.getItem('__tour_notices'));
+    expect(notices, 'The notices moved off the button').toBe('low');
+  });
+});
+`);
+    const run = await cli(dir, [
+      'run',
+      tour,
+      '--url',
+      `http://127.0.0.1:${(page.address() as AddressInfo).port}`,
+      '--hide',
+      '.dev-toolbar',
+      '--fast',
+    ]);
+    assert.equal(run.code, 0, run.out);
+  } finally {
+    page.close();
+  }
 });
 
 test('tours are held to what a watchable video needs, each with an error that says what to change', async () => {
