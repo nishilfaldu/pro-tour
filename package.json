@@ -22,7 +22,6 @@
   "scripts": {
     "test": "pnpm lint && pnpm typecheck && node --test 'tests/*.test.ts'",
     "build": "node scripts/build.js",
-    "prepare": "node scripts/build.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.check.json",
     "lint": "biome check",
     "format": "biome check --write"
