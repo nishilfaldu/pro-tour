@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  # A new pnpm or npm can break installing from GitHub without a change here, as pnpm 12 did.
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # package.json's devEngines asks for pnpm 11.
+      - run: npm install --global pnpm@11
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+      - run: ./bin/pro-tour.js install-browser --with-deps
+      # Also checks that the committed dist/ is the build of src/.
+      - run: pnpm test
+      - name: The tag names package.json's version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+
+  # Install this commit from GitHub into a blank project, as the README says, and check it is ready to record.
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        manager: [pnpm@11, pnpm@12, npm]
+    runs-on: ubuntu-latest
+    env:
+      SPEC: github:${{ github.repository }}#${{ github.event.pull_request.head.sha || github.sha }}
+      # doctor checks that the GitHub CLI is logged in.
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: startsWith(matrix.manager, 'pnpm')
+        run: npm install --global ${{ matrix.manager }}
+      - run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+      # Outside any checkout, so no devEngines or workspace of this repository applies.
+      - name: Make a blank project
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir app && cd app
+          echo '{ "name": "app", "private": true }' > package.json
+          # An app's own build allowlist, which installing pro-tour must leave as it is (pnpm 11.3 rewrote it).
+          printf 'allowBuilds:\n  esbuild: true\n  sharp: false\n' > pnpm-workspace.yaml
+      - name: Install pro-tour with pnpm
+        if: startsWith(matrix.manager, 'pnpm')
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          pnpm --version
+          pnpm add --save-dev "$SPEC"
+          # pnpm may add settings of its own, but the allowBuilds entries must be the app's, unchanged.
+          node -e '
+            const lines = require("fs").readFileSync("pnpm-workspace.yaml", "utf8").split("\n");
+            const entries = [];
+            for (let i = lines.indexOf("allowBuilds:") + 1; lines[i]?.startsWith(" "); i++) entries.push(lines[i].trim());
+            if (entries.sort().join() !== "esbuild: true,sharp: false") {
+              console.error(`allowBuilds changed:\n${lines.join("\n")}`);
+              process.exit(1);
+            }'
+          echo 'RUN=pnpm exec' >> "$GITHUB_ENV"
+      - name: Install pro-tour with npm
+        if: matrix.manager == 'npm'
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          rm pnpm-workspace.yaml
+          npm --version
+          npm install --save-dev "$SPEC"
+          echo 'RUN=npx' >> "$GITHUB_ENV"
+      - working-directory: ${{ runner.temp }}/app
+        run: |
+          $RUN pro-tour install-browser --with-deps
+          $RUN pro-tour doctor
+
+  # A pushed version tag that passes becomes a GitHub release.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, install]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

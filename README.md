@@ -13,17 +13,20 @@ you can follow, and a notice for each step and check. No API key: the agent you 
 In your app's repository:
 
 ```sh
-pnpm add -D github:nishilfaldu/pro-tour
+pnpm add -D github:nishilfaldu/pro-tour#v0.1.0
 pnpm exec pro-tour install-browser
 pnpm exec pro-tour init
 ```
 
-With npm: `npm i -D github:nishilfaldu/pro-tour`, then `npx pro-tour …`. `init` adds a short "Feature tours"
+With npm: `npm i -D github:nishilfaldu/pro-tour#v0.1.0`, then `npx pro-tour …`. `init` adds a short "Feature tours"
 section to `AGENTS.md` and `CLAUDE.md` (only `AGENTS.md` if `CLAUDE.md` imports it) that points agents at
 [the docs](docs/feature-tours.md); commit it. Pro Tour also needs Node.js 22.18+, ffmpeg and the
 [GitHub CLI](https://cli.github.com), logged in. `pro-tour doctor` checks them all.
 
-To update to the latest commit: `pnpm update pro-tour` (or `npm update pro-tour`).
+`#v0.1.0` installs that [release](https://github.com/nishilfaldu/pro-tour/releases). To update, or to go back
+if a release breaks something, install another one the same way. For the latest commit on main instead, leave
+out `#v0.1.0`: `pnpm add -D github:nishilfaldu/pro-tour`, which `pnpm update pro-tour` (or `npm update
+pro-tour`) then moves to the newest commit.
 
 ## Use
 
@@ -62,7 +65,17 @@ node sample-app/server.js &
 ```
 
 `dist/` is committed, so an install from GitHub has nothing to build. After changing `src/`, run `pnpm build`
-and commit `dist/` with it; `pnpm test` fails until you do.
+and commit `dist/` with it: `pnpm test` fails when `dist/` is out of date (and rebuilds it), and CI fails when
+the committed one is.
+
+To release, set `version` in `package.json` and the `#v…` in this README and the website's setup (`pnpm test`
+checks they agree), merge it, then tag that commit on main and push the tag:
+
+```sh
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+CI tests the tag, installs it with pnpm 11, pnpm 12 and npm, and publishes it as a GitHub release.
 
 ## License
 
