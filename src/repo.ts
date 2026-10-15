@@ -1,9 +1,10 @@
 // Git and filesystem handling for the app repository a tour belongs to.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { access, lstat, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { tmpdir } from 'node:os';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 export class TourError extends Error {}
 
@@ -83,6 +84,36 @@ export function headCommit(repo: string): string | null {
 // code that is not committed.
 export const hasChanges = (repo: string) =>
   git(['status', '--porcelain', '--untracked-files=all', '--', '.', ':(exclude,glob)**/.tours/**'], repo).trim().length > 0;
+
+// The tree a commit of everything in the working copy would have: uncommitted and untracked files in, ignored
+// files out. Built in a copy of the index, so the real one is untouched. Null if git cannot make it.
+export function workingTree(repo: string): string | null {
+  const dir = mkdtempSync(join(tmpdir(), 'pro-tour-index-'));
+  try {
+    const index = join(dir, 'index');
+    // The copy keeps the index's file stats, so git hashes only what changed.
+    const own = resolve(repo, git(['rev-parse', '--git-path', 'index'], repo).trim());
+    if (existsSync(own)) copyFileSync(own, index);
+    const env = { ...process.env, GIT_INDEX_FILE: index };
+    git(['add', '--all', '--', '.'], repo, env);
+    return git(['write-tree'], repo, env).trim();
+  } catch {
+    return null;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+// Whether two commits or trees hold the same code outside .tours/: true, false, or null when git cannot tell
+// (one of them is not in this checkout).
+export function sameCode(repo: string, from: string, to: string): boolean | null {
+  const diff = spawnSync('git', ['diff', '--quiet', from, to, '--', '.', ':(exclude,glob)**/.tours/**'], { cwd: repo });
+  return diff.status === 0 ? true : diff.status === 1 ? false : null;
+}
+
+// Whether the commit is in this checkout.
+export const hasCommit = (repo: string, commit: string) =>
+  spawnSync('git', ['cat-file', '-e', `${commit}^{commit}`], { cwd: repo }).status === 0;
 
 // Every tour in the repository, committed or not (ignored files aside).
 export const allTours = (repo: string) =>

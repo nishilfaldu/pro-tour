@@ -3,6 +3,7 @@ import { access, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { type PullRequest, publishTours } from '../src/publish.ts';
+import { workingTree } from '../src/repo.ts';
 import { fakeGh, git, PR, recording, repo } from './helpers.ts';
 
 // A repository on a pushed PR branch with a passing recording of each tour.
@@ -38,11 +39,11 @@ test('publishes one comment per recording, then deletes the videos and .videos/ 
   await gone(join(dir, '.videos'));
 });
 
-test('a failed recording is published as failed, not refused', async () => {
+test('a failed recording is published as failed, not refused, and an outdated one with allowStale', async () => {
   const { dir, pr } = await setup([]);
   await recording(join(dir, '.videos', 'feature.mp4'), { status: 'failed', error: 'Card says Ana', commit: 'f'.repeat(40), dirty: true });
   const { env, read } = await fakeGh();
-  await publishTours(dir, pr, ['feature'], { env });
+  await publishTours(dir, pr, ['feature'], { env, allowStale: true });
   const [comment] = (await read()).comments;
   assert.match(
     comment.body,
@@ -107,4 +108,69 @@ test('a new recording of the same tour hides the older comment as outdated', asy
     (await read()).comments.map((comment: { minimized?: boolean }) => Boolean(comment.minimized)),
     [true, false],
   );
+});
+
+// A recording of the working copy as it is now, as pro-tour run makes one, in a .videos/ that ignores itself.
+async function recordNow(dir: string, name = 'feature') {
+  await mkdir(join(dir, '.videos'), { recursive: true });
+  await writeFile(join(dir, '.videos', '.gitignore'), '*\n');
+  const commit = git(dir, 'rev-parse', 'HEAD').trim();
+  const dirty = git(dir, 'status', '--porcelain').trim().length > 0;
+  await recording(join(dir, '.videos', `${name}.mp4`), { commit, dirty, tree: workingTree(dir) ?? undefined });
+}
+
+const commit = async (dir: string, file: string, body: string) => {
+  await mkdir(join(dir, file, '..'), { recursive: true });
+  await writeFile(join(dir, file), body);
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', file);
+  return git(dir, 'rev-parse', 'HEAD').trim();
+};
+
+test("a tour recorded before its change was committed shows the PR's head once it is", async () => {
+  const dir = await repo();
+  await writeFile(join(dir, 'app.js'), 'the change\n');
+  await recordNow(dir);
+  const head = await commit(dir, 'app.js', 'the change\n');
+  // A commit that changes only tours changes no code the video shows.
+  const later = await commit(dir, '.tours/feature.tour.ts', 'a tour\n');
+  const { env, read } = await fakeGh();
+  await publishTours(dir, { ...PR, head: later }, ['feature'], { env });
+  const [comment] = (await read()).comments;
+  assert.match(comment.body, new RegExp(`recorded at \`${later.slice(0, 7)}\`, this PR's head$`, 'm'));
+  assert.notEqual(head, later);
+});
+
+test('a recording that does not show the PR head is refused, saying why and what to do', async () => {
+  const dir = await repo();
+  const recorded = await commit(dir, 'app.js', 'one\n');
+  await recordNow(dir);
+  const refused = (head: string, why: RegExp) =>
+    assert.rejects(publishTours(dir, { ...PR, head }, ['feature'], { dryRun: true }), (error: Error) => {
+      assert.match(error.message, /^The recording of feature does not show the PR's code: /);
+      assert.match(error.message, why);
+      assert.match(error.message, /Record it again with pro-tour run, or pass --allow-stale/);
+      return true;
+    });
+  // New commits after it.
+  const next = await commit(dir, 'app.js', 'two\n');
+  await refused(next, new RegExp(`recorded at \`${recorded.slice(0, 7)}\`, and the PR has 1 commit after it`));
+  // Rewritten history, as after a rebase.
+  git(dir, 'reset', '-q', '--hard', 'HEAD~2');
+  const amended = await commit(dir, 'app.js', 'one, amended\n');
+  await refused(amended, /which is not on the PR's branch \(rebased or amended since\?\)/);
+  // Not pushed: the recording is of this checkout's HEAD, which the PR is behind.
+  await recordNow(dir);
+  await refused(
+    recorded,
+    new RegExp(`it shows this checkout's HEAD \\(\`${amended.slice(0, 7)}\`\\), which the PR does not have yet: push it`),
+  );
+  // A head this checkout has never seen.
+  await refused('e'.repeat(40), /the PR's head \(`eeeeeee`\) is not in this checkout: pull it/);
+  // Uncommitted changes at the head.
+  await writeFile(join(dir, 'app.js'), 'three\n');
+  await recordNow(dir);
+  await refused(amended, /recorded at the PR's head \(`[0-9a-f]{7}`\) with uncommitted changes the PR does not have/);
+  const [result] = await publishTours(dir, { ...PR, head: amended }, ['feature'], { dryRun: true, allowStale: true });
+  assert.ok('body' in result && result.body.includes("this PR's head, plus uncommitted changes"));
 });

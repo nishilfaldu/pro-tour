@@ -39,12 +39,40 @@ const firstLine = (error: unknown) => text(error).split('\n')[0];
 
 // Set by the recorder. This module has no import.meta: Playwright compiles it to CommonJS when the app's
 // package.json has no "type": "module" and pro-tour runs from a checkout.
-function settings(): { url: string; work: string; overlay: string; pace: Pace } {
-  const { PRO_TOUR_URL: url, PRO_TOUR_WORK: work, PRO_TOUR_OVERLAY: overlay, PRO_TOUR_PACE } = process.env;
+function settings(): { url: string; work: string; overlay: string; pace: Pace; video: boolean; hide: string[] } {
+  const { PRO_TOUR_URL: url, PRO_TOUR_WORK: work, PRO_TOUR_OVERLAY: overlay, PRO_TOUR_PACE, PRO_TOUR_VIDEO, PRO_TOUR_HIDE } = process.env;
   if (!url || !work || !overlay)
     throw new Error('Record tours with pro-tour run <file.tour.ts> --url <app url>, not with playwright test.');
   const fast = Object.fromEntries(Object.keys(PACE).map(key => [key, 0])) as Pace;
-  return { url, work, overlay, pace: PRO_TOUR_PACE === 'fast' ? fast : PACE };
+  const hide = JSON.parse(PRO_TOUR_HIDE || '[]') as string[];
+  return { url, work, overlay, pace: PRO_TOUR_PACE === 'fast' ? fast : PACE, video: PRO_TOUR_VIDEO !== 'off', hide };
+}
+
+// Runs in the page before the app's scripts. Hides the elements --hide names, and the Next.js dev badge while
+// it shows no error: either would sit in every frame of the video. The badge is in the open shadow root of
+// <nextjs-portal>, which also holds Next's error overlay, so only the badge goes and an error still shows.
+function hideDevTools(selectors: string[]) {
+  const sheet = (css: string) => {
+    const style = new CSSStyleSheet();
+    style.replaceSync(css);
+    return style;
+  };
+  // One rule each, so a selector the browser does not understand drops only itself.
+  if (selectors.length)
+    document.adoptedStyleSheets = [
+      ...document.adoptedStyleSheets,
+      sheet(selectors.map(s => `${s} { display: none !important; }`).join('\n')),
+    ];
+  const badge = sheet('#devtools-indicator:has([data-next-badge][data-error="false"]) { display: none !important; }');
+  const portals = document.getElementsByTagName('nextjs-portal');
+  const done = new WeakSet<Element>();
+  new MutationObserver(() => {
+    for (const portal of portals)
+      if (portal.shadowRoot && !done.has(portal)) {
+        done.add(portal);
+        portal.shadowRoot.adoptedStyleSheets = [...portal.shadowRoot.adoptedStyleSheets, badge];
+      }
+  }).observe(document, { childList: true, subtree: true });
 }
 
 /** The tour being recorded: its steps so far, and the overlay that shows them. */
@@ -383,15 +411,16 @@ function failureDom(node: Node | null): string {
 
 export const test = base.extend<{ _record: void }>({
   context: async ({ browser }, use) => {
-    const { url, work, overlay } = settings();
+    const { url, work, overlay, video, hide } = settings();
     const context = await browser.newContext({
       baseURL: url,
       viewport: SIZE,
       deviceScaleFactor: 1,
       // The overlay's styles must apply under any Content-Security-Policy the app sets.
       bypassCSP: true,
-      recordVideo: { dir: join(work, 'video'), size: SIZE },
+      ...(video ? { recordVideo: { dir: join(work, 'video'), size: SIZE } } : {}),
     });
+    await context.addInitScript(hideDevTools, hide);
     await context.addInitScript({ path: overlay });
     await use(context);
     await context.close();

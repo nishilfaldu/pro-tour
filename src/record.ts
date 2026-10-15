@@ -93,6 +93,12 @@ export interface RecordOptions {
   channel?: string;
   commit: string | null;
   dirty: boolean;
+  /** The git tree of the code being recorded, uncommitted changes included (see workingTree). */
+  tree?: string | null;
+  /** Run the tour without recording it, and without pauses, for fixing a tour quickly. */
+  fast?: boolean;
+  /** CSS selectors of elements to hide in the video, such as a dev server's toolbar. */
+  hide?: string[];
   /** Aborting it stops the recording, leaving the previous one as it was. */
   signal?: AbortSignal;
 }
@@ -104,6 +110,8 @@ export interface Recording {
   /** The full error of a failed tour, and the page's visible DOM where it stopped. */
   error?: string;
   dom?: string;
+  /** Where in the tour it failed, such as .tours/login.tour.ts:12:5. */
+  at?: string;
 }
 
 interface JsonError {
@@ -134,28 +142,34 @@ function codeFrame(file: string, line: number, column: number): string {
   return out.join('\n');
 }
 
-// Playwright's error, with where it happened in the tour. Playwright would point at pro-tour's own wrappers
-// when they are on the stack, so the location is the tour's own frame.
-function describe(error: JsonError, tour: string, cwd: string): string {
+// Where the error happened in the tour. Playwright would point at pro-tour's own wrappers when they are on the
+// stack, so the location is the tour's own frame.
+function locate(error: JsonError, tour: string): { line: number; column: number } | null {
   const frame = new RegExp(`${tour.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:(\\d+):(\\d+)`).exec(error.stack ?? '');
-  const location = frame ? { line: Number(frame[1]), column: Number(frame[2]) } : error.location?.file === tour ? error.location : null;
+  return frame ? { line: Number(frame[1]), column: Number(frame[2]) } : error.location?.file === tour ? error.location : null;
+}
+
+// Playwright's error, with where it happened in the tour.
+function describe(error: JsonError, tour: string, cwd: string): string {
+  const location = locate(error, tour);
   const text = plain(error.message ?? error.value).trim();
   if (!location) return text;
   return `${text}\n\n    at ${relative(cwd, tour)}:${location.line}:${location.column}\n\n${codeFrame(tour, location.line, location.column)}`;
 }
 
-/** Record the tour, replacing its previous recording in outDir. */
+/** Record the tour, replacing its previous recording in outDir. A fast run records nothing and replaces nothing. */
 export async function recordTour(
   file: string,
-  { repo, url, outDir, name, channel = 'chromium', commit, dirty, signal }: RecordOptions,
+  { repo, url, outDir, name, channel = 'chromium', commit, dirty, tree = null, fast = false, hide = [], signal }: RecordOptions,
 ): Promise<Recording> {
   signal?.throwIfAborted();
   // Found now rather than after a 30-second recording.
-  for (const encoder of ['ffmpeg', 'ffprobe'])
+  for (const encoder of fast ? [] : ['ffmpeg', 'ffprobe'])
     if ((spawnSync(encoder, ['-version']).error as NodeJS.ErrnoException)?.code === 'ENOENT')
       throw new RecordingError(
         `${encoder} is not installed.\nInstall ffmpeg (macOS: brew install ffmpeg; Debian/Ubuntu: sudo apt-get install ffmpeg).`,
       );
+  const started = Date.now();
   const video = recordingFile(outDir, name);
   await mkdir(dirname(video), { recursive: true });
   // Work beside the destination, so the finished video is renamed into place on the same file system.
@@ -168,6 +182,8 @@ export async function recordTour(
       PRO_TOUR_WORK: work,
       PRO_TOUR_CHANNEL: channel,
       PRO_TOUR_OVERLAY: OVERLAY,
+      PRO_TOUR_HIDE: JSON.stringify(hide),
+      ...(fast ? { PRO_TOUR_PACE: 'fast', PRO_TOUR_VIDEO: 'off' } : {}),
       FORCE_COLOR: '0',
       NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --import=${RESOLVE}`.trim(),
     };
@@ -183,10 +199,15 @@ export async function recordTour(
     });
     signal?.throwIfAborted();
 
-    const failed = (error: string): Recording => ({
+    const where = (error?: JsonError) => {
+      const location = error && locate(error, file);
+      return location ? { at: `${relative(repo, file)}:${location.line}:${location.column}` } : {};
+    };
+    const failed = (error: string, cause?: JsonError): Recording => ({
       result: { title: name, status: 'failed', steps: [], error: firstLine(error), seconds: 0, commit, dirty },
       video: null,
       error,
+      ...where(cause),
     });
     const report = JSON.parse(await readFile(join(work, 'report.json'), 'utf8').catch(() => 'null')) as {
       suites?: JsonSuite[];
@@ -197,7 +218,7 @@ export async function recordTour(
       throw new RecordingError(`Playwright did not run the tour (exit code ${runner.status}).\n${output}`);
     }
     // The tour did not load: a syntax error, a failed import.
-    if (report.errors?.length) return failed(`The tour failed to load: ${describe(report.errors[0], file, repo)}`);
+    if (report.errors?.length) return failed(`The tour failed to load: ${describe(report.errors[0], file, repo)}`, report.errors[0]);
     const all = tests(report.suites);
     if (!all.length) return failed("The tour has no test. A tour is one test('…', async ({ page }) => { … }) from pro-tour.");
     if (all.length > 1) return failed(`A tour is one test, and this file has ${all.length}. Put each tour in a file of its own.`);
@@ -218,6 +239,18 @@ export async function recordTour(
 
     const status = run.status === 'passed' && outcome.status === 'passed' ? 'passed' : 'failed';
     const error = status === 'failed' ? (playwrightError ?? run.error ?? `The tour ${outcome.status}.`) : undefined;
+    const failure = error ? { error, dom: run.dom, ...where(outcome.error) } : {};
+    const result: TourResult = {
+      title: run.title,
+      status,
+      steps: run.steps,
+      ...(error ? { error: firstLine(error) } : {}),
+      seconds: Math.round((Date.now() - started) / 100) / 10,
+      commit,
+      dirty,
+      ...(tree ? { tree } : {}),
+    };
+    if (fast) return { result, video: null, ...failure };
 
     const raw = (await readdir(join(work, 'video')).catch(() => [])).find(entry => entry.endsWith('.webm'));
     if (!raw) throw new Error('Playwright did not record a video');
@@ -232,15 +265,7 @@ export async function recordTour(
     );
     if (encode.status !== 0) throw new Error(`ffmpeg failed: ${encode.stderr.trim()}`);
     const probe = await tool('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', encoded], { signal });
-    const result: TourResult = {
-      title: run.title,
-      status,
-      steps: run.steps,
-      ...(error ? { error: firstLine(error) } : {}),
-      seconds: Math.round(Number(probe.stdout) * 10) / 10,
-      commit,
-      dirty,
-    };
+    result.seconds = Math.round(Number(probe.stdout) * 10) / 10;
     // The result goes into the video's own metadata, so there is no second file to keep in step with it.
     const tagged = join(work, 'tour.mp4');
     const tag = await tool(
@@ -254,7 +279,7 @@ export async function recordTour(
     if (tag.status !== 0) throw new Error(`ffmpeg failed: ${tag.stderr.trim()}`);
     signal?.throwIfAborted();
     await rename(tagged, video);
-    return { result, video, ...(error ? { error, dom: run.dom } : {}) };
+    return { result, video, ...failure };
   } finally {
     await rm(work, { recursive: true, force: true });
     // A run that recorded nothing leaves nothing: no empty folders for a monorepo tour.

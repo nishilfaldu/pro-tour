@@ -17,6 +17,7 @@
       box-shadow: 0 0 0 5px rgba(91,140,255,.18); transition: opacity .25s, left .4s, top .4s, width .4s, height .4s; }
     .notices { position: fixed; top: 20px; right: 20px; z-index: 5; width: min(440px, 46vw); display: flex; flex-direction: column;
       gap: 8px; align-items: stretch; }
+    .notices.low { top: auto; bottom: 20px; }
     .notice { padding: 10px 15px; border-radius: 12px; background: rgba(15,18,26,.92); color: #fff;
       font: 500 15px/1.35 system-ui, -apple-system, sans-serif; box-shadow: 0 8px 22px rgba(0,0,0,.22); }
     .notice b { margin-right: 8px; }
@@ -39,6 +40,8 @@
   const TIP = { x: 5, y: 2.5 };
   const stored = JSON.parse(sessionStorage.getItem('__tour_cursor') || 'null');
   const position = stored || { x: innerWidth * 0.5, y: innerHeight * 0.62 };
+  // The notices sit top right, or bottom right once they have been in the way (see avoid).
+  let low = sessionStorage.getItem('__tour_notices') === 'low';
   let host, ui;
 
   // Overlay lives in the top layer so it stays above modal dialogs, which are also top-layer.
@@ -60,6 +63,7 @@
       <div class="card"><div class="eyebrow"></div><h1></h1><p></p></div>`;
     const $ = selector => shadow.querySelector(selector);
     ui = { ring: $('.ring'), menu: $('.menu'), cursor: $('.cursor'), notices: $('.notices'), card: $('.card') };
+    ui.notices.classList.toggle('low', low);
     place(0);
     document.documentElement.append(host);
     raise();
@@ -71,6 +75,20 @@
     ui.cursor.style.setProperty('--x', `${position.x - TIP.x}px`);
     ui.cursor.style.setProperty('--y', `${position.y - TIP.y}px`);
     sessionStorage.setItem('__tour_cursor', JSON.stringify(position));
+  }
+
+  // The notices move to the other end of the screen when the element the cursor is going to is under them, such
+  // as a button in a sticky header, unless it would be under them there too. They stay there until they are in
+  // the way again.
+  function avoid(box) {
+    const { left, right, height } = ui.notices.getBoundingClientRect();
+    const under = top => box.x < right && box.x + box.width > left && box.y < top + height && box.y + box.height > top;
+    const [here, there] = low ? [innerHeight - 20 - height, 20] : [20, innerHeight - 20 - height];
+    if (!height || !under(here) || under(there)) return;
+    low = !low;
+    sessionStorage.setItem('__tour_notices', low ? 'low' : 'top');
+    ui.notices.classList.toggle('low', low);
+    ui.notices.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
   }
 
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -110,6 +128,7 @@
     },
     ring(box) {
       mount();
+      avoid(box);
       const pad = 6;
       Object.assign(ui.ring.style, {
         left: `${box.x - pad}px`,

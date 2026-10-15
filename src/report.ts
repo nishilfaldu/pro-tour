@@ -8,8 +8,10 @@ const text = (value: unknown) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-// Which code the video shows, said plainly rather than enforced.
-function recordedAt({ commit, dirty }: TourResult, head: string): string {
+// Which code the video shows. showsHead says the code it was recorded with is the head's, even if it was not
+// committed yet; without it, the commit decides.
+function recordedAt({ commit, dirty }: TourResult, head: string, showsHead?: boolean): string {
+  if (showsHead) return `recorded at \`${head.slice(0, 7)}\`, this PR's head`;
   const at = !commit
     ? 'recorded before the first commit'
     : commit === head
@@ -20,13 +22,13 @@ function recordedAt({ commit, dirty }: TourResult, head: string): string {
 
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
-export function markdown(result: TourResult, video: string, head: string): string {
+export function markdown(result: TourResult, video: string, head: string, showsHead?: boolean): string {
   const passed = result.status === 'passed';
   const steps = result.steps.length;
   const lines = [
     `### Feature tour: ${text(result.title)}`,
     '',
-    `**${passed ? '✓ Passed' : '✗ Failed'}** · ${steps} ${steps === 1 ? 'step' : 'steps'} · ${result.seconds}s · ${recordedAt(result, head)}`,
+    `**${passed ? '✓ Passed' : '✗ Failed'}** · ${steps} ${steps === 1 ? 'step' : 'steps'} · ${result.seconds}s · ${recordedAt(result, head, showsHead)}`,
     '',
   ];
   if (!passed && result.error) lines.push(`> ✗ ${text(result.error)}`, '');
