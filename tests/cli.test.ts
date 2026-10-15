@@ -154,7 +154,7 @@ test('a failure prints the error at the tour line and the visible DOM, and the v
   // The DOM is long, so the failure is repeated in one line at the end.
   assert.match(
     failed.out,
-    /\nFAILED: step "Filter to Done" · Error: 1 task in view · \.tours\/status-filter\.tour\.ts:6:68 \(error above the DOM\)$/,
+    /\nFAILED: step "Filter to Done" · Error: 1 task in view · locator\('#visible-count'\) · \.tours\/status-filter\.tour\.ts:6:68 \(error above the DOM\)$/,
   );
   const saved = await readRecording(join(videos, 'status-filter.mp4'));
   assert.deepEqual([saved?.status, saved?.error, saved?.dirty], ['failed', 'Error: 1 task in view', true]);
@@ -172,7 +172,10 @@ test('--fast runs the tour with the same checks and output, and records nothing'
   assert.equal(failed.code, 1, failed.out);
   assert.match(failed.out, /^FAILED: Filter to Done · \.tours\/status-filter\.tour\.ts \([\d.]+s, not recorded: --fast\)$/m);
   assert.match(failed.out, /^ {6}✗ 1 task in view$/m);
-  assert.match(failed.out, /\nFAILED: step "Filter to Done" · Error: 1 task in view · \.tours\/status-filter\.tour\.ts:6:68/);
+  assert.match(
+    failed.out,
+    /\nFAILED: step "Filter to Done" · Error: 1 task in view · locator\('#visible-count'\) · \.tours\/status-filter\.tour\.ts:6:68/,
+  );
   assert.deepEqual((await readdir(videos)).sort(), ['.gitignore', 'status-filter.mp4']);
   assert.deepEqual(await readFile(join(videos, 'status-filter.mp4')), before);
   await writeFile(tour, FILTER_TOUR);

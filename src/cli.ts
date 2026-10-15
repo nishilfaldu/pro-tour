@@ -66,7 +66,7 @@ const indent = (text: string, by: string) =>
     .map(line => (line ? `${by}${line}` : line))
     .join('\n');
 
-function printRecording({ result, video, error, dom, at }: Recording, shown: string, fast: boolean): void {
+function printRecording({ result, video, error, dom, at, locator }: Recording, shown: string, fast: boolean): void {
   const where = video
     ? `${relative(process.cwd(), video)} (${result.seconds}s)`
     : fast
@@ -82,7 +82,7 @@ function printRecording({ result, video, error, dom, at }: Recording, shown: str
   console.log(`\n  Visible DOM where the tour stopped:\n${indent(dom, '    ')}`);
   // The DOM can be long, and the end of the output is what is often read: the failure again, in one line.
   const step = result.steps.find(step => step.status === 'failed');
-  console.log(`\nFAILED: ${[step && `step "${step.title}"`, result.error, at].filter(Boolean).join(' · ')} (error above the DOM)`);
+  console.log(`\nFAILED: ${[step && `step "${step.title}"`, result.error, locator, at].filter(Boolean).join(' · ')} (error above the DOM)`);
 }
 
 // Ctrl-C (or SIGTERM) during run aborts the signal: the recording in progress stops, its browser closes and the
@@ -167,6 +167,7 @@ type RunOutput = Omit<Partial<Recording['result']>, 'status' | 'error'> & {
   error?: string;
   dom?: string;
   at?: string;
+  locator?: string;
 };
 
 async function record(
@@ -230,8 +231,8 @@ async function record(
       if (!json) console.log(`ERROR: ${shown}\n  ${error}\n  This is not a tour failure.`);
       continue;
     }
-    const { video, error, dom, at } = recording;
-    results.push({ tour: file, ...recording.result, video, error, dom, at });
+    const { video, error, dom, at, locator } = recording;
+    results.push({ tour: file, ...recording.result, video, error, dom, at, locator });
     if (!json) printRecording(recording, shown, fast);
   }
   if (results.some(result => result.status === 'error')) return finish(3);

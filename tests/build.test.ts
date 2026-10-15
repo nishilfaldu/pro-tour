@@ -17,9 +17,22 @@ test('the build ships the overlay unchanged, the config and resolve hook, .js im
   assert.match(execFileSync(process.execPath, ['--input-type=module', '-e', help], { encoding: 'utf8' }), /pro-tour run/);
 });
 
-// dist/ is committed, so an install from GitHub has nothing to build. It must be the build of src/ as committed.
-test('the committed dist/ is the build of src/', () => {
+// dist/ is committed, so an install from GitHub has nothing to build: it must be the build of src/. Read before
+// any test here rebuilds it; in CI, it is the committed dist/.
+const dist = () => Object.fromEntries(readdirSync('dist').map(file => [file, readFileSync(`dist/${file}`, 'utf8')]));
+const before = dist();
+
+test('dist/ is the build of src/', () => {
   execFileSync(process.execPath, ['scripts/build.js'], { stdio: 'pipe' });
-  const changed = execFileSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'dist'], { encoding: 'utf8' });
-  assert.equal(changed, '', `Run pnpm build and commit dist/:\n${changed}`);
+  assert.deepEqual(before, dist(), 'dist/ is not the build of src/: run pnpm build and commit dist/');
+});
+
+// The README and the website's setup install the release package.json names.
+test('the install commands name the current version', () => {
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+  for (const file of ['README.md', 'site/index.html']) {
+    const tags = readFileSync(file, 'utf8').match(/github:nishilfaldu\/pro-tour#v[\w.-]+/g) ?? [];
+    assert.ok(tags.length, `${file} has no install command with a version`);
+    for (const tag of tags) assert.equal(tag, `github:nishilfaldu/pro-tour#v${version}`, file);
+  }
 });

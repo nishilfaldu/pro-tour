@@ -38,6 +38,11 @@ export interface Recording {
     dom?: string;
     /** Where in the tour it failed, such as .tours/login.tour.ts:12:5. */
     at?: string;
+    /** The locator the failure is about, such as getByRole('button', { name: 'Save' }). */
+    locator?: string;
 }
+export declare function failedLocator(error: string): {
+    locator?: string;
+};
 /** Record the tour, replacing its previous recording in outDir. A fast run records nothing and replaces nothing. */
 export declare function recordTour(file: string, { repo, url, outDir, name, channel, commit, dirty, tree, fast, hide, signal }: RecordOptions): Promise<Recording>;

@@ -112,6 +112,8 @@ export interface Recording {
   dom?: string;
   /** Where in the tour it failed, such as .tours/login.tour.ts:12:5. */
   at?: string;
+  /** The locator the failure is about, such as getByRole('button', { name: 'Save' }). */
+  locator?: string;
 }
 
 interface JsonError {
@@ -147,6 +149,15 @@ function codeFrame(file: string, line: number, column: number): string {
 function locate(error: JsonError, tour: string): { line: number; column: number } | null {
   const frame = new RegExp(`${tour.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:(\\d+):(\\d+)`).exec(error.stack ?? '');
   return frame ? { line: Number(frame[1]), column: Number(frame[2]) } : error.location?.file === tour ? error.location : null;
+}
+
+// The locator a failure is about, as Playwright's error names it: an expect's "Locator:" line, or what an action
+// was waiting for. Left out when the first line names it already, as a strict mode violation does.
+export function failedLocator(error: string): { locator?: string } {
+  const named =
+    /^Locator:\s+(.+)$/m.exec(error) ??
+    /^\s*- waiting for (.+?)(?: to be (?:visible|hidden|attached|detached|enabled|editable|stable))?$/m.exec(error);
+  return named && !firstLine(error).includes(named[1]) ? { locator: named[1] } : {};
 }
 
 // Playwright's error, with where it happened in the tour.
@@ -239,7 +250,7 @@ export async function recordTour(
 
     const status = run.status === 'passed' && outcome.status === 'passed' ? 'passed' : 'failed';
     const error = status === 'failed' ? (playwrightError ?? run.error ?? `The tour ${outcome.status}.`) : undefined;
-    const failure = error ? { error, dom: run.dom, ...where(outcome.error) } : {};
+    const failure = error ? { error, dom: run.dom, ...where(outcome.error), ...failedLocator(error) } : {};
     const result: TourResult = {
       title: run.title,
       status,
