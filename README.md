@@ -13,18 +13,17 @@ you can follow, and a notice for each step and check. No API key: the agent you 
 In your app's repository:
 
 ```sh
-pnpm add -D pro-tour
+pnpm add -D github:nishilfaldu/pro-tour
 pnpm exec pro-tour install-browser
 pnpm exec pro-tour init
 ```
 
-With npm: `npm i -D pro-tour`, then `npx pro-tour …`. `init` adds a short "Feature tours" section to
-`AGENTS.md` and `CLAUDE.md` (only `AGENTS.md` if `CLAUDE.md` imports it) that points agents at
+With npm: `npm i -D github:nishilfaldu/pro-tour`, then `npx pro-tour …`. `init` adds a short "Feature tours"
+section to `AGENTS.md` and `CLAUDE.md` (only `AGENTS.md` if `CLAUDE.md` imports it) that points agents at
 [the docs](docs/feature-tours.md); commit it. Pro Tour also needs Node.js 22.18+, ffmpeg and the
 [GitHub CLI](https://cli.github.com), logged in. `pro-tour doctor` checks them all.
 
-To update, `pnpm add -D pro-tour@latest` (or `npm i -D pro-tour@latest`). pnpm 11 and later wait a day after
-a release is published before they install it.
+To update to the latest commit: `pnpm update pro-tour` (or `npm update pro-tour`).
 
 ## Use
 
@@ -62,8 +61,8 @@ node sample-app/server.js &
 ./bin/pro-tour.js run sample-app/.tours/status-filter.tour.ts --url http://127.0.0.1:4173
 ```
 
-To release, bump `version` in `package.json` and run `pnpm publish`. It builds `dist/` first, so the package
-installs without a build step.
+`dist/` is committed, so an install from GitHub has nothing to build. After changing `src/`, run `pnpm build`
+and commit `dist/` with it; `pnpm test` fails until you do.
 
 ## License
 

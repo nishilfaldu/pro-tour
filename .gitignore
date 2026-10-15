@@ -23,8 +23,5 @@ test-results/
 .artifacts/
 .videos/
 
-# Build output
-dist/
-
 # Vercel project link
 .vercel/
